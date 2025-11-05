@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { AppLogo } from '../components/common/AppLogo';
-import { AppTextInput } from '../components/common/AppTextInput';
-import { AppButton } from '../components/common/AppButton';
-import { AppText } from '../components/common/AppText';
+import { AppLogo } from '../common/AppLogo';
+import { AppTextInput } from '../common/AppTextInput';
+import { AppButton } from '../common/AppButton';
+import { AppText } from '../common/AppText';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { Dimensions } from 'react-native';
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    transform: [{ translateY: -screenHeight * 0.1 }], // np. 10% wysokości ekranu w górę
+    transform: [{ translateY: -screenHeight * 0.1 }],
   },
   signupText: {
     marginTop: 16,

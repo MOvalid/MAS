@@ -8,16 +8,17 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useColorScheme } from 'react-native';
-import HomeScreen from './src/components/HomeScreen';
-import AuthScreen from './src/components/AuthScreen';
+import AuthScreen from './src/components/screens/AuthScreen';
+import { MainScreen } from './src/components/screens/MainScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
 
   const colorScheme = useColorScheme();
-  const paperTheme = colorScheme === 'dark' ? LightTheme : LightTheme;
-  const navigationTheme = colorScheme === 'dark' ? CombinedLightTheme : CombinedLightTheme;
+  const isDark = colorScheme === 'dark'
+  const paperTheme = isDark ? DarkTheme : LightTheme;
+  const navigationTheme = isDark ? CombinedDarkTheme : CombinedLightTheme;
   const [fontsLoaded, setFontsLoaded] = React.useState(false);
 
   React.useEffect(() => {
@@ -40,11 +41,11 @@ export default function App() {
       <AppThemeProvider>
         <NavigationContainer theme={navigationTheme as any}>
           <Stack.Navigator 
-            initialRouteName="Auth"
+            initialRouteName="Main"
             screenOptions={{ headerShown: false }}
           >
             <Stack.Screen name="Auth" component={AuthScreen} />
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Main" component={MainScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </AppThemeProvider>

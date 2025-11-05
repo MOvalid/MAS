@@ -270,23 +270,23 @@ export const DarkTheme: MD3Theme = {
 };
 
 export const CombinedLightTheme = {
-  ...NavigationLightTheme,
-  ...LightTheme,
+  dark: false,
+  roundness: LightTheme.roundness,
+  version: 3,
+  isV3: true,
   colors: {
     ...NavigationLightTheme.colors,
     ...LightTheme.colors,
-    background: LightTheme.colors.background, // białe tło
-    card: LightTheme.colors.surface, // topbar, header
   },
 };
 
 export const CombinedDarkTheme = {
-  ...NavigationDarkTheme,
-  ...DarkTheme,
+  dark: true,
+  roundness: MD3DarkTheme.roundness,
+  version: 3,
+  isV3: true,
   colors: {
     ...NavigationDarkTheme.colors,
-    ...DarkTheme.colors,
-    background: DarkTheme.colors.background, // ciemne tło
-    card: DarkTheme.colors.surface,
+    ...MD3DarkTheme.colors,
   },
 };
