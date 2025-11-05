@@ -5,13 +5,18 @@ import { AppTextInput } from '../components/common/AppTextInput';
 import { AppButton } from '../components/common/AppButton';
 import { AppText } from '../components/common/AppText';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from 'react-native-paper';
+import { Dimensions } from 'react-native';
+
+const screenHeight = Dimensions.get('window').height;
 
 export const AuthScreen = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
 
   return (
     <View style={styles.container}>
-      <AppLogo size={100} />
+      <AppLogo width={200} height={200} />
 
       <AppTextInput label="Email address" keyboardType="email-address" />
       <AppTextInput label="Password" secureTextEntry />
@@ -21,7 +26,7 @@ export const AuthScreen = () => {
       <AppText style={styles.signupText}>
         Don’t have an account?{' '}
         <TouchableOpacity onPress={() => console.log("Sign up")}>
-          <AppText style={{ fontWeight: '700', color: '#142144' }}>Sign up</AppText>
+          <AppText weight={"bold"} italic style={{ color: theme.colors.onBackground }}>Sign up</AppText>
         </TouchableOpacity>
       </AppText>
     </View>
@@ -31,10 +36,10 @@ export const AuthScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
+    transform: [{ translateY: -screenHeight * 0.1 }], // np. 10% wysokości ekranu w górę
   },
   signupText: {
     marginTop: 16,

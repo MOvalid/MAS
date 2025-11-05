@@ -6,31 +6,47 @@ import { Spacing } from '../../theme/metrics';
 type AppTextInputProps = TextInputProps & {
   marginTop?: Spacing;
   padding?: Spacing;
+  mode?: 'flat' | 'outlined';
 };
 
 export const AppTextInput: React.FC<AppTextInputProps> = ({
   style,
   marginTop = 'md',
-  padding = 'md',
+  padding = 'smd',
+  mode = 'outlined',
   ...props
 }) => {
-  const { colors, metrics } = useAppTheme();
+  const { colors, metrics, fonts } = useAppTheme();
 
   return (
     <TextInput
+      mode={mode}
       underlineColor="transparent"
       activeUnderlineColor={colors.primary}
-      theme={{ colors }}
+      outlineColor={colors.background}
+      activeOutlineColor={colors.primary}
+      textColor={colors.onSurfaceVariant}
+      theme={{
+        roundness: metrics.radius.xl,
+        colors,
+      }}
       style={[
         {
+          minWidth: "25%",
+          height: 40,
+          alignSelf: 'center',
           marginTop: metrics.spacing[marginTop],
           paddingVertical: metrics.spacing[padding],
           paddingHorizontal: metrics.spacing[padding],
-          borderRadius: metrics.radius.md,
+          borderRadius: metrics.radius.xl,
           backgroundColor: colors.surface,
         },
         style,
       ]}
+      contentStyle={{
+        height: 40,
+        paddingVertical: 4,
+      }}
       {...props}
     />
   );

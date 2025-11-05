@@ -25,6 +25,9 @@
     },
     "web": {
       "favicon": "./assets/mas-icon.png"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

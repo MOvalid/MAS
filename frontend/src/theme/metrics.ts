@@ -3,7 +3,9 @@ export const metrics = {
   spacing: {
     xs: 4,
     sm: 8,
+    smd: 12,
     md: 16,
+    lmd: 20,
     lg: 24,
     xl: 32,
   },
@@ -11,6 +13,7 @@ export const metrics = {
     sm: 4,
     md: 8,
     lg: 16,
+    xl: 32,
   },
   text: {
     small: 12,

@@ -1,4 +1,3 @@
-// src/theme/AppThemeContext.tsx
 import React, { createContext, useContext } from 'react';
 import { MD3Theme, useTheme } from 'react-native-paper';
 import { metrics } from './metrics';

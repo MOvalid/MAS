@@ -8,12 +8,14 @@ type AppTextProps = TextProps & {
   size?: TextSize;
   weight?: 'normal' | 'bold';
   color?: string;
+  italic?: boolean;
 };
 
 export const AppText: React.FC<AppTextProps> = ({
   size = 'normal',
   weight = 'normal',
   color,
+  italic = false,
   style,
   children,
   ...props
@@ -27,6 +29,7 @@ export const AppText: React.FC<AppTextProps> = ({
           fontSize: metrics.text[size],
           fontWeight: weight,
           color: color ?? colors.onSurface,
+          fontStyle: italic ? 'italic' : 'normal',
         },
         style,
       ]}
