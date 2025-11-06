@@ -21,6 +21,9 @@ export const metrics = {
     large: 20,
     title: 24,
   },
+  element: {
+    height: 48,
+  },
 } as const;
 
 export type Spacing = keyof typeof metrics.spacing; // 'xs' | 'sm' | 'md' | 'lg' | 'xl'

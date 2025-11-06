@@ -9,6 +9,7 @@ import { useTheme } from 'react-native-paper';
 import { Dimensions } from 'react-native';
 
 const screenHeight = Dimensions.get('window').height;
+const screenWidth = Dimensions.get('window').width;
 
 export const AuthScreen = () => {
   const navigation = useNavigation();
@@ -18,10 +19,13 @@ export const AuthScreen = () => {
     <View style={styles.container}>
       <AppLogo width={200} height={200} />
 
-      <AppTextInput label="Email address" keyboardType="email-address" />
-      <AppTextInput label="Password" secureTextEntry />
-
-      <AppButton onPress={() => console.log('Sign in pressed')}>Sign in</AppButton>
+      <View style={styles.formContainer}>
+        <AppTextInput label="Email address" keyboardType="email-address" />
+        <AppTextInput label="Password" secureTextEntry />
+        <AppButton onPress={() => console.log('Sign in pressed')}>
+          Sign in
+        </AppButton>
+      </View>
 
       <AppText style={styles.signupText}>
         Don’t have an account?{' '}
@@ -39,10 +43,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    transform: [{ translateY: -screenHeight * 0.1 }],
   },
   signupText: {
     marginTop: 16,
+  },
+  formContainer: {
+    width: Math.min(screenWidth * 0.8, 400),
+    marginTop: 24,
   },
 });
 

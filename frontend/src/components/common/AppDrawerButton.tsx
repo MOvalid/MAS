@@ -21,11 +21,16 @@ export const AppDrawerButton: React.FC<AppDrawerButtonProps> = ({
     <Drawer.Item
       label={label}
       icon={({ color, size }) => (
-        <MaterialCommunityIcons name={icon as any} color={color} size={size} />
+        <MaterialCommunityIcons name={icon as any} color={color} size={32} />
       )}
       active={active}
       onPress={onPress}
-      style={[styles.item]}
+      style={[
+          styles.item,
+          active && {
+            backgroundColor: theme.colors.background, // 👈 tło aktywnego
+          },
+      ]}
       theme={theme}
     />
   );

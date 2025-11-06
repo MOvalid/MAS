@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { AppDrawer } from '../common/AppDrawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { metrics } from '../../theme/metrics';
 
 import HomeScreen from './HomeScreen';
 import ClientScreen from './ClientScreen';
@@ -52,7 +53,6 @@ export const MainScreen: React.FC = () => {
         { backgroundColor: theme.colors.background },
       ]}
     >
-      {/* LEWY PANEL */}
       <View
         style={[
           styles.drawerContainer,
@@ -69,11 +69,16 @@ export const MainScreen: React.FC = () => {
         />
       </View>
 
-      {/* PRAWA CZĘŚĆ: HEADER + ZAWARTOŚĆ */}
       <View style={styles.mainArea}>
         <AppHeader />
 
-        <View style={styles.contentContainer}>{renderContent()}</View>
+          <ScrollView
+            style={styles.scrollContainer}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={true}
+          >
+            {renderContent()}
+          </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -92,9 +97,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
   },
-  contentContainer: {
+  scrollContainer: {
     flex: 1,
-    padding: 16,
+    width: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: metrics.spacing.lg,
   },
 });
 

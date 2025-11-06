@@ -1,24 +1,32 @@
 import React from 'react';
 import { Button, ButtonProps } from 'react-native-paper';
 import { useAppTheme } from '../../theme/AppThemeContext';
-import { Spacing } from '../../theme/metrics';
+import { metrics, Spacing } from '../../theme/metrics';
 
 type AppButtonProps = ButtonProps & {
-  marginTop?: Spacing;
+  margin?: Spacing;
   padding?: Spacing;
-  minWidth?: string | number;
-  minHeight?: string | number;
 };
 
 export const AppButton: React.FC<AppButtonProps> = ({
-  marginTop = 'md',
+  margin = 'md',
   padding = 'smd',
-  minWidth = '30%',
-  minHeight = '10%',
   style,
   ...props
 }) => {
-  const { colors, metrics } = useAppTheme();
+  const { colors } = useAppTheme();
+
+  const styles = {
+    base: {
+      width: '100%' as const,
+      height: metrics.element?.height,
+      justifyContent: 'center' as const,
+      borderRadius: metrics.radius.xl,
+      marginVertical: metrics.spacing[margin],
+      paddingVertical: metrics.spacing[padding],
+      shadowColor: colors.primary,
+    },
+  };
 
   return (
     <Button
@@ -29,19 +37,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
         roundness: metrics.radius.xl,
         colors,
       }}
-      style={[
-        {
-          shadowColor: colors.primary,
-          minWidth: "25%",
-          alignSelf: 'center',
-          marginTop: metrics.spacing[marginTop],
-          paddingVertical: metrics.spacing[padding],
-          paddingHorizontal: metrics.spacing[padding],
-          borderRadius: metrics.radius.xl,
-          // backgroundColor: colors.surface,
-        },
-        style,
-      ]}
+      style={[styles.base, style]}
       {...props}
     />
   );
