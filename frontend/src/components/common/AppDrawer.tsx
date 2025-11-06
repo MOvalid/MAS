@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Drawer, useTheme } from 'react-native-paper';
 import { AppLogo } from './AppLogo';
-import { AppIconButton } from './AppIconButton';
+import { AppDrawerButton } from './AppDrawerButton';
 
 type AppDrawerProps = {
   navigationItems: {
@@ -21,14 +21,14 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
 }) => {
   const theme = useTheme()
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.secondaryContainer }]}>
       <View style={styles.header}>
-        <AppLogo width={100} height={100} />
+        <AppLogo width={150} height={150} />
       </View>
 
       <Drawer.Section style={[styles.drawerSection]} theme={theme}>
         {navigationItems.map((item) => (
-          <AppIconButton
+          <AppDrawerButton
             key={item.route}
             label={item.label}
             icon={item.icon}
@@ -44,13 +44,13 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 40,
+    borderRightWidth: 0,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 16,
   },
   drawerSection: {
-    marginTop: 8,
+    // marginTop: 8,
+    outlineWidth: 0
   },
 });

@@ -16,7 +16,7 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
   mode = 'outlined',
   ...props
 }) => {
-  const { colors, metrics, fonts } = useAppTheme();
+  const { colors, metrics } = useAppTheme();
 
   return (
     <TextInput
@@ -24,11 +24,11 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
       underlineColor="transparent"
       activeUnderlineColor={colors.primary}
       outlineColor={colors.background}
-      activeOutlineColor={colors.primary}
-      textColor={colors.onSurfaceVariant}
+      textColor={colors.background}
+      placeholderTextColor={colors.primary}
       theme={{
         roundness: metrics.radius.xl,
-        colors,
+        colors
       }}
       style={[
         {
@@ -39,7 +39,7 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
           paddingVertical: metrics.spacing[padding],
           paddingHorizontal: metrics.spacing[padding],
           borderRadius: metrics.radius.xl,
-          backgroundColor: colors.surface,
+          backgroundColor: colors.secondaryContainer,
         },
         style,
       ]}

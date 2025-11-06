@@ -24,7 +24,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/mas-icon.png"
+      "favicon": "./assets/mas-icon-transparent.png"
     },
     "plugins": [
       "expo-font"

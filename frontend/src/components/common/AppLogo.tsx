@@ -8,7 +8,7 @@ type AppLogoProps = {
 
 export const AppLogo: React.FC<AppLogoProps> = ({ width = 120, height = 120 }) => (
   <Image
-    source={require('../../../assets/mas-icon.png')}
+    source={require('../../../assets/mas-icon-transparent.png')}
     style={[styles.logo, { width: width, height: height }]}
     resizeMode="contain"
   />

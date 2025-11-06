@@ -9,18 +9,46 @@ export const LightTheme: MD3Theme = {
   dark: false,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#162245',
+    primary: '#000B2F',
     onPrimary: '#FFFFFF',
-    secondary: '#03A9F4',
-    onSecondary: '#142144',
-    background: '#FFFFFF',
-    surface: '#DADADA',
-    onSurface: '#7f8f9d',
-    onSurfaceVariant: '#FFFFFF',
-    error: '#B00020',
+    primaryContainer: '#162245',
+    onPrimaryContainer: '#7E8AB3',
+
+    secondary: '#5D5E5F',
+    onSecondary: '#FFFFFF',
+    secondaryContainer: '#DADADA',
+    onSecondaryContainer: '#5E5F60',
+
+    tertiary: '#4F5D6C',
+    onTertiary: '#FFFFFF',
+    tertiaryContainer: '#677686',
+    onTertiaryContainer: '#FDFCFF',
+
+    error: '#B41C1B',
     onError: '#FFFFFF',
-    outline: '#a6a6a6',
-    surfaceVariant: '#000000',
+    errorContainer: '#D83831',
+    onErrorContainer: '#FFFBFF',
+
+    background: '#FBF8FC',
+    onBackground: '#1B1B1E',
+
+    surface: '#FCF8F8',
+    onSurface: '#1C1B1B',
+
+    surfaceVariant: '#E2E1EB',
+    onSurfaceVariant: '#45464E',
+
+    outline: '#76767F',
+    outlineVariant: '#C6C6CF',
+
+    shadow: '#000000',
+    scrim: '#000000',
+
+    inverseSurface: '#313030',
+    inverseOnSurface: '#F4F0EF',
+    inversePrimary: '#BAC5F1',
+
+    // surfaceTint: '#525D83',
   },
   roundness: 8,
   fonts: {
@@ -116,8 +144,8 @@ export const LightTheme: MD3Theme = {
     bodyLarge: {
       fontFamily: 'Work Sans',
       fontWeight: '400',
-      fontSize: 32,
-      lineHeight: 32,
+      fontSize: 16,
+      lineHeight: 24,
       letterSpacing: 0.5,
     },
     bodyMedium: {
@@ -142,17 +170,46 @@ export const DarkTheme: MD3Theme = {
   dark: true,
   colors: {
     ...MD3DarkTheme.colors,
-    primary: '#6C8AE4',
-    onPrimary: '#FFFFFF',
-    secondary: '#4FC3F7',
-    onSecondary: '#142144',
-    background: '#0E141F',
-    surface: '#1C2333',
-    onSurface: '#C0C9D2',
-    error: '#CF6679',
-    onError: '#000000',
-    outline: '#4A5568',
-    surfaceVariant: '#2A3145',
+    primary: '#BAC5F1',
+    onPrimary: '#232F52',
+    primaryContainer: '#162245',
+    onPrimaryContainer: '#7E8AB3',
+
+    secondary: '#F7F6F6',
+    onSecondary: '#2F3131',
+    secondaryContainer: '#DADADA',
+    onSecondaryContainer: '#5E5F60',
+
+    tertiary: '#B9C8D9',
+    onTertiary: '#23323F',
+    tertiaryContainer: '#8392A2',
+    onTertiaryContainer: '#192835',
+
+    error: '#FFB4AB',
+    onError: '#690005',
+    errorContainer: '#FF5449',
+    onErrorContainer: '#5C0004',
+
+    background: '#131316',
+    onBackground: '#E4E2E5',
+
+    surface: '#141313',
+    onSurface: '#E5E2E1',
+
+    surfaceVariant: '#45464E',
+    onSurfaceVariant: '#C6C6CF',
+
+    outline: '#909099',
+    outlineVariant: '#45464E',
+
+    shadow: '#000000',
+    scrim: '#000000',
+
+    inverseSurface: '#E5E2E1',
+    inverseOnSurface: '#313030',
+    inversePrimary: '#525D83',
+
+    // surfaceTint: '#BAC5F1',
   },
   roundness: 8,
   fonts: {
