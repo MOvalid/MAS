@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+
+namespace MasApi;
+
 internal class Program
 {
     private static void Main(string[] args)
@@ -8,7 +12,14 @@ internal class Program
         builder.Services.AddOpenApi();
         builder.Services.AddSwaggerGen();
 
+        builder.Services.AddDbContext<Data.MasDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("MasDatabase") ?? throw new InvalidOperationException("Connection string 'MasDatabase' not found.")));
+
         var app = builder.Build();
+
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Data.MasDbContext>();
+        dbContext.Database.Migrate();
 
         if (app.Environment.IsDevelopment())
         {
