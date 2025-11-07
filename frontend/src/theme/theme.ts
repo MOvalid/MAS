@@ -242,8 +242,8 @@ export const DarkTheme: MD3Theme = {
     headlineLarge: {
       fontFamily: 'Work Sans',
       fontWeight: '700',
-      fontSize: 32,
-      lineHeight: 40,
+      fontSize: 36,
+      lineHeight: 44,
       letterSpacing: 0,
     },
     headlineMedium: {

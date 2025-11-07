@@ -20,9 +20,9 @@ export const AuthScreen = () => {
       <AppLogo width={200} height={200} />
 
       <View style={styles.formContainer}>
-        <AppTextInput label="Email address" keyboardType="email-address" />
-        <AppTextInput label="Password" secureTextEntry />
-        <AppButton onPress={() => console.log('Sign in pressed')}>
+        <AppTextInput fullWidth label="Email address" keyboardType="email-address" />
+        <AppTextInput fullWidth label="Password" secureTextEntry />
+        <AppButton fullWidth onPress={() => console.log('Sign in pressed')}>
           Sign in
         </AppButton>
       </View>
