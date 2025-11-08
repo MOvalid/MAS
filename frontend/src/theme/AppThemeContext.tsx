@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-// import { MD3DarkTheme, MD3LightTheme, useTheme } from 'react-native-paper';
 import { LightTheme, DarkTheme} from './theme';
-
 import { metrics } from './metrics';
+import { MD3Theme } from 'react-native-paper';
 
 type AppThemeContextType = {
   isDark: boolean;

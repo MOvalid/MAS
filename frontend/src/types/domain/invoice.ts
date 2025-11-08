@@ -31,3 +31,13 @@ export interface Invoice {
   products: InvoiceProduct[];
   totalAmount: number;
 }
+
+export interface InvoiceTableRow {
+  lp: number;
+  id: string;
+  issueDate: string;
+  paymentDate?: string | null;
+  number: string;
+  amount: string;
+  status: string;
+}

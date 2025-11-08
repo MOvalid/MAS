@@ -7,8 +7,8 @@ import { AppText } from '../common/AppText';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { Dimensions } from 'react-native';
+import { metrics } from '@/theme/metrics';
 
-const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
 export const AuthScreen = () => {
@@ -42,14 +42,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: metrics.spacing.lg,
   },
   signupText: {
-    marginTop: 16,
+    marginTop: metrics.spacing.md,
   },
   formContainer: {
     width: Math.min(screenWidth * 0.8, 400),
-    marginTop: 24,
+    marginTop: metrics.spacing.lg,
   },
 });
 

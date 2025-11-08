@@ -3,15 +3,15 @@ import { View, StyleSheet } from 'react-native';
 import { AppButton } from '../common/AppButton';
 import { AppText } from '../common/AppText';
 import { AppTable } from '../common/table/AppTable';
-import { AppDropdown } from '../common/AppDropdown';
-import { AppDateFilter } from '../common/AppDateFilter';
 import { AppTextInput } from '../common/AppTextInput';
 import { metrics } from '../../theme/metrics';
-import { InvoiceStatus } from '../../types/common/enums';
 import { mapApiInvoiceToDomain, mapInvoiceToTableRow } from '../../mappers/invoiceMapper';
 import { ApiInvoice } from '../../types/api/invoice';
-import { Menu } from 'react-native-paper';
-import { useAppTheme } from '@/theme/AppThemeContext';
+import { InvoiceTableRow } from '@/types/domain';
+import { AppDropdown } from '../common/AppDropdown';
+import { AppDateRangeFilter } from '../common/AppDateRangeFilter';
+import { IconName } from '../common';
+import { InvoiceStatus } from '@/types/common';
 
 const mockApiInvoices: ApiInvoice[] = [
   {
@@ -46,14 +46,29 @@ const mockApiInvoices: ApiInvoice[] = [
   },
 ];
 
+
+
 export default function InvoiceScreen() {
-  const { colors, metrics } = useAppTheme();
   const [search, setSearch] = useState('');
-  const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
-  const [statusMenuVisible, setStatusMenuVisible] = useState(false);
+  const [status, setStatus] = useState('ALL');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const domainInvoices = mockApiInvoices.map(mapApiInvoiceToDomain);
   const tableData = domainInvoices.map(mapInvoiceToTableRow);
+
+  const editInvoice = (row: InvoiceTableRow) => {
+    console.log('Edit invoice');
+  };
+
+  const downloadInvoice = (row: InvoiceTableRow) => {
+    console.log('Download invoice');
+  };
+
+  const deleteInvoice = (row: InvoiceTableRow) => {
+    console.log('Delete invoice');
+  };
+
 
   return (
     <View style={styles.container}>
@@ -76,52 +91,42 @@ export default function InvoiceScreen() {
           style={styles.searchInput}
         />
 
-        <Menu
-          visible={periodMenuVisible}
-          onDismiss={() => setPeriodMenuVisible(false)}
-          anchor={
-            <AppButton
-              mode="outlined"
-              onPress={() => setPeriodMenuVisible(true)}
-              style={styles.menuButton}
-            >
-              Okres: Wszystkie 2025
-            </AppButton>
-          }
-        >
-          <Menu.Item onPress={() => {}} title="2025" />
-          <Menu.Item onPress={() => {}} title="2024" />
-        </Menu>
+        <AppDateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+        />
 
-        <Menu
-          visible={statusMenuVisible}
-          onDismiss={() => setStatusMenuVisible(false)}
-          anchor={
-            <AppButton
-              mode="outlined"
-              onPress={() => setStatusMenuVisible(true)}
-              style={styles.menuButton}
-            >
-              Status: Wszystkie
-            </AppButton>
-          }
-        >
-          <Menu.Item onPress={() => {}} title="Opłacone" />
-          <Menu.Item onPress={() => {}} title="Nieopłacone" />
-        </Menu>
+        <AppDropdown
+          label="Status"
+          value={status}
+          onChange={setStatus}
+          options={[
+            { label: 'Wszystkie', value: InvoiceStatus.ALL },
+            { label: 'Opłacone', value: InvoiceStatus.PAID },
+            { label: 'Wysłane', value: InvoiceStatus.SENT },
+            { label: 'Przeterminowane', value: InvoiceStatus.OVERDUE },
+            { label: 'Anulowane', value: InvoiceStatus.CANCELLED },
+          ]}
+        />
       </View>
 
-      {/* 🔹 Tabela */}
       <AppTable
         columns={[
-          { key: 'lp', title: 'Lp.' },
-          { key: 'issueDate', title: 'Data wystawienia' },
-          { key: 'paymentDate', title: 'Data opłacenia' },
-          { key: 'number', title: 'Numer faktury' },
-          { key: 'amount', title: 'Kwota' },
-          { key: 'status', title: 'Status' },
+          { key: 'lp', title: 'Lp.', align: 'center', flex: 0.2 },
+          { key: 'issueDate', title: 'Data wystawienia', align: 'center',flex: 1 },
+          { key: 'paymentDate', title: 'Data opłacenia', align: 'center',flex: 1 },
+          { key: 'number', title: 'Numer faktury', align: 'center', flex: 1 },
+          { key: 'amount', title: 'Kwota', align: 'center', flex: 1 },
+          { key: 'status', title: 'Status', align: 'center', flex: 1 },
         ]}
         data={tableData}
+        actions={(row) => [
+          { icon: IconName.edit, onPress: () => editInvoice(row) },
+          { icon: IconName.download, onPress: () => downloadInvoice(row) },
+          { icon: IconName.delete, onPress: () => deleteInvoice(row), iconColor: 'red' },
+        ]}
       />
     </View>
   );
@@ -139,7 +144,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: metrics.spacing.sm,
+    gap: metrics.spacing.xl,
   },
   menuButton: {
     marginHorizontal: metrics.spacing.xs,
@@ -151,7 +156,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    // marginBottom: metrics.spacing.md,
   },
   pageTitle: {
     flexShrink: 1,

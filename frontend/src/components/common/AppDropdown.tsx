@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Menu, Button, useTheme } from 'react-native-paper';
-import { AppText } from './AppText';
+import { View, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
+import { Menu } from 'react-native-paper';
+import { AppButton } from './AppButton';
 import { metrics } from '../../theme/metrics';
 
 export interface DropdownOption {
@@ -12,49 +12,47 @@ export interface DropdownOption {
 interface AppDropdownProps {
   label: string;
   options: DropdownOption[];
-  selected?: string;
-  onSelect: (value: string) => void;
-  fullWidth?: boolean;
+  value: string;
+  onChange: (value: string) => void;
+  style?: ViewStyle;
+  width?: number | string;
 }
 
 export const AppDropdown: React.FC<AppDropdownProps> = ({
   label,
   options,
-  selected,
-  onSelect,
-  fullWidth = false,
+  value,
+  onChange,
+  style,
+  width = 180,
 }) => {
   const [visible, setVisible] = useState(false);
-  const theme = useTheme();
 
-  const selectedLabel =
-    options.find((opt) => opt.value === selected)?.label || label;
+  const getDisplayLabel = (): string => {
+    const selected = options.find((o) => o.value === value);
+    return selected ? selected.label : 'Wszystkie';
+  };
 
   return (
-    <View style={[styles.container, fullWidth && { width: '100%' }]}>
+    <View style={[styles.container, { width: width as DimensionValue }, style]}>
       <Menu
         visible={visible}
         onDismiss={() => setVisible(false)}
         anchor={
-          <Button
+          <AppButton
             mode="outlined"
             onPress={() => setVisible(true)}
-            textColor={theme.colors.onSurface}
-            style={[
-              styles.button,
-              { borderColor: theme.colors.outline },
-              fullWidth && { width: '100%' },
-            ]}
+            style={styles.button}
           >
-            {selectedLabel}
-          </Button>
+            {label}: {getDisplayLabel()}
+          </AppButton>
         }
       >
         {options.map((option) => (
           <Menu.Item
             key={option.value}
             onPress={() => {
-              onSelect(option.value);
+              onChange(option.value);
               setVisible(false);
             }}
             title={option.label}
@@ -67,9 +65,9 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: metrics.spacing.smd,
+    justifyContent: 'center',
   },
   button: {
-    borderRadius: metrics.radius.lg,
+    marginHorizontal: metrics.spacing.xs,
   },
 });

@@ -1,7 +1,11 @@
 import { ApiInvoice } from '../types/api';
-import { Invoice } from '../types/domain';
+import { Invoice, InvoiceTableRow } from '../types/domain';
 import { Currency, InvoiceStatus } from '../types/common';
+import { formatCurrency, formatDate } from '../utils/formatters';
 
+/**
+ * Mapper: API → Domain (Invoice)
+ */
 export const mapApiInvoiceToDomain = (api: ApiInvoice): Invoice => ({
   id: api.id,
   title: api.title,
@@ -30,37 +34,39 @@ export const mapApiInvoiceToDomain = (api: ApiInvoice): Invoice => ({
   totalAmount: api.total_amount,
 });
 
-
-export const mapInvoiceToTableRow = (invoice: Invoice, index: number) => ({
+/**
+ * Mapper: Domain (Invoice) → TableRow (InvoiceTableRow)
+ */
+export const mapInvoiceToTableRow = (
+  invoice: Invoice,
+  index: number
+): InvoiceTableRow => ({
   lp: index + 1,
+  id: invoice.id,
   issueDate: formatDate(invoice.issueDate),
-  paymentDate: invoice.paymentDate
-    ? formatDate(invoice.paymentDate)
-    : 'Nieopłacona',
+  paymentDate: invoice.paymentDate ? formatDate(invoice.paymentDate) : '—',
   number: invoice.number,
-  amount: `${invoice.totalAmount.toLocaleString('pl-PL')} ${invoice.currency}`,
+  amount: formatCurrency(invoice.totalAmount, invoice.currency),
   status: translateStatus(invoice.status),
 });
 
 
-const formatDate = (date?: Date | null) => {
-  if (!date) return '—';
-  const d = date.getDate().toString().padStart(2, '0');
-  const m = (date.getMonth() + 1).toString().padStart(2, '0');
-  const y = date.getFullYear();
-  return `${d}-${m}-${y}`;
-};
-
-const translateStatus = (status: InvoiceStatus): string => {
+/**
+ * Translates an InvoiceStatus enum value to a human-readable string.
+ */
+export const translateStatus = (status: InvoiceStatus): string => {
   switch (status) {
-    case InvoiceStatus.PAID:
-      return 'Opłacona';
+    case InvoiceStatus.DRAFT:
+      return 'Niewysłana';
     case InvoiceStatus.SENT:
       return 'Wysłana';
+    case InvoiceStatus.PAID:
+      return 'Opłacona';
     case InvoiceStatus.OVERDUE:
-      return 'Po terminie';
-    case InvoiceStatus.DRAFT:
+      return 'Przeterminowana';
+    case InvoiceStatus.CANCELLED:
+      return 'Anulowana';
     default:
-      return 'Robocza';
+      return 'Nieznany';
   }
 };

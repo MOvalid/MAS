@@ -18,11 +18,13 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-paper": "^5.14.5",
+    "react-native-paper-dates": "^0.22.50",
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {
     "@expo/vector-icons": "^15.0.3",
+    "@react-native-community/datetimepicker": "^8.5.0",
     "@react-navigation/drawer": "^7.7.2",
     "@types/react": "~19.1.0",
     "@types/react-native-vector-icons": "^6.4.18",

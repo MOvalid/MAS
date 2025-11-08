@@ -1,8 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, DimensionValue} from 'react-native';
 import { AppText } from '../../common/AppText';
-import { metrics } from '../../../theme/metrics';
-import { AppTableActions } from './AppTableActions';
 
 interface TableColumn {
   key: string;
@@ -19,11 +17,10 @@ export const AppTableRow: React.FC<AppTableRowProps> = ({ item, columns }) => {
   return (
     <View style={styles.row}>
       {columns.map((col) => (
-        <AppText key={col.key} style={[styles.cell, { width: col.width || 'auto' }]}>
+        <AppText key={col.key} style={[{ width: col.width as DimensionValue || 'auto' }]}>
           {item[col.key]}
         </AppText>
       ))}
-      <AppTableActions onEdit={() => {}} onDownload={() => {}} onDelete={() => {}} />
     </View>
   );
 };
@@ -32,11 +29,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: metrics.spacing.sm,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
-  },
-  cell: {
-    flex: 1,
+    
   },
 });

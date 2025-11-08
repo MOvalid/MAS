@@ -1,8 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { AppLogo } from '../common/AppLogo';
-import { AppTextInput } from '../common/AppTextInput';
-import { AppButton } from '../common/AppButton';
+import { View, StyleSheet } from 'react-native';
 import { AppText } from '../common/AppText';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';

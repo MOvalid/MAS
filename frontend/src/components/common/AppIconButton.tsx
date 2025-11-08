@@ -2,9 +2,10 @@ import React from 'react';
 import { View, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 import { IconButton, IconButtonProps, Text, useTheme } from 'react-native-paper';
 import { metrics, Spacing } from '../../theme/metrics';
+import { IconValue } from './icons';
 
 interface AppIconButtonProps extends Omit<IconButtonProps, 'icon' | 'onPress'> {
-  icon: string;
+  icon: IconValue
   label?: string;
   onPress: () => void;
   iconColor?: string;
@@ -17,7 +18,7 @@ interface AppIconButtonProps extends Omit<IconButtonProps, 'icon' | 'onPress'> {
   spacing?: Spacing;
 }
 
-const AppIconButton: React.FC<AppIconButtonProps> = ({
+export const AppIconButton: React.FC<AppIconButtonProps> = ({
   icon,
   label,
   onPress,
@@ -68,7 +69,7 @@ const AppIconButton: React.FC<AppIconButtonProps> = ({
               styles.badgeText,
               { 
                 color: finalBadgeTextColor,
-                fontSize: metrics.text.small - 2,
+                fontSize: metrics.text.small,
               }
             ]}>
               {badge}
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
   label: {
     marginTop: -metrics.spacing.xs,
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: metrics.fontWeight.regular,
   },
   badge: {
     position: 'absolute',
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: metrics.spacing.xs,
   },
   badgeText: {
-    fontWeight: 'bold',
+    fontWeight: metrics.fontWeight.bold,
   },
 });
 

@@ -1,31 +1,46 @@
 // src/components/common/table/AppTable.tsx
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { AppText } from '../AppText';
 import { useAppTheme } from '../../../theme/AppThemeContext';
 import { metrics } from '../../../theme/metrics';
+import { AppTableHeader } from './AppTableHeader';
+import { AppTableContent } from './AppTableContent';
+import { IconValue } from '../icons';
 
 interface TableColumn {
   key: string;
   title: string;
+  align?: 'left' | 'center' | 'right';
+  flex?: number;
+}
+
+interface ActionButton {
+  icon: IconValue;
+  onPress: () => void;
+  iconColor?: string;
+  label?: string;
 }
 
 interface AppTableProps<T> {
   title?: string;
   columns: TableColumn[];
   data: T[];
+  onRowPress?: (row: T) => void;
+  actions?: (row: T) => ActionButton[];
 }
 
 export const AppTable = <T extends Record<string, any>>({
   title,
   columns,
   data,
+  onRowPress,
+  actions,
 }: AppTableProps<T>) => {
   const { colors } = useAppTheme();
 
   return (
     <View style={styles.container}>
-
       {title ? (
         <AppText
           variant="headlineSmall"
@@ -35,53 +50,20 @@ export const AppTable = <T extends Record<string, any>>({
         </AppText>
       ) : null}
 
+      <AppTableHeader
+        columns={
+          actions
+            ? [...columns, { key: '_actions', title: '' }]
+            : columns
+        }
+      />
 
-      <View
-        style={[
-          styles.rowContainer,
-          {
-            backgroundColor: colors.secondaryContainer,
-            borderColor: colors.outlineVariant ?? colors.outline,
-          },
-        ]}
-      >
-        {columns.map((col) => (
-          <View key={col.key} style={styles.cell}>
-            <AppText
-              variant="labelLarge"
-              style={[styles.headerText, { color: colors.onSecondaryContainer }]}
-            >
-              {col.title}
-            </AppText>
-          </View>
-        ))}
-      </View>
-
-      <ScrollView>
-        {data.map((row, index) => (
-          <View
-            key={index}
-            style={[
-              styles.rowContainer,
-              {
-                backgroundColor: colors.secondaryContainer,
-                borderColor: colors.outlineVariant ?? colors.outline,
-              },
-            ]}
-          >
-            {columns.map((col) => (
-              <View key={col.key} style={styles.cell}>
-                <AppText
-                  variant="bodyMedium"
-                  style={[styles.cellText, { color: colors.onSurface }]}
-                >
-                  {row[col.key] ?? '-'}
-                </AppText>
-              </View>
-            ))}
-          </View>
-        ))}
-      </ScrollView>
+      <AppTableContent
+        columns={columns}
+        data={data}
+        onRowPress={onRowPress}
+        actions={actions}
+      />
     </View>
   );
 };
@@ -93,23 +75,5 @@ const styles = StyleSheet.create({
   },
   tableTitle: {
     marginBottom: metrics.spacing.smd,
-  },
-  rowContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: metrics.spacing.sm,
-    paddingHorizontal: metrics.spacing.md,
-    borderRadius: metrics.radius.md,
-    marginBottom: metrics.spacing.sm,
-  },
-  cell: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  headerText: {
-    fontWeight: 'bold',
-  },
-  cellText: {
-    textAlign: 'left',
   },
 });

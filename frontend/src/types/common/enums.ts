@@ -6,8 +6,8 @@ export enum Currency {
   GBP = 'GBP',
 }
 
-/** Status faktury */
 export enum InvoiceStatus {
+  ALL = 'ALL',
   DRAFT = 'DRAFT',
   SENT = 'SENT',
   PAID = 'PAID',
