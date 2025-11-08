@@ -10,4 +10,4 @@ export { AppIconButton } from './AppIconButton';
 export { AppLogo } from './AppLogo';
 export { AppText } from './AppText';
 export { AppTextInput } from './AppTextInput';
-export { IconName } from './icons'
+export { IconName } from './icons';

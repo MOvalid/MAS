@@ -1,18 +1,21 @@
-import { AxiosError } from "axios";
-
 export interface AuthTokens {
-  accessToken: string;
-  refreshToken?: string;
+    accessToken: string;
+    refreshToken?: string;
 }
 
 export interface LoginPayload {
-  email: string;
-  password: string;
+    email: string;
+    password: string;
 }
 
-export interface LoginResponse extends AuthTokens {}
+export type LoginResponse = AuthTokens;
 
 export interface ApiErrorResponse {
-  message: string;
-  [key: string]: any;
+    message: string;
+    [key: string]: unknown;
 }
+
+export type RootStackParamList = {
+    Auth: undefined;
+    Main: undefined;
+};
