@@ -1,3 +1,4 @@
+// HomeScreen.tsx
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppButton } from '../common/AppButton';
@@ -38,13 +39,10 @@ export default function HomeScreen() {
 
             <View style={styles.cardContainer}>
                 {dailySummary.map((item) => (
-                    <AppCard
-                        key={item.id}
-                        title={item.title}
-                        value={item.value}
-                        valueAlign="right"
-                        style={styles.card}
-                    />
+                    <AppCard key={item.id} style={styles.card}>
+                        <AppText variant="titleMedium">{item.title}</AppText>
+                        <AppText variant="headlineSmall">{item.value}</AppText>
+                    </AppCard>
                 ))}
             </View>
         </View>
@@ -81,7 +79,6 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         gap: metrics.spacing.lg,
     },
-    // TODO: poprawić wyświetlanie kart w formie elastycznego grida
     card: {
         flexBasis: '32%',
         flexGrow: 0,

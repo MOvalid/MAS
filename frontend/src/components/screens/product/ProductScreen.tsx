@@ -1,5 +1,5 @@
+import { AppText } from '@/components/common';
 import { View, StyleSheet } from 'react-native';
-import { AppText } from '../common/AppText';
 import { Dimensions } from 'react-native';
 
 const screenHeight = Dimensions.get('window').height;

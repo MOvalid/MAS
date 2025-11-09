@@ -1,3 +1,4 @@
+// AppTextInput.tsx
 import React from 'react';
 import { View, ViewStyle, DimensionValue } from 'react-native';
 import { TextInput, TextInputProps } from 'react-native-paper';
@@ -23,6 +24,8 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
 }) => {
     const { colors, metrics } = useAppTheme();
 
+    const isMultiline = !!(height && height > 48);
+
     const containerStyle: ViewStyle = {
         width: (fullWidth ? '100%' : width) as DimensionValue,
         alignSelf: fullWidth ? 'stretch' : 'center',
@@ -34,6 +37,8 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
 
     const inputStyle: ViewStyle = {
         height: height ?? 48,
+        paddingVertical: isMultiline ? metrics.spacing.sm : 0,
+        paddingHorizontal: metrics.spacing.md,
     };
 
     return (

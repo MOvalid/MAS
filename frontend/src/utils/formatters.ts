@@ -29,3 +29,10 @@ export const formatCurrency = (amount: number, currency?: string): string => {
     const formatted = amount.toFixed(2);
     return currency ? `${formatted} ${currency}` : formatted;
 };
+
+export const formatNumber = (num: number): string => {
+    return num
+        .toFixed(2)
+        .replace('.', ',')
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+};

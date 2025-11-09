@@ -8,10 +8,10 @@ import { metrics } from '../../theme/metrics';
 import HomeScreen from './HomeScreen';
 import ClientScreen from './ClientScreen';
 import AuthScreen from './AuthScreen';
-import OrderScreen from './OrderScreen';
 import InvoiceScreen from './InvoiceScreen';
 import MagazineScreen from './MagazineScreen';
 import AppHeader from '../common/AppHeader';
+import AddProductScreen from './product/AddProductScreen';
 
 export const MainScreen: React.FC = () => {
     const [activeRoute, setActiveRoute] = useState('home');
@@ -33,9 +33,9 @@ export const MainScreen: React.FC = () => {
             case 'client':
                 return <ClientScreen />;
             case 'product':
-                return <AuthScreen />;
+                return <AddProductScreen />;
             case 'order':
-                return <OrderScreen />;
+                return <AuthScreen />;
             case 'invoice':
                 return <InvoiceScreen />;
             case 'magazine':
