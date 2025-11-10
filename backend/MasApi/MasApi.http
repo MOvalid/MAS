@@ -1,0 +1,6 @@
+@MasApi_HostAddress = http://localhost:5208
+
+GET {{MasApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
