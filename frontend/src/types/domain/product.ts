@@ -10,6 +10,11 @@ export interface ProductTableRow {
     stockQuantity?: number;
 }
 
+export interface Tag {
+    id: string; // UUID
+    name: string;
+}
+
 export interface Product {
     id: string; // UUID
     name: string;
@@ -22,4 +27,5 @@ export interface Product {
     grossPrice: number;
     vatAmount: number;
     currency: string;
+    tags: Tag[];
 }

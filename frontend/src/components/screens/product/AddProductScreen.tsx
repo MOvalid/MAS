@@ -1,36 +1,55 @@
-import { AppCard, AppDropdown, AppText, AppTextInput } from '@/components/common';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import { AppButton, AppCard, AppDropdown, AppText, AppTextInput } from '@/components/common';
 import { AppCurrencyInput } from '@/components/common/AppCurrencyInput';
 import { AppTagList } from '@/components/common/tag/AppTagList';
 import { metrics } from '@/theme/metrics';
 import { Currency } from '@/types/common';
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { ProductFormValues } from '@/types/forms';
+
+const categories = [
+    { label: 'Laptopy', value: 'laptops' },
+    { label: 'Smartfony', value: 'smartphones' },
+    { label: 'Akcesoria', value: 'accessories' },
+    { label: 'Monitory', value: 'monitors' },
+];
 
 export default function AddProductScreen() {
-    const [selectedCategory, setSelectedCategory] = useState<string>('');
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const {
+        control,
+        handleSubmit,
+        watch,
+        setValue,
+        formState: { errors },
+    } = useForm<ProductFormValues>({
+        defaultValues: {
+            name: '',
+            description: '',
+            sku: '',
+            stockQuantity: 0,
+            netPrice: 0,
+            vatRate: 23,
+            category: '',
+            tags: [],
+        },
+    });
 
-    // stan dla ceny
-    const [netPrice, setNetPrice] = useState<number | null>(null);
-    const [vatRate, setVatRate] = useState<number>(23); // domyślnie 23%
-    const [currency, setCurrency] = useState<Currency>(Currency.PLN);
+    const netPrice = watch('netPrice');
+    const vatRate = watch('vatRate');
+    const calculatedVat = (netPrice * vatRate) / 100;
+    const grossPrice = netPrice + calculatedVat;
 
-    const categories = [
-        { label: 'Laptopy', value: 'laptops' },
-        { label: 'Smartfony', value: 'smartphones' },
-        { label: 'Akcesoria', value: 'accessories' },
-        { label: 'Monitory', value: 'monitors' },
-    ];
-
-    const handleTagSelect = (value: string) => {
-        setSelectedTags((prev) =>
-            prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]
-        );
+    const handleTagSelect = (value: string, selectedTags: string[]) => {
+        const newTags = selectedTags.includes(value)
+            ? selectedTags.filter((t) => t !== value)
+            : [...selectedTags, value];
+        setValue('tags', newTags);
     };
 
-    // obliczone wartości VAT i brutto
-    const vatValue = netPrice != null ? (netPrice * vatRate) / 100 : 0;
-    const grossPrice = netPrice != null ? netPrice + vatValue : 0;
+    const onSubmit = (data: ProductFormValues) => {
+        console.log('Product data:', data);
+    };
 
     return (
         <View style={styles.container}>
@@ -38,48 +57,91 @@ export default function AddProductScreen() {
                 Nowy Produkt
             </AppText>
 
+            {/* Sekcja: Informacje ogólne */}
             <View style={styles.cardsRow}>
                 <AppCard style={styles.cardMain}>
                     <AppText variant="headlineSmall" style={styles.cardTitle}>
                         Informacje ogólne
                     </AppText>
+
                     <AppText>Nazwa produktu</AppText>
-                    <AppTextInput fullWidth />
+                    <Controller
+                        control={control}
+                        name="name"
+                        rules={{ required: 'Nazwa produktu jest wymagana' }}
+                        render={({ field: { value, onChange } }) => (
+                            <AppTextInput
+                                fullWidth
+                                value={value}
+                                onChangeText={onChange}
+                                errorMessage={errors.name?.message}
+                            />
+                        )}
+                    />
+
                     <AppText>Opis produktu</AppText>
-                    <AppTextInput fullWidth height={100} />
+                    <Controller
+                        control={control}
+                        name="description"
+                        render={({ field: { value, onChange } }) => (
+                            <AppTextInput
+                                fullWidth
+                                height={100}
+                                value={value}
+                                onChangeText={onChange}
+                            />
+                        )}
+                    />
                 </AppCard>
 
+                {/* Sekcja: Kategoria i tagi */}
                 <AppCard style={styles.cardSide}>
                     <AppText variant="headlineSmall" style={styles.cardTitle}>
-                        Kategoria
+                        Kategoria i tagi
                     </AppText>
 
                     <AppText>Kategoria produktu</AppText>
-                    <AppDropdown
-                        fullWidth
-                        label=""
-                        options={categories}
-                        value={selectedCategory}
-                        onChange={setSelectedCategory}
+                    <Controller
+                        control={control}
+                        name="category"
+                        rules={{ required: 'Wybierz kategorię' }}
+                        render={({ field: { value, onChange } }) => (
+                            <AppDropdown
+                                fullWidth
+                                options={categories}
+                                value={value}
+                                onChange={onChange}
+                            />
+                        )}
                     />
+                    {errors.category && (
+                        <AppText style={styles.errorText}>{errors.category.message}</AppText>
+                    )}
 
                     <AppText style={{ marginTop: metrics.spacing.md }}>Tagi produktu</AppText>
-                    <AppDropdown
-                        fullWidth
-                        label=""
-                        options={categories}
-                        value={''}
-                        onChange={handleTagSelect}
-                    />
-
-                    <AppTagList
-                        tags={categories}
-                        selectedValues={selectedTags}
-                        onRemove={handleTagSelect}
+                    <Controller
+                        control={control}
+                        name="tags"
+                        render={({ field: { value } }) => (
+                            <>
+                                <AppDropdown
+                                    fullWidth
+                                    options={categories}
+                                    value={''}
+                                    onChange={(val) => handleTagSelect(val, value)}
+                                />
+                                <AppTagList
+                                    tags={categories}
+                                    selectedValues={value}
+                                    onRemove={(val) => handleTagSelect(val, value)}
+                                />
+                            </>
+                        )}
                     />
                 </AppCard>
             </View>
 
+            {/* Sekcja: Cena */}
             <View style={styles.cardsRow}>
                 <AppCard style={styles.cardMain}>
                     <AppText variant="headlineSmall" style={styles.cardTitle}>
@@ -87,68 +149,105 @@ export default function AddProductScreen() {
                     </AppText>
 
                     <AppText>Cena netto</AppText>
-                    <AppCurrencyInput
-                        fullWidth
-                        value={netPrice}
-                        onChangeValue={setNetPrice}
-                        currency={currency}
-                        onChangeCurrency={setCurrency}
+                    <Controller
+                        control={control}
+                        name="netPrice"
+                        rules={{
+                            required: 'Cena netto jest wymagana',
+                            min: { value: 0, message: 'Cena nie może być ujemna' },
+                        }}
+                        render={({ field: { value, onChange } }) => (
+                            <AppCurrencyInput
+                                fullWidth
+                                value={value}
+                                onChangeValue={onChange}
+                                currency={Currency.PLN}
+                            />
+                        )}
                     />
 
-                    <AppText>Stawka VAT (%)</AppText>
                     <View style={styles.vatRow}>
-                        <AppTextInput
-                            value={vatRate.toString()}
-                            onChangeText={(t) => setVatRate(Number(t))}
-                            keyboardType="numeric"
-                            placeholder="VAT %"
-                            style={{ flex: 1, marginRight: metrics.spacing.sm }}
-                        />
-                        <AppCurrencyInput
-                            value={vatValue}
-                            currency={currency}
-                            editable={false}
-                            style={styles.vatValue}
-                        />
-                        <AppCurrencyInput
-                            value={grossPrice}
-                            currency={currency}
-                            editable={false}
-                            style={styles.vatGross}
-                        />
+                        <View>
+                            <AppText>Stawka VAT (%)</AppText>
+                            <Controller
+                                control={control}
+                                name="vatRate"
+                                rules={{ min: { value: 0, message: 'VAT nie może być ujemny' } }}
+                                render={({ field: { value, onChange } }) => (
+                                    <AppTextInput
+                                        value={value.toString()}
+                                        onChangeText={(t) => onChange(Number(t))}
+                                    />
+                                )}
+                            />
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                            <AppText>Wartość VAT</AppText>
+                            <AppCurrencyInput
+                                value={calculatedVat}
+                                currency={Currency.PLN}
+                                editable={false}
+                                fullWidth
+                            />
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                            <AppText>Cena brutto</AppText>
+                            <AppCurrencyInput
+                                value={grossPrice}
+                                currency={Currency.PLN}
+                                editable={false}
+                                fullWidth
+                            />
+                        </View>
                     </View>
                 </AppCard>
 
+                {/* Sekcja: Magazyn */}
                 <AppCard style={styles.cardSide}>
                     <AppText variant="headlineSmall" style={styles.cardTitle}>
-                        Kategoria
+                        Informacje magazynowe
                     </AppText>
 
-                    <AppText>Kategoria produktu</AppText>
-                    <AppDropdown
-                        fullWidth
-                        label=""
-                        options={categories}
-                        value={selectedCategory}
-                        onChange={setSelectedCategory}
+                    <AppText>SKU</AppText>
+                    <Controller
+                        control={control}
+                        name="sku"
+                        rules={{ required: 'SKU jest wymagane' }}
+                        render={({ field: { value, onChange } }) => (
+                            <AppTextInput
+                                fullWidth
+                                value={value}
+                                onChangeText={onChange}
+                                errorMessage={errors.sku?.message}
+                            />
+                        )}
                     />
 
-                    <AppText style={{ marginTop: metrics.spacing.md }}>Tagi produktu</AppText>
-                    <AppDropdown
-                        fullWidth
-                        label=""
-                        options={categories}
-                        value={''}
-                        onChange={handleTagSelect}
-                    />
-
-                    <AppTagList
-                        tags={categories}
-                        selectedValues={selectedTags}
-                        onRemove={handleTagSelect}
+                    <AppText>Ilość w magazynie</AppText>
+                    <Controller
+                        control={control}
+                        name="stockQuantity"
+                        rules={{
+                            required: 'Ilość jest wymagana',
+                            min: { value: 0, message: 'Nie może być ujemna' },
+                        }}
+                        render={({ field: { value, onChange } }) => (
+                            <AppTextInput
+                                fullWidth
+                                value={value?.toString() || ''}
+                                onChangeText={(t) => onChange(Number(t))}
+                                errorMessage={errors.stockQuantity?.message}
+                            />
+                        )}
                     />
                 </AppCard>
             </View>
+
+            <AppButton onPress={handleSubmit(onSubmit)} style={styles.addButton}>
+                Dodaj produkt
+            </AppButton>
         </View>
     );
 }
@@ -157,6 +256,7 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         padding: metrics.spacing.lg,
+        gap: metrics.spacing.lg,
     },
     screenTitle: {
         marginBottom: metrics.spacing.lg,
@@ -169,10 +269,12 @@ const styles = StyleSheet.create({
     cardMain: {
         flex: 2,
         justifyContent: 'flex-start',
+        marginBottom: metrics.spacing.lg,
     },
     cardSide: {
         flex: 1,
         justifyContent: 'flex-start',
+        marginBottom: metrics.spacing.lg,
     },
     cardTitle: {
         marginBottom: metrics.spacing.md,
@@ -180,14 +282,14 @@ const styles = StyleSheet.create({
     vatRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        width: 'auto',
         gap: metrics.spacing.sm,
     },
-    vatValue: {
-        flex: 1, // reszta dla wartości netto/brutto
-        marginRight: metrics.spacing.sm,
+    addButton: {
+        alignSelf: 'flex-end',
+        marginTop: metrics.spacing.md,
     },
-    vatGross: {
-        flex: 1,
+    errorText: {
+        color: 'red',
+        marginTop: 4,
     },
 });

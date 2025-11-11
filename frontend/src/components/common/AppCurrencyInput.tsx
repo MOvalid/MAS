@@ -1,5 +1,5 @@
 // AppCurrencyInput.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ViewStyle, DimensionValue, StyleSheet } from 'react-native';
 import type { TextInputProps as PaperTextInputProps } from 'react-native-paper';
 import { AppTextInput } from './AppTextInput';
@@ -7,6 +7,7 @@ import { AppDropdown } from './AppDropdown';
 import { metrics } from '@/theme/metrics';
 import { Currency } from '@/types/common';
 import { formatNumber } from '@/utils/formatters';
+import { sanitizeNumericInput } from '@/utils/price-utils';
 
 interface AppCurrencyInputProps extends Omit<PaperTextInputProps, 'onChangeText' | 'value'> {
     label?: string;
@@ -18,10 +19,6 @@ interface AppCurrencyInputProps extends Omit<PaperTextInputProps, 'onChangeText'
     fullWidth?: boolean;
     editable?: boolean;
 }
-
-const sanitizeNumericInput = (text: string): string => {
-    return text.replace(/[^\d,.]/g, '').replace(',', '.');
-};
 
 export const AppCurrencyInput: React.FC<AppCurrencyInputProps> = ({
     label,
@@ -37,6 +34,17 @@ export const AppCurrencyInput: React.FC<AppCurrencyInputProps> = ({
     const [rawValue, setRawValue] = useState<string>(
         value !== null && !isNaN(value) ? formatNumber(value) : ''
     );
+
+    const [isEditing, setIsEditing] = useState(false);
+
+    useEffect(() => {
+        if (!isEditing) {
+            setRawValue(value !== null && !isNaN(value) ? formatNumber(value) : '');
+        }
+    }, [value, isEditing]);
+
+    const handleFocus = () => setIsEditing(true);
+    const handleBlur = () => setIsEditing(false);
 
     const handleChangeText = (text: string) => {
         if (!editable) return;
@@ -65,7 +73,8 @@ export const AppCurrencyInput: React.FC<AppCurrencyInputProps> = ({
                     label={label}
                     value={rawValue}
                     onChangeText={handleChangeText}
-                    keyboardType="numeric"
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                     fullWidth={fullWidth}
                     editable={editable}
                     {...props}
@@ -88,6 +97,6 @@ export const AppCurrencyInput: React.FC<AppCurrencyInputProps> = ({
 };
 
 const styles = StyleSheet.create({
-    textInput: { flex: 1 },
-    dropdown: { width: 100 },
+    textInput: { flex: 2 },
+    dropdown: { flex: 1, maxWidth: 100 },
 });

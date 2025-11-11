@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
     LayoutChangeEvent,
 } from 'react-native';
-import { Menu, Icon } from 'react-native-paper';
+import { Menu, Icon, Text } from 'react-native-paper';
 import { AppText } from './AppText';
 import { useAppTheme } from '../../theme/AppThemeContext';
 import { metrics } from '../../theme/metrics';
@@ -29,6 +29,7 @@ interface AppDropdownProps {
     height?: number | string;
     fullWidth?: boolean;
     disabled?: boolean;
+    errorMessage?: string;
 }
 
 export const AppDropdown: React.FC<AppDropdownProps> = ({
@@ -41,6 +42,7 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
     height = 48,
     fullWidth = false,
     disabled = false,
+    errorMessage,
 }) => {
     const { colors } = useAppTheme();
     const [visible, setVisible] = useState(false);
@@ -72,6 +74,55 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
 
     const containerWidth = (fullWidth ? '100%' : width) as DimensionValue;
 
+    const handleMenuItemOnPress = (option: DropdownOption) => {
+        if (disabled) return;
+        onChange(option.value);
+        setVisible(false);
+    };
+
+    const menuItemStyle = {
+        backgroundColor: colors.secondaryContainer,
+        paddingHorizontal: metrics.spacing.md,
+    };
+
+    const optionsViewStyle = {
+        backgroundColor: colors.secondaryContainer,
+        overflow: 'hidden' as const,
+    };
+
+    const menuItemTitleStyle = { color: colors.onSurface };
+
+    const errorMessageStyle = {
+        color: colors.error,
+        fontSize: metrics.text.small,
+        marginLeft: metrics.spacing.md,
+    };
+
+    const errorContainerStyle = {
+        position: 'absolute' as const,
+        bottom: -metrics.spacing.lg,
+        left: 0,
+        right: 0,
+        height: metrics.spacing.lg,
+        justifyContent: 'center' as const,
+    };
+
+    const getTouchableStyle = (
+        colors: MD3Colors,
+        containerWidth: DimensionValue,
+        disabled: boolean
+    ): ViewStyle => ({
+        ...inputContainerStyle(colors),
+        width: containerWidth,
+        opacity: disabled ? 0.5 : 1,
+    });
+
+    const getMenuStyle = (colors: MD3Colors, anchorWidth?: number): ViewStyle => ({
+        ...styles.menu,
+        width: anchorWidth ?? undefined,
+        backgroundColor: colors.secondaryContainer,
+    });
+
     return (
         <View style={[styles.container, { width: containerWidth }, style]}>
             <Menu
@@ -82,12 +133,9 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
                         ref={anchorRef}
                         onPress={() => !disabled && setVisible(true)}
                         onLayout={handleLayout}
-                        style={[
-                            inputContainerStyle(colors),
-                            { width: containerWidth },
-                            disabled && { opacity: 0.5 },
-                        ]}
+                        style={getTouchableStyle(colors, containerWidth, disabled)}
                         activeOpacity={0.8}
+                        disabled={disabled}
                     >
                         <AppText style={styles.labelText}>{label ? `${label}: ` : ''}</AppText>
                         <AppText style={styles.valueText} numberOfLines={1} ellipsizeMode="tail">
@@ -101,27 +149,23 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
                     </TouchableOpacity>
                 }
                 anchorPosition="bottom"
-                style={[
-                    styles.menu,
-                    anchorWidth ? { width: anchorWidth } : null,
-                    { backgroundColor: colors.secondaryContainer },
-                ]}
+                style={getMenuStyle(colors, anchorWidth)}
             >
-                <View style={{ backgroundColor: colors.secondaryContainer, overflow: 'hidden' }}>
+                <View style={optionsViewStyle}>
                     {options.map((option) => (
                         <Menu.Item
                             key={option.value}
-                            onPress={() => !disabled && onChange(option.value)}
+                            onPress={() => handleMenuItemOnPress(option)}
                             title={option.label}
-                            titleStyle={{ color: colors.onSurface }}
-                            style={{
-                                backgroundColor: colors.secondaryContainer,
-                                paddingHorizontal: metrics.spacing.md,
-                            }}
+                            titleStyle={menuItemTitleStyle}
+                            style={menuItemStyle}
                         />
                     ))}
                 </View>
             </Menu>
+            <View style={errorContainerStyle}>
+                {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
+            </View>
         </View>
     );
 };

@@ -6,6 +6,7 @@ import {
     Platform,
     ViewStyle,
     DimensionValue,
+    Text,
 } from 'react-native';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { AppText } from './AppText';
@@ -19,6 +20,7 @@ interface AppDatePickerProps {
     placeholder?: string;
     style?: ViewStyle;
     width?: string | number;
+    errorMessage?: string;
 }
 
 export const AppDatePicker = ({
@@ -27,6 +29,7 @@ export const AppDatePicker = ({
     placeholder = 'Wybierz datę',
     style,
     width = '100%',
+    errorMessage,
 }: AppDatePickerProps): React.JSX.Element => {
     const { colors, fonts } = useAppTheme();
     const [visible, setVisible] = useState(false);
@@ -35,6 +38,13 @@ export const AppDatePicker = ({
     const currentDate =
         dateParts.length === 3 ? new Date(dateParts[0], dateParts[1] - 1, dateParts[2]) : undefined;
 
+    const errorMessageStyle = {
+        color: colors.error,
+        fontSize: metrics.text.small,
+        marginTop: metrics.spacing.xs,
+        marginLeft: metrics.spacing.md,
+    };
+
     if (Platform.OS === 'web') {
         return (
             <View style={[styles.webContainer, webContainerStyle(colors, width), style]}>
@@ -42,8 +52,11 @@ export const AppDatePicker = ({
                     type="date"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    style={webInputStyle(colors, fonts)}
+                    style={webInputStyle(colors, fonts, errorMessage)}
                 />
+                <View style={styles.errorContainer}>
+                    {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
+                </View>
             </View>
         );
     }
@@ -74,6 +87,9 @@ export const AppDatePicker = ({
                 date={currentDate}
                 onConfirm={handleConfirm}
             />
+            <View style={styles.errorContainer}>
+                {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
+            </View>
         </View>
     );
 };
@@ -94,8 +110,16 @@ const styles = StyleSheet.create({
         height: metrics.element.height,
         borderWidth: 1,
         borderRadius: metrics.radius.xl,
-        overflow: 'hidden',
+
         justifyContent: 'center',
+    },
+    errorContainer: {
+        position: 'absolute' as const,
+        bottom: -metrics.spacing.lg,
+        left: 0,
+        right: 0,
+        height: metrics.spacing.lg,
+        justifyContent: 'center' as const,
     },
 });
 
@@ -115,7 +139,11 @@ const webContainerStyle = (colors: MD3Colors, width: string | number) => ({
     width: width as DimensionValue,
 });
 
-const webInputStyle = (colors: MD3Colors, fonts: MD3Typescale): React.CSSProperties => ({
+const webInputStyle = (
+    colors: MD3Colors,
+    fonts: MD3Typescale,
+    errorMessage: string
+): React.CSSProperties => ({
     width: '80%',
     height: '100%',
     border: 'none',
@@ -127,4 +155,6 @@ const webInputStyle = (colors: MD3Colors, fonts: MD3Typescale): React.CSSPropert
     color: colors.onSecondaryContainer,
     fontFamily: fonts.bodyLarge.fontFamily,
     fontSize: fonts.bodyLarge.fontSize,
+    borderWidth: errorMessage ? 5 : 0,
+    borderColor: errorMessage ? colors.error : 'transparent',
 });

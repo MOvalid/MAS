@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, ButtonProps } from 'react-native-paper';
 import { useAppTheme } from '../../theme/AppThemeContext';
 import { metrics, Spacing } from '../../theme/metrics';
-import { ViewStyle, StyleSheet } from 'react-native';
+import { ViewStyle } from 'react-native';
 
 type Size = 'sm' | 'md' | 'lg';
 
@@ -50,6 +50,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
         marginVertical: metrics.spacing[margin],
         paddingVertical: metrics.spacing[padding],
         shadowColor: colors.primary,
+        alignItems: 'center',
     };
 
     return (
@@ -61,14 +62,9 @@ export const AppButton: React.FC<AppButtonProps> = ({
                 roundness: metrics.radius.xl,
                 colors,
             }}
-            style={[styles.button, computedStyle, style]}
+            style={[computedStyle, style]}
             {...props}
+
         />
     );
 };
-
-const styles = StyleSheet.create({
-    button: {
-        alignItems: 'center',
-    },
-});

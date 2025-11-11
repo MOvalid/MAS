@@ -1,9 +1,10 @@
 // AppTextInput.tsx
-import React from 'react';
-import { View, ViewStyle, DimensionValue } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, ViewStyle, DimensionValue, StyleSheet, Text } from 'react-native';
 import { TextInput, TextInputProps } from 'react-native-paper';
 import { useAppTheme } from '../../theme/AppThemeContext';
 import { Spacing } from '../../theme/metrics';
+import { MD3Colors } from 'react-native-paper/lib/typescript/types';
 
 type AppTextInputProps = TextInputProps & {
     margin?: Spacing;
@@ -11,18 +12,32 @@ type AppTextInputProps = TextInputProps & {
     fullWidth?: boolean;
     width?: number | string;
     height?: number;
+    value?: string | number;
+    onChangeValue?: (value: string) => void;
+    errorMessage?: string;
 };
 
 export const AppTextInput: React.FC<AppTextInputProps> = ({
-    margin = 'smd',
+    margin = 'lmd',
     mode = 'outlined',
     fullWidth = false,
     width,
     height,
     style,
+    value,
+    onChangeText,
+    onChangeValue,
+    errorMessage,
     ...props
 }) => {
     const { colors, metrics } = useAppTheme();
+    const [internalValue, setInternalValue] = useState(
+        value !== undefined && value !== null ? String(value) : ''
+    );
+
+    useEffect(() => {
+        setInternalValue(value !== undefined && value !== null ? String(value) : '');
+    }, [value]);
 
     const isMultiline = !!(height && height > 48);
 
@@ -39,7 +54,21 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
         height: height ?? 48,
         paddingVertical: isMultiline ? metrics.spacing.sm : 0,
         paddingHorizontal: metrics.spacing.md,
+        borderWidth: errorMessage ? 1 : 0,
+        borderColor: errorMessage ? colors.error : 'transparent',
+        borderRadius: metrics.radius.xl,
     };
+
+    const handleChangeText = (text: string) => {
+        setInternalValue(text);
+        onChangeText?.(text);
+        onChangeValue?.(text);
+    };
+
+    const styles = useMemo(
+        () => getStyles(colors, metrics, margin, errorMessage, fullWidth, width, height),
+        [colors, metrics, margin, errorMessage, fullWidth, width, height]
+    );
 
     return (
         <View style={containerStyle}>
@@ -59,8 +88,57 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
                     },
                 }}
                 style={[inputStyle, style]}
+                value={internalValue}
+                onChangeText={handleChangeText}
                 {...props}
             />
+            <View style={styles.errorContainer}>
+                {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+            </View>
         </View>
     );
+};
+
+const getStyles = (
+    colors: MD3Colors,
+    metrics: typeof import('../../theme/metrics').metrics,
+    margin: Spacing,
+    errorMessage?: string,
+    fullWidth?: boolean,
+    width?: number | string,
+    height?: number
+) => {
+    const isMultiline = !!(height && height > 48);
+
+    return StyleSheet.create({
+        container: {
+            width: (fullWidth ? '100%' : width) as DimensionValue,
+            alignSelf: fullWidth ? 'stretch' : 'center',
+            marginTop: metrics.spacing[margin],
+            marginBottom: metrics.spacing[margin],
+            borderRadius: metrics.radius.xl,
+            backgroundColor: colors.secondaryContainer,
+        },
+        input: {
+            height: height ?? 48,
+            paddingVertical: isMultiline ? metrics.spacing.sm : 0,
+            paddingHorizontal: metrics.spacing.md,
+            borderWidth: errorMessage ? 1 : 0,
+            borderColor: errorMessage ? colors.error : 'transparent',
+            borderRadius: metrics.radius.xl,
+        },
+        errorContainer: {
+            position: 'absolute',
+            bottom: -metrics.spacing.lg,
+            left: 0,
+            right: 0,
+            height: metrics.spacing.lg,
+            justifyContent: 'center',
+        },
+        errorText: {
+            marginLeft: metrics.spacing.md,
+            color: colors.error,
+            fontSize: metrics.text.small,
+        },
+    });
 };
