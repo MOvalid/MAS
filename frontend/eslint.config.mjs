@@ -13,7 +13,17 @@ export default [
         },
         rules: {
             'prettier/prettier': 'warn',
-            'no-unused-vars': 'warn',
+            'no-unused-vars': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'warn',
+                {
+                    vars: 'all',
+                    args: 'after-used',
+                    ignoreRestSiblings: true,
+                    argsIgnorePattern: '^_',
+                },
+            ],
+
             'react/react-in-jsx-scope': 'off',
             'react/prop-types': 'off',
             '@typescript-eslint/no-require-imports': 'off',

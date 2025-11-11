@@ -1,52 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppButton } from '../common/AppButton';
 import { AppText } from '../common/AppText';
 import { AppTable } from '../common/table/AppTable';
 import { AppTextInput } from '../common/AppTextInput';
 import { metrics } from '../../theme/metrics';
-import { mapApiInvoiceToDomain, mapInvoiceToTableRow } from '../../mappers/invoiceMapper';
-import { ApiInvoice } from '../../types/api/invoice';
+import { mapInvoiceSummaryDtoToTableRow } from '../../mappers/invoice.mapper';
+import { InvoiceSummaryDto } from '../../types/dto/invoice';
 import { AppDropdown } from '../common/AppDropdown';
 import { AppDateRangeFilter } from '../common/AppDateRangeFilter';
 import { IconName } from '../common';
 import { InvoiceTableRow } from '../../types/domain';
 import { InvoiceStatus } from '../../types/common';
 
-const mockApiInvoices: ApiInvoice[] = [
+const mockInvoices: InvoiceSummaryDto[] = [
     {
-        id: '1',
-        title: 'Faktura VAT',
-        number: 'FV/2025/01',
-        issued_to_email: 'jan@kowalski.pl',
-        issued_by_name: 'Anna Nowak',
-        client_billing_data: {
-            name: 'Jan Kowalski',
-            nip: '1234567890',
-            email: 'jan@kowalski.pl',
+        id: '1', // UUID
+        invoiceNumber: 'FV/2025/01',
+        orderId: '101',
+        customerFirstName: 'Jan',
+        customerLastName: 'Kowalski',
+        customerAddress: {
+            street: 'Piękna',
+            number: '10',
+            city: 'Warszawa',
+            postalCode: '00-001',
+            country: 'Polska',
         },
-        currency: 'PLN',
-        issue_date: '2025-02-01',
-        payment_due_date: '2025-02-05',
-        payment_date: '2025-02-04',
+        company: null,
         status: 'PAID',
-        products: [],
-        total_amount: 1200,
+        issuedAt: '2025-02-01T00:00:00Z',
+        paymentDueDate: '2025-02-05T00:00:00Z',
+        items: [],
+        totalNet: 1000,
+        totalVat: 200,
+        totalGross: 1200,
+        currency: 'PLN',
+        payments: [],
     },
     {
-        id: '2',
-        title: 'Faktura VAT',
-        number: 'FV/2025/02',
-        issued_to_email: 'kontakt@acme.pl',
-        issued_by_name: 'Marek Duda',
-        client_billing_data: { name: 'ACME Sp. z o.o.', nip: '9876543210' },
-        currency: 'PLN',
-        issue_date: '2025-02-03',
-        payment_due_date: '2025-02-10',
-        payment_date: null,
+        id: '2', // UUID
+        invoiceNumber: 'FV/2025/02',
+        orderId: '102',
+        customerFirstName: 'ACME',
+        customerLastName: '',
+        customerAddress: {
+            street: 'Nowa',
+            number: '5',
+            city: 'Kraków',
+            postalCode: '31-000',
+            country: 'Polska',
+        },
+        company: {
+            id: 'c1', // UUID
+            name: 'ACME Sp. z o.o.',
+            taxId: '9876543210',
+            address: {
+                street: 'Nowa',
+                number: '5',
+                city: 'Kraków',
+                postalCode: '31-000',
+                country: 'Polska',
+            },
+            email: 'kontakt@acme.pl',
+            phone: '123456789',
+        },
         status: 'SENT',
-        products: [],
-        total_amount: 950,
+        issuedAt: '2025-02-03T00:00:00Z',
+        paymentDueDate: '2025-02-10T00:00:00Z',
+        items: [],
+        totalNet: 950,
+        totalVat: 0,
+        totalGross: 950,
+        currency: 'PLN',
+        payments: [],
     },
 ];
 
@@ -56,8 +83,9 @@ export default function InvoiceScreen() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-    const domainInvoices = mockApiInvoices.map(mapApiInvoiceToDomain);
-    const tableData = domainInvoices.map(mapInvoiceToTableRow);
+    const tableData: InvoiceTableRow[] = useMemo(() => {
+        return mockInvoices.map(mapInvoiceSummaryDtoToTableRow);
+    }, [mockInvoices]);
 
     const editInvoice = (row: InvoiceTableRow) => {
         console.log(row);

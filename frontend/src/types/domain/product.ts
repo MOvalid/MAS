@@ -1,24 +1,4 @@
 // types/domain/product.ts
-export interface Product {
-    id: string;
-    name: string;
-    description?: string;
-    price: number;
-    currency: string;
-    category: Category;
-    isAvailable: boolean;
-    createdAt: Date;
-    updatedAt?: Date;
-    tags: string[];
-    imageUrl?: string;
-    stockQuantity?: number;
-}
-
-export interface Category {
-    id: string;
-    name: string;
-    parent?: Category;
-}
 
 export interface ProductTableRow {
     lp: number;
@@ -28,4 +8,18 @@ export interface ProductTableRow {
     price: string;
     available: boolean;
     stockQuantity?: number;
+}
+
+export interface Product {
+    id: string; // UUID
+    name: string;
+    sku: string;
+    stockQuantity: number;
+    description: string | null;
+    categoryId: string | null;
+    netPrice: number;
+    vatRate: number;
+    grossPrice: number;
+    vatAmount: number;
+    currency: string;
 }

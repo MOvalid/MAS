@@ -10,7 +10,7 @@ import { metrics } from '@/theme/metrics';
 import { useAuth } from '@/context/AuthContext';
 import { loginAPI } from '@/api/authApi';
 import axios, { AxiosError } from 'axios';
-import { RootStackParamList } from '@/types/api/auth';
+import { RootStackParamList } from '@/types/dto/auth';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const screenWidth = Dimensions.get('window').width;

@@ -1,4 +1,5 @@
-import { Currency, InvoiceStatus } from '../common/enums';
+import { Address, Company, OrderItemDetails, Payment } from '.';
+import { InvoiceStatus } from '../common';
 
 export interface InvoiceProduct {
     id: string;
@@ -16,28 +17,34 @@ export interface ClientBillingData {
     email?: string;
 }
 
-export interface Invoice {
-    id: string;
-    title: string;
-    number: string;
-    issuedTo: string;
-    issuedBy: string;
-    client: ClientBillingData;
-    currency: Currency;
-    issueDate: Date;
-    paymentDueDate: Date;
-    paymentDate?: Date | null;
-    status: InvoiceStatus;
-    products: InvoiceProduct[];
-    totalAmount: number;
-}
-
 export interface InvoiceTableRow {
     lp: number;
     id: string;
     issueDate: string;
     paymentDate?: string | null;
-    number: string;
+    invoiceNumber: string;
     amount: string;
     status: string;
+}
+
+export interface Invoice {
+    id: string; // UUID
+    issuedAt: string; // ISO datetime
+    status: InvoiceStatus;
+}
+
+export interface InvoiceSummary {
+    invoiceId: string; // UUID
+    orderId: string; // UUID
+    customerFirstName: string;
+    customerLastName: string;
+    customerAddress: Address;
+    company: Company | null;
+    issuedAt: string; // ISO datetime
+    items: OrderItemDetails[];
+    totalNet: number;
+    totalVat: number;
+    totalGross: number;
+    currency: string;
+    payments: Payment[] | null;
 }

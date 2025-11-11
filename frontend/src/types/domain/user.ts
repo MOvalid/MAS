@@ -1,4 +1,4 @@
-import { ApiUser } from '../api';
+import { ApiUser } from '../dto';
 
 export type User = {
     id: string;
