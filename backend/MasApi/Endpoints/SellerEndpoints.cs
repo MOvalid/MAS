@@ -37,11 +37,11 @@ public static class SellerEndpoints
         var sub = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = httpContext.User.FindFirstValue(ClaimTypes.Email);
 
-        if (!Guid.TryParse(sub, out Guid userId)) return TypedResults.BadRequest("Invalid user ID");
-        if (email == null) return TypedResults.BadRequest("Invalid user ID");
+        if (!Guid.TryParse(sub, out Guid userId)) return TypedResults.BadRequest("Invalid user ID.");
+        if (email == null) return TypedResults.BadRequest("Email claim is missing.");
 
         var existingSeller = await dbContext.Sellers.FindAsync(userId);
-        if (existingSeller != null) return TypedResults.BadRequest("Seller already exists");
+        if (existingSeller != null) return TypedResults.BadRequest("Seller already exists.");
 
         var seller = new Seller
         {
@@ -62,14 +62,27 @@ public static class SellerEndpoints
         var seller = await dbContext.Sellers.FindAsync(id);
         if (seller == null) return TypedResults.NotFound();
 
-        var sellerDto = new SellerDetailsDto(seller.Id, seller.FirstName, seller.LastName, seller.Email);
+        var sellerDto = new SellerDetailsDto
+        {
+            Id = seller.Id,
+            FirstName = seller.FirstName,
+            LastName = seller.LastName,
+            Email = seller.Email
+        };
+
         return TypedResults.Ok(sellerDto);
     }
 
     private static async Task<Results<Ok<List<SellerListDto>>, NotFound>> GetSellers(Data.MasDbContext dbContext)
     {
         var sellers = await dbContext.Sellers
-            .Select(s => new SellerListDto(s.Id, s.FirstName, s.LastName, s.Email))
+            .Select(s => new SellerListDto
+            {
+                Id = s.Id,
+                FirstName = s.FirstName,
+                LastName = s.LastName,
+                Email = s.Email
+            })
             .ToListAsync();
 
         return TypedResults.Ok(sellers);
@@ -86,7 +99,14 @@ public static class SellerEndpoints
         dbContext.Sellers.Update(seller);
         await dbContext.SaveChangesAsync();
 
-        var sellerDto = new SellerListDto(seller.Id, seller.FirstName, seller.LastName, seller.Email);
+        var sellerDto = new SellerListDto
+        {
+            Id = seller.Id,
+            FirstName = seller.FirstName,
+            LastName = seller.LastName,
+            Email = seller.Email
+        };
+
         return TypedResults.Ok(sellerDto);
     }
 
