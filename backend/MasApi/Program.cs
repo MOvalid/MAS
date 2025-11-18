@@ -97,6 +97,7 @@ internal class Program
         }
 
         app.MapSellerEndpoints();
+        app.MapCompanyEndpoints();
 
         var cultureInfo = new System.Globalization.CultureInfo("en-US");
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
