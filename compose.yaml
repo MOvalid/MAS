@@ -8,6 +8,8 @@ services:
       dockerfile: backend/MasApi/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - Cognito__Authority=${Cognito__Authority}
+      - Cognito__Audience=${Cognito__Audience}
       - ConnectionStrings__MasDatabase=Server=sqlserverdb;Database=MasDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
     ports:
       - 80:80
