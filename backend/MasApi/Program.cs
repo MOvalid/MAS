@@ -16,7 +16,7 @@ internal class Program
         builder.Services.AddOpenApi();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthService", Version = "v1" });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "MasApi", Version = "v1" });
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
