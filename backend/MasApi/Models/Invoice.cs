@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 
 namespace MasApi.Models
 {
@@ -7,7 +6,11 @@ namespace MasApi.Models
     {
         [Key]
         public required Guid Id { get; set; }
+        public required Guid OrderId { get; set; }
+        public Order? Order { get; set; }
+        public Guid? CompanyId { get; set; }
+        public Company? Company { get; set; }
         public required DateTime IssuedAt { get; set; }
-        // some url to retrieve the invoice pdf
+        public required Enums.InvoiceStatus Status { get; set; }
     }
-}                                                       
+}

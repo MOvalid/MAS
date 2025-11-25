@@ -11,8 +11,11 @@ namespace MasApi.Models
         public Customer? Customer { get; set; }
         public required Guid SellerId { get; set; }
         public Seller? Seller { get; set; }
-        public Guid? InvoiceId { get; set; }
+        public required Enums.Currency Currency { get; set; }
+
         public Invoice? Invoice { get; set; }
+        public Delivery? Delivery { get; set; }
+        public ICollection<Payment>? Payments { get; set; }
         public ICollection<OrderItem>? OrderProducts { get; set; }
     }
 }
