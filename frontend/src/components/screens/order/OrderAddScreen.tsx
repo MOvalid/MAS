@@ -1,14 +1,14 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { AppText } from '../common/AppText';
+import { AppText } from '../../common/AppText';
 import { Dimensions } from 'react-native';
 
 const screenHeight = Dimensions.get('window').height;
 
-export const ClientScreen = () => {
+export const OrderAddScreen = () => {
     return (
         <View style={styles.container}>
-            <AppText>ClientScreen</AppText>
+            <AppText>OrderAddScreen</AppText>
         </View>
     );
 };

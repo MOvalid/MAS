@@ -8,18 +8,18 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator, DrawerScreenProps } from '@react-navigation/drawer';
 import { useColorScheme } from 'react-native';
 import AuthScreen from './src/components/screens/AuthScreen';
+import { ClientNavigator, OrderNavigator, ProductNavigator } from './src/components/navigation';
 import { DrawerParamList } from './src/types/navigation';
 import { AuthProvider } from './src/context/AuthContext';
 
-import { HomeScreen, ClientScreen, InvoiceScreen, MagazineScreen } from './src/components/screens';
-import AddProductScreen from './src/components/screens/product/AddProductScreen';
+import { HomeScreen, InvoiceScreen, MagazineScreen } from './src/components/screens';
 import { AppDrawerContent, AppScreenWrapper } from './src/components/common';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
 const linking = {
-    prefixes: ['http://localhost:8081', 'https://yourapp.com'],
+    prefixes: ['http://localhost:8081'],
     config: {
         screens: {
             Auth: 'auth',
@@ -27,9 +27,33 @@ const linking = {
                 path: '',
                 screens: {
                     Home: 'home',
-                    Client: 'client',
-                    Product: 'product',
-                    Order: 'order',
+                    Client: {
+                        path: 'client',
+                        screens: {
+                            ClientList: '',
+                            ClientAdd: 'add',
+                            ClientEdit: 'edit/:id',
+                            ClientDetails: ':id',
+                        },
+                    },
+                    Product: {
+                        path: 'product',
+                        screens: {
+                            ProductList: '',
+                            ProductAdd: 'add',
+                            ProductEdit: 'edit/:id',
+                            ProductDetails: ':id',
+                        },
+                    },
+                    Order: {
+                        path: 'order',
+                        screens: {
+                            OrderList: '',
+                            OrderAdd: 'add',
+                            OrderEdit: 'edit/:id',
+                            OrderDetails: ':id',
+                        },
+                    },
                     Invoice: 'invoice',
                     Magazine: 'magazine',
                 },
@@ -70,7 +94,7 @@ function DrawerNavigator() {
             />
             <Drawer.Screen
                 name="Client"
-                component={withScreenWrapper(ClientScreen)}
+                component={ClientNavigator}
                 options={{
                     drawerLabel: 'Klienci',
                     title: 'Klienci',
@@ -78,7 +102,7 @@ function DrawerNavigator() {
             />
             <Drawer.Screen
                 name="Product"
-                component={withScreenWrapper(AddProductScreen)}
+                component={ProductNavigator}
                 options={{
                     drawerLabel: 'Produkty',
                     title: 'Produkty',
@@ -86,10 +110,18 @@ function DrawerNavigator() {
             />
             <Drawer.Screen
                 name="Order"
-                component={withScreenWrapper(AuthScreen)}
+                component={OrderNavigator}
                 options={{
                     drawerLabel: 'Zamówienia',
                     title: 'Zamówienia',
+                }}
+            />
+            <Drawer.Screen
+                name="Auth"
+                component={withScreenWrapper(AuthScreen)}
+                options={{
+                    drawerLabel: 'Autoryzacja',
+                    title: 'Autoryzacja',
                 }}
             />
             <Drawer.Screen
@@ -142,8 +174,7 @@ export default function App() {
                         theme={navigationTheme as unknown as Theme}
                         linking={linking}
                         documentTitle={{
-                            formatter: (options, route) =>
-                                `${options?.title ?? route?.name} - Your App Name`,
+                            formatter: (options, route) => `${options?.title ?? route?.name} - MAS`,
                         }}
                     >
                         <Stack.Navigator

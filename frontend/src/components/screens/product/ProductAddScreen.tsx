@@ -15,7 +15,7 @@ const categories = [
     { label: 'Monitory', value: 'monitors' },
 ];
 
-export default function AddProductScreen() {
+export const ProductAddScreen = () => {
     const {
         control,
         handleSubmit,
@@ -250,7 +250,7 @@ export default function AddProductScreen() {
             </AppButton>
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
