@@ -5,12 +5,112 @@ import { LightTheme, DarkTheme, CombinedDarkTheme, CombinedLightTheme } from './
 import { AppThemeProvider } from './src/theme/AppThemeContext';
 import { NavigationContainer, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createDrawerNavigator, DrawerScreenProps } from '@react-navigation/drawer';
 import { useColorScheme } from 'react-native';
 import AuthScreen from './src/components/screens/AuthScreen';
-import { MainScreen } from './src/components/screens/MainScreen';
+import { DrawerParamList } from './src/types/navigation';
 import { AuthProvider } from './src/context/AuthContext';
 
+import { HomeScreen, ClientScreen, InvoiceScreen, MagazineScreen } from './src/components/screens';
+import AddProductScreen from './src/components/screens/product/AddProductScreen';
+import { AppDrawerContent, AppScreenWrapper } from './src/components/common';
+
 const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator<DrawerParamList>();
+
+const linking = {
+    prefixes: ['http://localhost:8081', 'https://yourapp.com'],
+    config: {
+        screens: {
+            Auth: 'auth',
+            MainDrawer: {
+                path: '',
+                screens: {
+                    Home: 'home',
+                    Client: 'client',
+                    Product: 'product',
+                    Order: 'order',
+                    Invoice: 'invoice',
+                    Magazine: 'magazine',
+                },
+            },
+        },
+    },
+};
+
+const withScreenWrapper = <RouteName extends keyof DrawerParamList>(
+    Component: React.ComponentType<DrawerScreenProps<DrawerParamList, RouteName>>
+) => {
+    return (props: DrawerScreenProps<DrawerParamList, RouteName>) => (
+        <AppScreenWrapper>
+            <Component {...props} />
+        </AppScreenWrapper>
+    );
+};
+
+function DrawerNavigator() {
+    return (
+        <Drawer.Navigator
+            drawerContent={(props) => <AppDrawerContent {...props} />}
+            screenOptions={{
+                headerShown: false,
+                drawerType: 'permanent',
+                drawerStyle: {
+                    width: 250,
+                },
+            }}
+        >
+            <Drawer.Screen
+                name="Home"
+                component={withScreenWrapper(HomeScreen)}
+                options={{
+                    drawerLabel: 'Strona główna',
+                    title: 'Strona główna',
+                }}
+            />
+            <Drawer.Screen
+                name="Client"
+                component={withScreenWrapper(ClientScreen)}
+                options={{
+                    drawerLabel: 'Klienci',
+                    title: 'Klienci',
+                }}
+            />
+            <Drawer.Screen
+                name="Product"
+                component={withScreenWrapper(AddProductScreen)}
+                options={{
+                    drawerLabel: 'Produkty',
+                    title: 'Produkty',
+                }}
+            />
+            <Drawer.Screen
+                name="Order"
+                component={withScreenWrapper(AuthScreen)}
+                options={{
+                    drawerLabel: 'Zamówienia',
+                    title: 'Zamówienia',
+                }}
+            />
+            <Drawer.Screen
+                name="Invoice"
+                component={withScreenWrapper(InvoiceScreen)}
+                options={{
+                    drawerLabel: 'Faktury',
+                    title: 'Faktury',
+                }}
+            />
+            <Drawer.Screen
+                name="Magazine"
+                component={withScreenWrapper(MagazineScreen)}
+                options={{
+                    drawerLabel: 'Magazyn',
+                    title: 'Magazyn',
+                }}
+            />
+        </Drawer.Navigator>
+    );
+}
 
 export default function App() {
     const colorScheme = useColorScheme();
@@ -38,13 +138,20 @@ export default function App() {
         <AuthProvider>
             <PaperProvider theme={paperTheme}>
                 <AppThemeProvider>
-                    <NavigationContainer theme={navigationTheme as unknown as Theme}>
+                    <NavigationContainer
+                        theme={navigationTheme as unknown as Theme}
+                        linking={linking}
+                        documentTitle={{
+                            formatter: (options, route) =>
+                                `${options?.title ?? route?.name} - Your App Name`,
+                        }}
+                    >
                         <Stack.Navigator
-                            initialRouteName="Main"
+                            initialRouteName="MainDrawer"
                             screenOptions={{ headerShown: false }}
                         >
                             <Stack.Screen name="Auth" component={AuthScreen} />
-                            <Stack.Screen name="Main" component={MainScreen} />
+                            <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
                         </Stack.Navigator>
                     </NavigationContainer>
                 </AppThemeProvider>

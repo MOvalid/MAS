@@ -6,7 +6,7 @@ import { AppText } from '../common/AppText';
 import { metrics } from '../../theme/metrics';
 import { AppCard } from '../common/AppCard';
 
-export default function HomeScreen() {
+export const HomeScreen = () => {
     const dailySummary = [
         { id: 1, title: 'Przychody dzisiaj', value: '12 345 PLN' },
         { id: 2, title: 'Zamówienia', value: '58' },
@@ -47,7 +47,7 @@ export default function HomeScreen() {
             </View>
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {

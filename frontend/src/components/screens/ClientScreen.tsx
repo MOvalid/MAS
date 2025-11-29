@@ -5,13 +5,13 @@ import { Dimensions } from 'react-native';
 
 const screenHeight = Dimensions.get('window').height;
 
-export default function ClientScreen() {
+export const ClientScreen = () => {
     return (
         <View style={styles.container}>
             <AppText>ClientScreen</AppText>
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {

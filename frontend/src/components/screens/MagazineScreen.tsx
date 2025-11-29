@@ -5,13 +5,13 @@ import { Dimensions } from 'react-native';
 
 const screenHeight = Dimensions.get('window').height;
 
-export default function MagazineScreen() {
+export const MagazineScreen = () => {
     return (
         <View style={styles.container}>
             <AppText>MagazineScreen</AppText>
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {

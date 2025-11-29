@@ -4,13 +4,13 @@ import { Dimensions } from 'react-native';
 
 const screenHeight = Dimensions.get('window').height;
 
-export default function OrderScreen() {
+export const OrderScreen = () => {
     return (
         <View style={styles.container}>
             <AppText>OrderScreen</AppText>
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {

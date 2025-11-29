@@ -77,7 +77,7 @@ const mockInvoices: InvoiceSummaryDto[] = [
     },
 ];
 
-export default function InvoiceScreen() {
+export const InvoiceScreen = () => {
     const [search, setSearch] = useState('');
     const [status, setStatus] = useState('ALL');
     const [startDate, setStartDate] = useState('');
@@ -173,7 +173,7 @@ export default function InvoiceScreen() {
             />
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {

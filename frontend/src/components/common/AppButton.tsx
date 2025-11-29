@@ -64,7 +64,6 @@ export const AppButton: React.FC<AppButtonProps> = ({
             }}
             style={[computedStyle, style]}
             {...props}
-
         />
     );
 };
