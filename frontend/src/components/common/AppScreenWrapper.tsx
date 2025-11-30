@@ -4,6 +4,7 @@ import { useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from './AppHeader';
 import { metrics } from '../../theme/metrics';
+import { AppBreadcrumb } from './AppBreadcrumbConfig';
 
 type ScreenWrapperProps = {
     children: React.ReactNode;
@@ -19,7 +20,7 @@ export const AppScreenWrapper: React.FC<ScreenWrapperProps> = ({ children }) => 
         >
             <View style={styles.mainArea}>
                 <AppHeader />
-
+                <AppBreadcrumb />
                 <ScrollView
                     style={styles.scrollContainer}
                     contentContainerStyle={styles.scrollContent}

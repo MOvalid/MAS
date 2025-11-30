@@ -1,3 +1,4 @@
+export { AppBreadcrumb } from './AppBreadcrumbConfig';
 export { AppButton } from './AppButton';
 export { AppCard } from './AppCard';
 export { AppDatePicker } from './AppDatePicker';

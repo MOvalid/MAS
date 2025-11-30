@@ -143,26 +143,25 @@ export const InvoiceScreen = () => {
 
             <AppTable
                 columns={[
-                    { key: 'lp', title: 'Lp.', align: 'center', flex: 0.2 },
+                    { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
                     {
                         key: 'issueDate',
                         title: 'Data wystawienia',
-                        align: 'center',
+                        align: 'left',
                         flex: 1,
                     },
                     {
                         key: 'paymentDate',
                         title: 'Data opłacenia',
-                        align: 'center',
+                        align: 'left',
                         flex: 1,
                     },
-                    { key: 'number', title: 'Numer faktury', align: 'center', flex: 1 },
-                    { key: 'amount', title: 'Kwota', align: 'center', flex: 1 },
-                    { key: 'status', title: 'Status', align: 'center', flex: 1 },
+                    { key: 'number', title: 'Numer faktury', align: 'left', flex: 1 },
+                    { key: 'amount', title: 'Kwota', align: 'left', flex: 1 },
+                    { key: 'status', title: 'Status', align: 'left', flex: 1 },
                 ]}
                 data={tableData}
                 actions={(row) => [
-                    { icon: IconName.edit, onPress: () => editInvoice(row) },
                     { icon: IconName.download, onPress: () => downloadInvoice(row) },
                     {
                         icon: IconName.delete,

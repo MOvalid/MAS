@@ -4,14 +4,30 @@ import { Drawer, useTheme } from 'react-native-paper';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { AppLogo } from './AppLogo';
 import { AppDrawerButton, MaterialCommunityIconName } from './AppDrawerButton';
+import { InvoiceScreen, MagazineScreen } from '../screens';
+import { ClientListScreen } from '../screens/client';
+import { ProductListScreen } from '../screens/product';
+import { OrderListScreen } from '../screens/order';
+import { NavigationConfig } from '@/types/navigation';
 
-const navigationConfig = [
+export type NavigationConfigItem = {
+    name: string;
+    label: string;
+    icon: MaterialCommunityIconName;
+    initialScreen?: string;
+};
+
+const navigationConfig: NavigationConfig = [
     { name: 'Home', label: 'Strona główna', icon: 'home-outline' },
-    { name: 'Client', label: 'Klienci', icon: 'account-outline' },
-    { name: 'Product', label: 'Produkty', icon: 'grid' },
-    { name: 'Order', label: 'Zamówienia', icon: 'cart-outline' },
-    { name: 'Invoice', label: 'Faktury', icon: 'clipboard-text-outline' },
-    { name: 'Magazine', label: 'Magazyn', icon: 'warehouse' },
+    { name: 'Client', label: 'Klienci', icon: 'account-outline', initialScreen: ClientListScreen },
+    { name: 'Product', label: 'Produkty', icon: 'grid', initialScreen: ProductListScreen },
+    { name: 'Order', label: 'Zamówienia', icon: 'cart-outline', initialScreen: OrderListScreen },
+    {
+        name: 'Invoice',
+        label: 'Faktury',
+        icon: 'clipboard-text-outline',
+    },
+    { name: 'Magazine', label: 'Magazyn', icon: 'warehouse'},
 ];
 
 export const AppDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
@@ -34,7 +50,19 @@ export const AppDrawerContent: React.FC<DrawerContentComponentProps> = (props) =
                             label={item.label}
                             icon={item.icon as MaterialCommunityIconName}
                             active={activeRouteName === item.name}
-                            onPress={() => navigation.navigate(item.name)}
+                            onPress={() => {
+                                navigation.reset({
+                                    index: 0,
+                                    routes: [
+                                        {
+                                            name: item.name,
+                                            params: item.initialScreen
+                                                ? { screen: item.initialScreen }
+                                                : undefined,
+                                        },
+                                    ],
+                                });
+                            }}
                         />
                     ))}
                 </Drawer.Section>

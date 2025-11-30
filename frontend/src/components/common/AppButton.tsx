@@ -27,6 +27,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
     minHeight,
     size = 'md',
     style,
+    contentStyle,
     ...props
 }) => {
     const { colors } = useAppTheme();
@@ -42,14 +43,16 @@ export const AppButton: React.FC<AppButtonProps> = ({
     const computedStyle: ViewStyle = {
         width: fullWidth ? '100%' : (width ?? undefined),
         minWidth: minWidth ?? baseSize.minWidth,
-        minHeight: minHeight ?? baseSize.height,
-        height: height ?? baseSize.height,
-        justifyContent: 'center',
-        alignSelf: fullWidth ? 'stretch' : 'flex-start',
         borderRadius: metrics.radius.xl,
         marginVertical: metrics.spacing[margin],
-        paddingVertical: metrics.spacing[padding],
         shadowColor: colors.primary,
+    };
+
+    const computedContentStyle: ViewStyle = {
+        minHeight: minHeight ?? baseSize.height,
+        height: height ?? baseSize.height,
+        paddingVertical: metrics.spacing[padding],
+        justifyContent: 'center',
         alignItems: 'center',
     };
 
@@ -63,6 +66,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
                 colors,
             }}
             style={[computedStyle, style]}
+            contentStyle={[computedContentStyle, contentStyle]}
             {...props}
         />
     );

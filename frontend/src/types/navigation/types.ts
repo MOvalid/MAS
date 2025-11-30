@@ -1,9 +1,30 @@
+import { MaterialCommunityIconName } from '@/components/common/AppDrawerButton';
+import { JSX } from 'react';
+
+export type NavigationConfigItem = {
+    name: string;
+    label: string;
+    icon: MaterialCommunityIconName;
+    initialScreen?: () => JSX.Element;
+};
+
+export type NavigationConfig = NavigationConfigItem[];
+
 export type DrawerParamList = {
     Home: undefined;
-    Client: undefined;
-    Product: undefined;
+    Product: {
+        screen?: keyof ProductStackParamList;
+        params?: ProductStackParamList[keyof ProductStackParamList];
+    };
+    Client: {
+        screen?: keyof ClientStackParamList;
+        params?: ClientStackParamList[keyof ClientStackParamList];
+    };
     Auth: undefined;
-    Order: undefined;
+    Order: {
+        screen?: keyof OrderStackParamList;
+        params?: OrderStackParamList[keyof OrderStackParamList];
+    };
     Invoice: undefined;
     Magazine: undefined;
 };

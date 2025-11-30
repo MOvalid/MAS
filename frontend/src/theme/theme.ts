@@ -60,6 +60,8 @@ export const LightTheme: MD3Theme = {
         inversePrimary: '#BAC5F1',
 
         // surfaceTint: '#525D83',
+        warning: '#f57c00',
+        success: '#388e3c',
     },
     roundness: 8,
     fonts: {
@@ -221,6 +223,8 @@ export const DarkTheme: MD3Theme = {
         inversePrimary: '#525D83',
 
         // surfaceTint: '#BAC5F1',
+        warning: '#ffb74d',
+        success: '#81c784',
     },
     roundness: 8,
     fonts: {

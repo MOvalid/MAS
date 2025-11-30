@@ -103,6 +103,14 @@ function DrawerNavigator() {
             <Drawer.Screen
                 name="Product"
                 component={ProductNavigator}
+                listeners={({ navigation }) => ({
+                    drawerItemPress: (e) => {
+                        e.preventDefault();
+                        navigation.navigate('Product', {
+                            screen: 'ProductList',
+                        });
+                    },
+                })}
                 options={{
                     drawerLabel: 'Produkty',
                     title: 'Produkty',

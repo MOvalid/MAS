@@ -8,3 +8,12 @@ export interface Company {
     email: string | null;
     phone: string | null;
 }
+
+export interface CompanyTableRow {
+    id: string;
+    lp: string;
+    name: string;
+    taxId: string;
+    email: string;
+    phone: string;
+}
