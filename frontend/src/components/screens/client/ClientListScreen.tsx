@@ -1,16 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { AppButton } from '../../common/AppButton';
 import { AppText } from '../../common/AppText';
 import { AppTable } from '../../common/table/AppTable';
 import { AppTextInput } from '../../common/AppTextInput';
 import { metrics } from '../../../theme/metrics';
-import { mapCompanyDtoToTableRow } from '../../../mappers/company.mapper';
-import { CompanyDto } from '../../../types/dto/company';
 import { IconName } from '../../common';
-import { CompanyTableRow } from '../../../types/domain';
+import { Customer } from '../../../types/domain/customer';
+import { Company } from '../../../types/domain/company';
 
-const mockCompanies: CompanyDto[] = [
+// Mock data
+const mockCompanies: Company[] = [
     {
         id: '1',
         name: 'ACME Sp. z o.o.',
@@ -39,46 +40,109 @@ const mockCompanies: CompanyDto[] = [
         email: 'biuro@techsolutions.pl',
         phone: '987654321',
     },
+];
+
+const mockCustomers: Customer[] = [
     {
-        id: '3',
-        name: 'BuildCorp Sp. z o.o.',
-        taxId: '5555555555',
+        id: 'c1',
+        firstName: 'Jan',
+        lastName: 'Kowalski',
+        email: 'jan.kowalski@example.com',
+        phoneNumber: '+48 111 222 333',
         address: {
-            street: 'Budowlana',
-            number: '22',
-            city: 'Wrocław',
-            postalCode: '50-001',
+            street: 'Lipowa',
+            number: '12',
+            city: 'Gdańsk',
+            postalCode: '80-001',
             country: 'Polska',
         },
-        email: null,
-        phone: null,
+        orders: [],
+    },
+    {
+        id: 'c2',
+        firstName: 'Anna',
+        lastName: 'Nowak',
+        email: 'anna.nowak@example.com',
+        phoneNumber: null,
+        address: null,
+        orders: [],
     },
 ];
 
+// Unified row type
+interface ClientRow {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    isCompany: boolean;
+}
+
 export const ClientListScreen = () => {
     const [search, setSearch] = useState('');
+    const navigation = useNavigation();
 
-    const tableData: CompanyTableRow[] = useMemo(() => {
-        return mockCompanies.map(mapCompanyDtoToTableRow);
-    }, [mockCompanies]);
+    const tableData: ClientRow[] = useMemo(() => {
+        const companyRows: ClientRow[] = mockCompanies.map((c) => ({
+            id: c.id,
+            name: `🏢 ${c.name}`,
+            email: c.email,
+            phone: c.phone,
+            address: c.address
+                ? `${c.address.street} ${c.address.number}, ${c.address.city}`
+                : null,
+            isCompany: true,
+        }));
 
-    const editCompany = (row: CompanyTableRow) => {
-        console.log(row);
-        console.log('Edit company');
+        const customerRows: ClientRow[] = mockCustomers.map((c) => ({
+            id: c.id,
+            name: `👤 ${c.firstName} ${c.lastName}`,
+            email: c.email,
+            phone: c.phoneNumber,
+            address: c.address
+                ? `${c.address.street} ${c.address.number}, ${c.address.city}`
+                : null,
+            isCompany: false,
+        }));
+
+        let allRows = [...companyRows, ...customerRows];
+
+        if (search) {
+            allRows = allRows.filter(
+                (row) =>
+                    row.name.toLowerCase().includes(search.toLowerCase()) ||
+                    (row.email?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+                    (row.phone?.includes(search) ?? false)
+            );
+        }
+
+        return allRows;
+    }, [search]);
+
+    const handleEdit = (row: ClientRow) => {
+        if (row.isCompany) {
+            navigation.navigate('CompanyAddEditScreen', { id: row.id });
+        } else {
+            navigation.navigate('CustomerAddEditScreen', { id: row.id });
+        }
     };
 
-    const deleteCompany = (row: CompanyTableRow) => {
-        console.log(row);
-        console.log('Delete company');
-    };
+    const handleAddCompany = () => navigation.navigate('Company', { screen: 'CompanyAdd' });
+    const handleAddCustomer = () => navigation.navigate('Customer', { screen: 'CustomerAdd' });
+
+    const handleDelete = (row: ClientRow) => console.log('Delete:', row);
 
     return (
         <View style={styles.container}>
             <View style={styles.headerRow}>
                 <AppText variant="headlineLarge" style={styles.pageTitle}>
-                    Firmy
+                    Klienci i firmy
                 </AppText>
-                <AppButton onPress={() => console.log('Nowa firma')}>Nowa firma</AppButton>
+                <View style={{ flexDirection: 'row', gap: metrics.spacing.md }}>
+                    <AppButton onPress={handleAddCompany}>Nowa firma</AppButton>
+                    <AppButton onPress={handleAddCustomer}>Nowy klient</AppButton>
+                </View>
             </View>
 
             <View style={styles.filters}>
@@ -94,19 +158,15 @@ export const ClientListScreen = () => {
             <AppTable
                 columns={[
                     { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
-                    { key: 'name', title: 'Nazwa', align: 'left', flex: 1.5 },
-                    { key: 'taxId', title: 'NIP', align: 'left', flex: 1 },
-                    { key: 'email', title: 'Email', align: 'left', flex: 1.2 },
+                    { key: 'name', title: 'Nazwa / Imię i nazwisko', align: 'left', flex: 1.5 },
+                    { key: 'email', title: 'Email', align: 'left', flex: 1.8 },
                     { key: 'phone', title: 'Telefon', align: 'left', flex: 1 },
+                    { key: 'address', title: 'Adres', align: 'left', flex: 2 },
                 ]}
-                data={tableData}
+                data={tableData.map((row, index) => ({ ...row, lp: index + 1 }))}
                 actions={(row) => [
-                    { icon: IconName.edit, onPress: () => editCompany(row) },
-                    {
-                        icon: IconName.delete,
-                        onPress: () => deleteCompany(row),
-                        iconColor: 'red',
-                    },
+                    { icon: IconName.edit, onPress: () => handleEdit(row) },
+                    { icon: IconName.delete, onPress: () => handleDelete(row), iconColor: 'red' },
                 ]}
             />
         </View>
@@ -114,25 +174,14 @@ export const ClientListScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        gap: metrics.spacing.lg,
-    },
-    searchInput: {
-        flex: 1,
-    },
+    container: { flex: 1, gap: metrics.spacing.lg },
+    searchInput: { flex: 1 },
     filters: {
         flexDirection: 'row',
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: metrics.spacing.xl,
     },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    pageTitle: {
-        flexShrink: 1,
-    },
+    headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    pageTitle: { flexShrink: 1 },
 });

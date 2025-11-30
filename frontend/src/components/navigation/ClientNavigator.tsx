@@ -4,12 +4,8 @@ import React from 'react';
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreenWrapper } from '../common';
 import { ClientStackParamList } from '@/types/navigation';
-import {
-    ClientAddScreen,
-    ClientDetailsScreen,
-    ClientEditScreen,
-    ClientListScreen,
-} from '../screens/client';
+import { ClientDetailsScreen, ClientAddEditScreen, ClientListScreen } from '../screens/client';
+import { CompanyDetailsScreen } from '../screens/company/CompanyDetailsScreen';
 
 const Stack = createNativeStackNavigator<ClientStackParamList>();
 
@@ -23,6 +19,8 @@ const withScreenWrapper = <RouteName extends keyof ClientStackParamList>(
     );
 };
 
+const screens = [{ name: 'ClientList' as const, component: ClientListScreen }] as const;
+
 export const ClientNavigator = () => {
     return (
         <Stack.Navigator
@@ -30,10 +28,9 @@ export const ClientNavigator = () => {
                 headerShown: false,
             }}
         >
-            <Stack.Screen name="ClientList" component={withScreenWrapper(ClientListScreen)} />
-            <Stack.Screen name="ClientAdd" component={withScreenWrapper(ClientAddScreen)} />
-            <Stack.Screen name="ClientEdit" component={withScreenWrapper(ClientEditScreen)} />
-            <Stack.Screen name="ClientDetails" component={withScreenWrapper(ClientDetailsScreen)} />
+            {screens.map(({ name, component }) => (
+                <Stack.Screen key={name} name={name} component={withScreenWrapper(component)} />
+            ))}
         </Stack.Navigator>
     );
 };

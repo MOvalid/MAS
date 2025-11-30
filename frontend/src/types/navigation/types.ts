@@ -20,6 +20,14 @@ export type DrawerParamList = {
         screen?: keyof ClientStackParamList;
         params?: ClientStackParamList[keyof ClientStackParamList];
     };
+    Company: {
+        screen?: keyof CompanyStackParamList;
+        params?: CompanyStackParamList[keyof CompanyStackParamList];
+    };
+    Customer: {
+        screen?: keyof CustomerStackParamList;
+        params?: CustomerStackParamList[keyof CustomerStackParamList];
+    };
     Auth: undefined;
     Order: {
         screen?: keyof OrderStackParamList;
@@ -38,9 +46,18 @@ export type ProductStackParamList = {
 
 export type ClientStackParamList = {
     ClientList: undefined;
-    ClientAdd: undefined;
-    ClientEdit: { id: string };
-    ClientDetails: { id: string };
+};
+
+export type CompanyStackParamList = {
+    CompanyAdd: undefined;
+    CompanyEdit: { id: string };
+    CompanyDetails: { id: string };
+};
+
+export type CustomerStackParamList = {
+    CustomerAdd: undefined;
+    CustomerEdit: { id: string };
+    CustomerDetails: { id: string };
 };
 
 export type OrderStackParamList = {

@@ -8,7 +8,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator, DrawerScreenProps } from '@react-navigation/drawer';
 import { useColorScheme } from 'react-native';
 import AuthScreen from './src/components/screens/AuthScreen';
-import { ClientNavigator, OrderNavigator, ProductNavigator } from './src/components/navigation';
+import {
+    ClientNavigator,
+    CompanyNavigator,
+    CustomerNavigator,
+    OrderNavigator,
+    ProductNavigator,
+} from './src/components/navigation';
 import { DrawerParamList } from './src/types/navigation';
 import { AuthProvider } from './src/context/AuthContext';
 
@@ -34,6 +40,22 @@ const linking = {
                             ClientAdd: 'add',
                             ClientEdit: 'edit/:id',
                             ClientDetails: ':id',
+                        },
+                    },
+                    Company: {
+                        path: 'company',
+                        screens: {
+                            CompanyAdd: 'add',
+                            CompanyEdit: 'edit/:id',
+                            CompanyDetails: ':id',
+                        },
+                    },
+                    Customer: {
+                        path: 'customer',
+                        screens: {
+                            CustomerAdd: 'add',
+                            CustomerEdit: 'edit/:id',
+                            CustomerDetails: ':id',
                         },
                     },
                     Product: {
@@ -98,6 +120,22 @@ function DrawerNavigator() {
                 options={{
                     drawerLabel: 'Klienci',
                     title: 'Klienci',
+                }}
+            />
+            <Drawer.Screen
+                name="Company"
+                component={CompanyNavigator}
+                options={{
+                    drawerLabel: 'Firmy',
+                    title: 'Firmy',
+                }}
+            />
+            <Drawer.Screen
+                name="Customer"
+                component={CustomerNavigator}
+                options={{
+                    drawerLabel: 'Klienci indywidualni',
+                    title: 'Klienci indywidualni',
                 }}
             />
             <Drawer.Screen

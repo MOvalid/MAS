@@ -24,6 +24,13 @@ const breadcrumbConfig: BreadcrumbConfig = {
     ClientEdit: { label: 'Edycja klienta', screen: 'Client', nested: 'ClientEdit' },
     ClientDetails: { label: 'Szczegóły klienta', screen: 'Client', nested: 'ClientDetails' },
 
+    // Firmy
+    Company: { label: 'Firmy' },
+    CompanyList: { label: 'Lista firm', screen: 'Company', nested: 'CompanyList' },
+    CompanyAdd: { label: 'Dodanie firmy', screen: 'Company', nested: 'CompanyAdd' },
+    CompanyEdit: { label: 'Edycja firmy', screen: 'Company', nested: 'CompanyEdit' },
+    CompanyDetails: { label: 'Szczegóły firmy', screen: 'Company', nested: 'CompanyDetails' },
+
     // Produkty
     Product: { label: 'Produkty' },
     ProductList: { label: 'Lista produktów', screen: 'Product', nested: 'ProductList' },

@@ -59,7 +59,7 @@ export const AppImageUpload: React.FC<AppImageUploadProps> = ({
         container: {
             width: '100%',
             aspectRatio: 1,
-            borderRadius: metrics.radius.md,
+            borderRadius: metrics.radius.lg,
             borderWidth: 2,
             borderStyle: 'dashed',
             borderColor: theme.colors.outline,

@@ -1,19 +1,23 @@
 // AppCard.tsx
 import React, { ReactNode } from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, ViewProps } from 'react-native';
 import { useAppTheme } from '../../theme/AppThemeContext';
 import { metrics } from '../../theme/metrics';
 import { MD3Colors } from 'react-native-paper/lib/typescript/types';
 
-interface AppCardProps {
+interface AppCardProps extends ViewProps {
     children?: ReactNode;
     style?: ViewStyle;
 }
 
-export const AppCard: React.FC<AppCardProps> = ({ children, style }) => {
+export const AppCard: React.FC<AppCardProps> = ({ children, style, ...props }) => {
     const { colors } = useAppTheme();
 
-    return <View style={[styles.card(colors), style]}>{children}</View>;
+    return (
+        <View style={[styles.card(colors), style]} {...props}>
+            {children}
+        </View>
+    );
 };
 
 const styles = {

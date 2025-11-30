@@ -111,3 +111,20 @@ export const formatNumber = (num: number): string => {
 export const convertStringToCurrency = (currencyString: string): Currency => {
     return Currency[currencyString as keyof typeof Currency];
 };
+
+/**
+ * Formats a raw Polish NIP (tax identification number) string into the standard NIP pattern XXX-XXX-XX-XX.
+ *
+ * Ensures consistent display of NIP numbers on the frontend, even if received as an unformatted string from the API.
+ *
+ * @example
+ *   formatNip("1234567890") // → "123-456-78-90"
+ *   formatNip("9876543210") // → "987-654-32-10"
+ *
+ * @param nip - The raw NIP string received from the API (10 digits).
+ * @returns The formatted NIP string, or the original value if it doesn't match the expected length.
+ */
+export const formatNip = (nip: string | undefined): string => {
+    if (!nip || nip.length !== 10) return nip || 'Brak';
+    return `${nip.slice(0, 3)}-${nip.slice(3, 6)}-${nip.slice(6, 8)}-${nip.slice(8, 10)}`;
+};
