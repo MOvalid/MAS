@@ -124,11 +124,13 @@ export const ProductDetailsScreen = () => {
         card: {
             flex: 1,
             marginVertical: 0,
+            backgroundColor: theme.colors.background,
         },
         specCard: {
             width: '100%',
             marginVertical: 0,
             marginBottom: metrics.spacing.xl,
+            backgroundColor: theme.colors.background,
         },
         cardTitle: {
             marginBottom: metrics.spacing.md,
@@ -385,13 +387,15 @@ export const ProductDetailsScreen = () => {
                             </View>
                         )}
 
-                        {product.specification.warranty && (
+                        {typeof product.specification.warranty === 'number' && (
                             <View style={styles.infoRow}>
                                 <AppText variant="bodyLarge" style={styles.label}>
                                     Gwarancja:
                                 </AppText>
                                 <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.warranty} miesięcy
+                                    {product.specification.warranty
+                                        ? `${product.specification.warranty} miesięcy`
+                                        : 'Brak'}
                                 </AppText>
                             </View>
                         )}

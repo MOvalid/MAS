@@ -4,7 +4,6 @@ import { Drawer, useTheme } from 'react-native-paper';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { AppLogo } from './AppLogo';
 import { AppDrawerButton, MaterialCommunityIconName } from './AppDrawerButton';
-import { InvoiceScreen, MagazineScreen } from '../screens';
 import { ClientListScreen } from '../screens/client';
 import { ProductListScreen } from '../screens/product';
 import { OrderListScreen } from '../screens/order';

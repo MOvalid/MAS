@@ -6,7 +6,7 @@ import { useAppTheme } from '../../theme/AppThemeContext';
 import { Spacing } from '../../theme/metrics';
 import { MD3Colors } from 'react-native-paper/lib/typescript/types';
 
-type AppTextInputProps = TextInputProps & {
+export type AppTextInputProps = TextInputProps & {
     margin?: Spacing;
     mode?: 'flat' | 'outlined';
     fullWidth?: boolean;
@@ -76,7 +76,7 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
                 mode={mode}
                 underlineColor="transparent"
                 activeUnderlineColor="transparent"
-                textColor={colors.background}
+                textColor={colors.primary}
                 placeholderTextColor={colors.primary}
                 theme={{
                     roundness: metrics.radius.xl,

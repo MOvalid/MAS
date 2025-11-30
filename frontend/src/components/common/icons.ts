@@ -11,6 +11,8 @@ export const IconName = {
     edit: 'pencil',
     download: 'download',
     delete: 'delete',
+    camera: 'camera-plus',
+    close: 'close-circle',
 } as const;
 
 export type IconKey = keyof typeof IconName;

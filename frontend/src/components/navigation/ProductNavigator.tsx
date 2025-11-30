@@ -1,17 +1,11 @@
-// src/navigation/ProductNavigator.tsx
-
 import React from 'react';
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreenWrapper } from '../common';
 import { ProductStackParamList } from '@/types/navigation';
-import {
-    ProductAddScreen,
-    ProductDetailsScreen,
-    ProductEditScreen,
-    ProductListScreen,
-} from '../screens/product';
+import { ProductAddEditScreen, ProductDetailsScreen, ProductListScreen } from '../screens/product';
 
 const Stack = createNativeStackNavigator<ProductStackParamList>();
+
 const withScreenWrapper = <RouteName extends keyof ProductStackParamList>(
     Component: React.ComponentType<NativeStackScreenProps<ProductStackParamList, RouteName>>
 ) => {
@@ -24,8 +18,8 @@ const withScreenWrapper = <RouteName extends keyof ProductStackParamList>(
 
 const screens = [
     { name: 'ProductList' as const, component: ProductListScreen },
-    { name: 'ProductAdd' as const, component: ProductAddScreen },
-    { name: 'ProductEdit' as const, component: ProductEditScreen },
+    { name: 'ProductAdd' as const, component: ProductAddEditScreen },
+    { name: 'ProductEdit' as const, component: ProductAddEditScreen },
     { name: 'ProductDetails' as const, component: ProductDetailsScreen },
 ] as const;
 

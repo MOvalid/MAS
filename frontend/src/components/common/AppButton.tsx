@@ -15,6 +15,7 @@ type AppButtonProps = ButtonProps & {
     minWidth?: number;
     minHeight?: number;
     size?: Size;
+    mode?: string;
 };
 
 export const AppButton: React.FC<AppButtonProps> = ({
@@ -26,6 +27,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
     minWidth,
     minHeight,
     size = 'md',
+    mode = 'contained',
     style,
     contentStyle,
     ...props
@@ -58,9 +60,9 @@ export const AppButton: React.FC<AppButtonProps> = ({
 
     return (
         <Button
-            mode="contained"
-            buttonColor={colors.primary}
-            textColor={colors.onPrimary}
+            mode={mode}
+            buttonColor={mode === 'contained' ? colors.primary : undefined}
+            textColor={mode === 'contained' ? colors.onPrimary : colors.primary}
             theme={{
                 roundness: metrics.radius.xl,
                 colors,
