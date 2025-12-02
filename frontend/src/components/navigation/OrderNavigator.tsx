@@ -4,12 +4,7 @@ import React from 'react';
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreenWrapper } from '../common';
 import { OrderStackParamList } from '@/types/navigation';
-import {
-    OrderAddScreen,
-    OrderDetailsScreen,
-    OrderEditScreen,
-    OrderListScreen,
-} from '../screens/order';
+import { OrderAddEditScreen, OrderDetailsScreen, OrderListScreen } from '../screens/order';
 
 const Stack = createNativeStackNavigator<OrderStackParamList>();
 
@@ -31,8 +26,8 @@ export const OrderNavigator = () => {
             }}
         >
             <Stack.Screen name="OrderList" component={withScreenWrapper(OrderListScreen)} />
-            <Stack.Screen name="OrderAdd" component={withScreenWrapper(OrderAddScreen)} />
-            <Stack.Screen name="OrderEdit" component={withScreenWrapper(OrderEditScreen)} />
+            <Stack.Screen name="OrderAdd" component={withScreenWrapper(OrderAddEditScreen)} />
+            <Stack.Screen name="OrderEdit" component={withScreenWrapper(OrderAddEditScreen)} />
             <Stack.Screen name="OrderDetails" component={withScreenWrapper(OrderDetailsScreen)} />
         </Stack.Navigator>
     );

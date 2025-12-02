@@ -4,8 +4,7 @@ import React from 'react';
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreenWrapper } from '../common';
 import { ClientStackParamList } from '@/types/navigation';
-import { ClientDetailsScreen, ClientAddEditScreen, ClientListScreen } from '../screens/client';
-import { CompanyDetailsScreen } from '../screens/company/CompanyDetailsScreen';
+import { ClientListScreen } from '../screens/client';
 
 const Stack = createNativeStackNavigator<ClientStackParamList>();
 

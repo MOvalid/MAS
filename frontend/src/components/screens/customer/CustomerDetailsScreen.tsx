@@ -83,12 +83,10 @@ export const CustomerDetailsScreen = () => {
             color: theme.colors.onSurfaceVariant,
             marginRight: metrics.spacing.md,
             width: 180,
-            fontSize: 16,
         },
         value: {
             textAlign: 'left',
             flex: 1,
-            fontSize: 16,
         },
         modalTitle: {
             marginBottom: metrics.spacing.md,

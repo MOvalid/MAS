@@ -28,3 +28,37 @@ export const sanitizeNumericInput = (text: string): string => {
 export const calculateVat = (netPrice: number, vatRate: number): number => {
     return (netPrice * vatRate) / 100;
 };
+
+/**
+ * Formats a numeric value into a standardized price string.
+ * Ensures two decimal places and optional thousands separators.
+ *
+ * Accepts both `number` and `string` inputs. When receiving a string,
+ * the value is first cleaned using `sanitizeNumericInput` to remove
+ * invalid characters before being converted into a number.
+ *
+ * This utility provides consistent price formatting across the system.
+ *
+ * @example
+ * formatPrice(12.5)          // "12.50"
+ * formatPrice("12,5")        // "12.50"
+ * formatPrice(1200.5)        // "1 200.50"
+ * formatPrice("1 200,99 zł") // "1 200.99"
+ *
+ * @param value - A numeric or string value to format
+ * @returns A formatted price string (e.g. "123.45")
+ */
+export const formatPrice = (value: number | string): string => {
+    if (value === null || value === undefined) return '0.00';
+
+    let numericValue: number;
+
+    if (typeof value === 'string') {
+        const sanitized = sanitizeNumericInput(value);
+        numericValue = Number(sanitized) || 0;
+    } else {
+        numericValue = value;
+    }
+
+    return numericValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+};

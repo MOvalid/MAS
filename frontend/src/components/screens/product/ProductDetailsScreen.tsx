@@ -99,7 +99,6 @@ export const ProductDetailsScreen = () => {
         subtitle: {
             marginBottom: metrics.spacing.xl,
             color: theme.colors.onSurfaceVariant,
-            fontSize: 16,
         },
         contentRow: {
             flexDirection: 'row',
@@ -149,16 +148,13 @@ export const ProductDetailsScreen = () => {
             color: theme.colors.onSurfaceVariant,
             marginRight: metrics.spacing.md,
             width: 180,
-            fontSize: 16,
         },
         value: {
             textAlign: 'left',
             flex: 1,
-            fontSize: 16,
         },
         priceGross: {
             fontWeight: metrics.fontWeight.bold,
-            fontSize: 18,
         },
         stockText: {
             fontWeight: metrics.fontWeight.semibold,
@@ -170,8 +166,6 @@ export const ProductDetailsScreen = () => {
         },
         noData: {
             color: theme.colors.onSurfaceVariant,
-            fontStyle: 'italic',
-            fontSize: 16,
         },
         modalTitle: {
             marginBottom: metrics.spacing.md,
@@ -412,7 +406,7 @@ export const ProductDetailsScreen = () => {
                         )}
                     </>
                 ) : (
-                    <AppText variant="bodyLarge" style={styles.noData}>
+                    <AppText variant="bodyLarge" italic style={styles.noData}>
                         Brak specyfikacji
                     </AppText>
                 )}

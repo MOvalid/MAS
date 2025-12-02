@@ -33,11 +33,11 @@ export const CompanyDetailsScreen = () => {
     const company = mockCompany;
 
     const handleEdit = () => {
-        navigation.navigate('CompanyEdit', { id: company.id });
+        navigation.navigate('CompanyEdit', { id: id });
     };
 
     const handleDelete = () => {
-        console.log('Usuwanie firmy:', company.id);
+        console.log('Usuwanie firmy:', id);
         setDeleteModalVisible(false);
         navigation.goBack();
     };
@@ -85,17 +85,10 @@ export const CompanyDetailsScreen = () => {
             color: theme.colors.onSurfaceVariant,
             marginRight: metrics.spacing.md,
             width: 180,
-            fontSize: 16,
         },
         value: {
             textAlign: 'left',
             flex: 1,
-            fontSize: 16,
-        },
-        noData: {
-            color: theme.colors.onSurfaceVariant,
-            fontStyle: 'italic',
-            fontSize: 16,
         },
         modalTitle: {
             marginBottom: metrics.spacing.md,

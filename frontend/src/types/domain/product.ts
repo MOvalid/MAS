@@ -1,6 +1,6 @@
 // types/domain/product.ts
 
-import { Category } from "./category";
+import { Category } from './category';
 
 export interface ProductTableRow {
     lp: number;
@@ -67,3 +67,9 @@ export interface ProductDetails {
     updatedAt?: string; // ISO date
     lastRestockedAt?: string;
 }
+
+export type ProductOption = {
+    label: string;
+    value: string;
+    unitPrice: number;
+};

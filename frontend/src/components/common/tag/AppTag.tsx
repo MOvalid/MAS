@@ -31,7 +31,5 @@ const styles = StyleSheet.create({
         borderRadius: metrics.radius.xl,
         marginBottom: metrics.spacing.xs,
     } as ViewStyle,
-    tagText: {
-        fontSize: 14,
-    } as TextStyle,
+    tagText: {} as TextStyle,
 });

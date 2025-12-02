@@ -70,6 +70,7 @@ export const AppCurrencyInput: React.FC<AppCurrencyInputProps> = ({
         <View style={containerStyle}>
             <View style={styles.textInput}>
                 <AppTextInput
+                    height={48}
                     label={label}
                     value={rawValue}
                     onChangeText={handleChangeText}

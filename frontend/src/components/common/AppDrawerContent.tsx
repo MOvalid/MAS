@@ -26,7 +26,7 @@ const navigationConfig: NavigationConfig = [
         label: 'Faktury',
         icon: 'clipboard-text-outline',
     },
-    { name: 'Magazine', label: 'Magazyn', icon: 'warehouse'},
+    { name: 'Magazine', label: 'Magazyn', icon: 'warehouse' },
 ];
 
 export const AppDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {

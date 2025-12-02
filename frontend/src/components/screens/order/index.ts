@@ -1,4 +1,3 @@
-export { OrderAddScreen } from './OrderAddScreen';
 export { OrderDetailsScreen } from './OrderDetailsScreen';
-export { OrderEditScreen } from './OrderEditScreen';
+export { OrderAddEditScreen } from './OrderAddEditScreen';
 export { OrderListScreen } from './OrderListScreen';
