@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MasApi.Endpoints;
+using AutoMapper;
 
 namespace MasApi;
 
@@ -104,6 +105,7 @@ internal class Program
         app.MapCarrierEndpoints();
         app.MapCustomerEndpoints();
         app.MapDeliveryEndpoints();
+        app.MapProductEndpoints();
 
         var cultureInfo = new System.Globalization.CultureInfo("en-US");
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
