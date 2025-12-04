@@ -3,6 +3,7 @@ using MasApi.Models.Dtos;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace MasApi.Endpoints;
 
@@ -57,55 +58,36 @@ public static class SellerEndpoints
         return TypedResults.Created($"/sellers/{seller.Id}", seller);
     }
 
-    private static async Task<Results<Ok<SellerDetailsDto>, NotFound>> GetSeller(Guid id, Data.MasDbContext dbContext)
+    private static async Task<Results<Ok<SellerDetailsDto>, NotFound>> GetSeller(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var seller = await dbContext.Sellers.FindAsync(id);
         if (seller == null) return TypedResults.NotFound();
 
-        var sellerDto = new SellerDetailsDto
-        {
-            Id = seller.Id,
-            FirstName = seller.FirstName,
-            LastName = seller.LastName,
-            Email = seller.Email
-        };
+        var sellerDto = mapper.Map<SellerDetailsDto>(seller);
 
         return TypedResults.Ok(sellerDto);
     }
 
-    private static async Task<Results<Ok<List<SellerListDto>>, NotFound>> GetSellers(Data.MasDbContext dbContext)
+    private static async Task<Results<Ok<List<SellerListDto>>, NotFound>> GetSellers(Data.MasDbContext dbContext, IMapper mapper)
     {
         var sellers = await dbContext.Sellers
-            .Select(s => new SellerListDto
-            {
-                Id = s.Id,
-                FirstName = s.FirstName,
-                LastName = s.LastName,
-                Email = s.Email
-            })
+            .Select(s => mapper.Map<SellerListDto>(s))
             .ToListAsync();
 
         return TypedResults.Ok(sellers);
     }
 
-    private static async Task<Results<Ok<SellerListDto>, NotFound>> UpdateSeller(Guid id, SellerCreateDto sellerRequest, Data.MasDbContext dbContext)
+    private static async Task<Results<Ok<SellerListDto>, NotFound>> UpdateSeller(Guid id, SellerCreateDto sellerRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var seller = await dbContext.Sellers.FindAsync(id);
         if (seller == null) return TypedResults.NotFound();
 
-        seller.FirstName = sellerRequest.FirstName;
-        seller.LastName = sellerRequest.LastName;
+        mapper.Map(sellerRequest, seller);
 
         dbContext.Sellers.Update(seller);
         await dbContext.SaveChangesAsync();
 
-        var sellerDto = new SellerListDto
-        {
-            Id = seller.Id,
-            FirstName = seller.FirstName,
-            LastName = seller.LastName,
-            Email = seller.Email
-        };
+        var sellerDto = mapper.Map<SellerListDto>(seller);
 
         return TypedResults.Ok(sellerDto);
     }

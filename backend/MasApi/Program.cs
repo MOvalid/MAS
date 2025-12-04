@@ -79,6 +79,8 @@ internal class Program
                         .AllowAnyHeader());
         });
 
+        builder.Services.AddAutoMapper(typeof(Program));
+
         var app = builder.Build();
 
         app.UseCors();

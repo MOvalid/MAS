@@ -2,6 +2,7 @@ using MasApi.Models.Dtos;
 using MasApi.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace MasApi.Endpoints;
 
@@ -31,13 +32,9 @@ public static class CarrierEndpoints
         return app;
     }
 
-    private static async Task<Results<Created<Carrier>, BadRequest<string>>> CreateCarrier(CarrierCreateDto carrierRequest, Data.MasDbContext dbContext)
+    private static async Task<Results<Created<Carrier>, BadRequest<string>>> CreateCarrier(CarrierCreateDto carrierRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var carrier = new Carrier
-        {
-            Id = Guid.NewGuid(),
-            Name = carrierRequest.Name
-        };
+        var carrier = mapper.Map<Carrier>(carrierRequest);
 
         dbContext.Carriers.Add(carrier);
         await dbContext.SaveChangesAsync();
@@ -59,12 +56,12 @@ public static class CarrierEndpoints
         return TypedResults.Ok(carriers);
     }
 
-    private static async Task<Results<Ok<Carrier>, NotFound>> UpdateCarrier(Guid id, CarrierCreateDto carrierRequest, Data.MasDbContext dbContext)
+    private static async Task<Results<Ok<Carrier>, NotFound>> UpdateCarrier(Guid id, CarrierCreateDto carrierRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var carrier = await dbContext.Carriers.FindAsync(id);
         if (carrier == null) return TypedResults.NotFound();
 
-        carrier.Name = carrierRequest.Name;
+        mapper.Map(carrierRequest, carrier);
 
         dbContext.Carriers.Update(carrier);
         await dbContext.SaveChangesAsync();
