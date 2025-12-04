@@ -106,6 +106,7 @@ internal class Program
         app.MapCustomerEndpoints();
         app.MapDeliveryEndpoints();
         app.MapProductEndpoints();
+        app.MapPaymentEndpoints();
 
         var cultureInfo = new System.Globalization.CultureInfo("en-US");
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
