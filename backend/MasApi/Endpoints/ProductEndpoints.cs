@@ -51,14 +51,12 @@ public static class ProductEndpoints
         return TypedResults.Created($"/products/{product.Id}", productDto);
     }
 
-    private static async Task<Results<Ok<ProductDetailsDto>, NotFound>> GetProduct(Guid id, Data.MasDbContext dbContext, IMapper mapper, ILogger<Program> logger)
+    private static async Task<Results<Ok<ProductDetailsDto>, NotFound>> GetProduct(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var product = await dbContext.Products
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (product == null) return TypedResults.NotFound();
-
-        logger.LogInformation(product.Category?.Id.ToString() ?? "No category");
 
         var productDto = mapper.Map<ProductDetailsDto>(product);
 
