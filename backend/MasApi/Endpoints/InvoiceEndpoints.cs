@@ -38,12 +38,15 @@ public static class InvoiceEndpoints
     private static async Task<Results<Created<InvoiceDetailsDto>, BadRequest<string>>> CreateInvoice(InvoiceCreateDto invoiceRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
 
-        var order = await dbContext.Orders.FindAsync(invoiceRequest.OrderId);
+        var order = await dbContext.Orders
+            .Include(o => o.OrderProducts)
+            .FirstOrDefaultAsync(o => o.Id == invoiceRequest.OrderId);
         if (order == null) return TypedResults.BadRequest("Order does not exist.");
 
+        Company? company = null;
         if (invoiceRequest.CompanyId != null)
         {
-            var company = await dbContext.Companies.FindAsync(invoiceRequest.CompanyId.Value);
+            company = await dbContext.Companies.FindAsync(invoiceRequest.CompanyId.Value);
             if (company == null) return TypedResults.BadRequest("Company does not exist.");
         }
 
@@ -51,6 +54,8 @@ public static class InvoiceEndpoints
 
         invoice.IssuedAt = DateTime.UtcNow;
         invoice.Status = InvoiceStatus.Draft;
+        invoice.Company = company;
+        invoice.Order = order;
 
         // TODO: Generate PDF and store it somewhere
 
@@ -66,6 +71,7 @@ public static class InvoiceEndpoints
     {
         var invoice = await dbContext.Invoices
             .Include(i => i.Order)
+                .ThenInclude(o => o!.OrderProducts)
             .Include(i => i.Company)
             .FirstOrDefaultAsync(i => i.Id == id);
         if (invoice == null) return TypedResults.NotFound();
@@ -86,7 +92,11 @@ public static class InvoiceEndpoints
     private static async Task<Results<Ok<InvoiceDetailsDto>, NotFound, BadRequest<string>>> UpdateInvoice(Guid id, InvoiceCreateDto invoiceRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         // TODO: Is this needed?
-        var invoice = await dbContext.Invoices.FindAsync(id);
+        var invoice = await dbContext.Invoices
+            .Include(i => i.Order)
+                .ThenInclude(o => o!.OrderProducts)
+            .Include(i => i.Company)
+            .FirstOrDefaultAsync(i => i.Id == id);
         if (invoice == null) return TypedResults.NotFound();
 
         var order = await dbContext.Orders.FindAsync(invoiceRequest.OrderId);

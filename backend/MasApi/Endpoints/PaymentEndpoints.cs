@@ -38,12 +38,15 @@ public static class PaymentEndpoints
     private static async Task<Results<Created<PaymentDetailsDto>, BadRequest<string>>> CreatePayment(PaymentCreateDto paymentRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
 
-        var order = await dbContext.Orders.FindAsync(paymentRequest.OrderId);
+        var order = await dbContext.Orders
+            .Include(o => o.OrderProducts)
+            .FirstOrDefaultAsync(o => o.Id == paymentRequest.OrderId);
         if (order == null) return TypedResults.BadRequest("Order does not exist.");
 
         var payment = mapper.Map<Payment>(paymentRequest);
 
         payment.PaymentDate = DateTime.UtcNow.AddDays(PaymentDueDays);
+        payment.Order = order;
 
         dbContext.Payments.Add(payment);
         await dbContext.SaveChangesAsync();
@@ -57,6 +60,7 @@ public static class PaymentEndpoints
     {
         var payment = await dbContext.Payments
             .Include(p => p.Order)
+                .ThenInclude(o => o!.OrderProducts)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (payment == null) return TypedResults.NotFound();
 
@@ -75,7 +79,10 @@ public static class PaymentEndpoints
 
     private static async Task<Results<Ok<PaymentDetailsDto>, NotFound, BadRequest<string>>> UpdatePayment(Guid id, PaymentCreateDto paymentRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var payment = await dbContext.Payments.FindAsync(id);
+        var payment = await dbContext.Payments
+            .Include(p => p.Order)
+                .ThenInclude(o => o!.OrderProducts)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (payment == null) return TypedResults.NotFound();
 
         var order = await dbContext.Orders.FindAsync(paymentRequest.OrderId);

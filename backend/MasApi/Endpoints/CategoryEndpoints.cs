@@ -32,19 +32,21 @@ public static class CategoryEndpoints
         return app;
     }
 
-    public static async Task<Results<Created<Category>, BadRequest<string>>> CreateCategory(CategoryCreateDto categoryRequest, Data.MasDbContext dbContext, IMapper mapper)
+    public static async Task<Results<Created<CategoryDetailsDto>, BadRequest<string>>> CreateCategory(CategoryCreateDto categoryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var category = mapper.Map<Category>(categoryRequest);
 
         dbContext.Categories.Add(category);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Created($"/categories/{category.Id}", category);
+        return TypedResults.Created($"/categories/{category.Id}", mapper.Map<CategoryDetailsDto>(category));
     }
 
     public static async Task<Results<Ok<CategoryDetailsDto>, NotFound>> GetCategory(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var category = await dbContext.Categories.FindAsync(id);
+        var category = await dbContext.Categories
+            .Include(c => c.Products)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (category == null) return TypedResults.NotFound();
 
         var categoryDetails = mapper.Map<CategoryDetailsDto>(category);
@@ -61,7 +63,7 @@ public static class CategoryEndpoints
         return TypedResults.Ok(categories);
     }
 
-    public static async Task<Results<Ok<Category>, NotFound>> UpdateCategory(Guid id, CategoryCreateDto categoryRequest, Data.MasDbContext dbContext, IMapper mapper)
+    public static async Task<Results<Ok<CategoryDetailsDto>, NotFound>> UpdateCategory(Guid id, CategoryCreateDto categoryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var category = await dbContext.Categories
             .Include(c => c.Products)
@@ -74,10 +76,10 @@ public static class CategoryEndpoints
         dbContext.Categories.Update(category);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Ok(category);
+        return TypedResults.Ok(mapper.Map<CategoryDetailsDto>(category));
     }
 
-    public static async Task<Results<Ok<Category>, NotFound, BadRequest<string>>> DeleteCategory(Guid id, Data.MasDbContext dbContext)
+    public static async Task<Results<NoContent, NotFound, BadRequest<string>>> DeleteCategory(Guid id, Data.MasDbContext dbContext)
     {
         var category = await dbContext.Categories
             .Include(c => c.Products)
@@ -89,6 +91,6 @@ public static class CategoryEndpoints
         dbContext.Categories.Remove(category);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Ok(category);
+        return TypedResults.NoContent();
     }
 }

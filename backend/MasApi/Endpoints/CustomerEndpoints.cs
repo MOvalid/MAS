@@ -1,7 +1,6 @@
 using MasApi.Models;
 using MasApi.Models.Dtos;
 using Microsoft.AspNetCore.Http.HttpResults;
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 
@@ -47,7 +46,10 @@ public static class CustomerEndpoints
 
     private static async Task<Results<Ok<CustomerDetailsDto>, NotFound>> GetCustomer(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var customer = await dbContext.Customers.FindAsync(id);
+        var customer = await dbContext.Customers
+            .Include(c => c.Orders!)
+                .ThenInclude(o => o.OrderProducts)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (customer == null) return TypedResults.NotFound();
 
         var customerDetailsDto = mapper.Map<CustomerDetailsDto>(customer);
@@ -64,9 +66,12 @@ public static class CustomerEndpoints
         return TypedResults.Ok(customers);
     }
 
-    private static async Task<Results<Ok<CustomerListDto>, NotFound>> UpdateCustomer(Guid id, CustomerCreateDto customerRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<CustomerDetailsDto>, NotFound>> UpdateCustomer(Guid id, CustomerCreateDto customerRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var customer = await dbContext.Customers.FindAsync(id);
+        var customer = await dbContext.Customers
+            .Include(c => c.Orders!)
+                .ThenInclude(o => o.OrderProducts)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (customer == null) return TypedResults.NotFound();
 
         mapper.Map(customerRequest, customer);
@@ -74,7 +79,7 @@ public static class CustomerEndpoints
         dbContext.Customers.Update(customer);
         await dbContext.SaveChangesAsync();
 
-        var customerDto = mapper.Map<CustomerListDto>(customer);
+        var customerDto = mapper.Map<CustomerDetailsDto>(customer);
 
         return TypedResults.Ok(customerDto);
     }

@@ -53,7 +53,11 @@ public static class DeliveryEndpoints
 
     private static async Task<Results<Ok<DeliveryDetailsDto>, NotFound>> GetDelivery(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var delivery = await dbContext.Deliveries.FindAsync(id);
+        var delivery = await dbContext.Deliveries
+            .Include(d => d.Order)
+                .ThenInclude(o => o!.OrderProducts)
+            .Include(d => d.Carrier)
+            .FirstOrDefaultAsync(d => d.Id == id);
         if (delivery == null) return TypedResults.NotFound();
 
         var deliveryDto = mapper.Map<DeliveryDetailsDto>(delivery);
@@ -64,15 +68,19 @@ public static class DeliveryEndpoints
     private static async Task<Results<Ok<List<DeliveryListDto>>, NotFound>> GetDeliveries(Data.MasDbContext dbContext, IMapper mapper)
     {
         var deliveries = await dbContext.Deliveries
-            .Select(s => mapper.Map<DeliveryListDto>(s))
+            .Select(d => mapper.Map<DeliveryListDto>(d))
             .ToListAsync();
 
         return TypedResults.Ok(deliveries);
     }
 
-    private static async Task<Results<Ok<DeliveryListDto>, NotFound>> UpdateDelivery(Guid id, DeliveryCreateDto deliveryRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<DeliveryDetailsDto>, NotFound>> UpdateDelivery(Guid id, DeliveryCreateDto deliveryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var delivery = await dbContext.Deliveries.FindAsync(id);
+        var delivery = await dbContext.Deliveries
+            .Include(d => d.Order)
+                .ThenInclude(o => o!.OrderProducts)
+            .Include(d => d.Carrier)
+            .FirstOrDefaultAsync(d => d.Id == id);
         if (delivery == null) return TypedResults.NotFound();
 
         mapper.Map(deliveryRequest, delivery);
@@ -80,7 +88,7 @@ public static class DeliveryEndpoints
         dbContext.Deliveries.Update(delivery);
         await dbContext.SaveChangesAsync();
 
-        var deliveryDto = mapper.Map<DeliveryListDto>(delivery);
+        var deliveryDto = mapper.Map<DeliveryDetailsDto>(delivery);
 
         return TypedResults.Ok(deliveryDto);
     }

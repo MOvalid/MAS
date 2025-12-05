@@ -32,19 +32,21 @@ public static class CompanyEndpoints
         return app;
     }
 
-    private static async Task<Results<Created<Company>, BadRequest<string>>> CreateCompany(CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Created<CompanyDetailsDto>, BadRequest<string>>> CreateCompany(CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var company = mapper.Map<Company>(companyRequest);
 
         dbContext.Companies.Add(company);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Created($"/companies/{company.Id}", company);
+        return TypedResults.Created($"/companies/{company.Id}", mapper.Map<CompanyDetailsDto>(company));
     }
 
     private static async Task<Results<Ok<CompanyDetailsDto>, NotFound>> GetCompany(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var company = await dbContext.Companies.FindAsync(id);
+        var company = await dbContext.Companies
+            .Include(c => c.Invoices)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (company == null) return TypedResults.NotFound();
 
         var companyDto = mapper.Map<CompanyDetailsDto>(company);
@@ -61,9 +63,11 @@ public static class CompanyEndpoints
         return TypedResults.Ok(companyDtos);
     }
 
-    private static async Task<Results<Ok<CompanyListDto>, NotFound>> UpdateCompany(Guid id, CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<CompanyDetailsDto>, NotFound>> UpdateCompany(Guid id, CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var company = await dbContext.Companies.FindAsync(id);
+        var company = await dbContext.Companies
+            .Include(c => c.Invoices)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (company == null) return TypedResults.NotFound();
 
         mapper.Map(companyRequest, company);
@@ -71,7 +75,7 @@ public static class CompanyEndpoints
         dbContext.Companies.Update(company);
         await dbContext.SaveChangesAsync();
 
-        var companyDto = mapper.Map<CompanyListDto>(company);
+        var companyDto = mapper.Map<CompanyDetailsDto>(company);
 
         return TypedResults.Ok(companyDto);
     }

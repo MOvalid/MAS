@@ -33,7 +33,7 @@ public static class SellerEndpoints
         return app;
     }
 
-    private static async Task<Results<Created<Seller>, BadRequest<string>>> CreateSeller(SellerCreateDto sellerRequest, Data.MasDbContext dbContext, HttpContext httpContext)
+    private static async Task<Results<Created<SellerDetailsDto>, BadRequest<string>>> CreateSeller(SellerCreateDto sellerRequest, Data.MasDbContext dbContext, HttpContext httpContext, IMapper mapper)
     {
         var sub = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = httpContext.User.FindFirstValue(ClaimTypes.Email);
@@ -55,12 +55,17 @@ public static class SellerEndpoints
         dbContext.Sellers.Add(seller);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Created($"/sellers/{seller.Id}", seller);
+        var sellerDto = mapper.Map<SellerDetailsDto>(seller);
+
+        return TypedResults.Created($"/sellers/{seller.Id}", sellerDto);
     }
 
     private static async Task<Results<Ok<SellerDetailsDto>, NotFound>> GetSeller(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var seller = await dbContext.Sellers.FindAsync(id);
+        var seller = await dbContext.Sellers
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.OrderProducts)
+            .FirstOrDefaultAsync(s => s.Id == id);
         if (seller == null) return TypedResults.NotFound();
 
         var sellerDto = mapper.Map<SellerDetailsDto>(seller);
@@ -77,9 +82,12 @@ public static class SellerEndpoints
         return TypedResults.Ok(sellers);
     }
 
-    private static async Task<Results<Ok<SellerListDto>, NotFound>> UpdateSeller(Guid id, SellerCreateDto sellerRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<SellerDetailsDto>, NotFound>> UpdateSeller(Guid id, SellerCreateDto sellerRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var seller = await dbContext.Sellers.FindAsync(id);
+        var seller = await dbContext.Sellers
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.OrderProducts)
+            .FirstOrDefaultAsync(s => s.Id == id);
         if (seller == null) return TypedResults.NotFound();
 
         mapper.Map(sellerRequest, seller);
@@ -87,7 +95,7 @@ public static class SellerEndpoints
         dbContext.Sellers.Update(seller);
         await dbContext.SaveChangesAsync();
 
-        var sellerDto = mapper.Map<SellerListDto>(seller);
+        var sellerDto = mapper.Map<SellerDetailsDto>(seller);
 
         return TypedResults.Ok(sellerDto);
     }

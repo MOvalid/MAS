@@ -32,31 +32,33 @@ public static class CarrierEndpoints
         return app;
     }
 
-    private static async Task<Results<Created<Carrier>, BadRequest<string>>> CreateCarrier(CarrierCreateDto carrierRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Created<CarrierListDto>, BadRequest<string>>> CreateCarrier(CarrierCreateDto carrierRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var carrier = mapper.Map<Carrier>(carrierRequest);
 
         dbContext.Carriers.Add(carrier);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Created($"/carriers/{carrier.Id}", carrier);
+        return TypedResults.Created($"/carriers/{carrier.Id}", mapper.Map<CarrierListDto>(carrier));
     }
 
-    private static async Task<Results<Ok<Carrier>, NotFound>> GetCarrier(Guid id, Data.MasDbContext dbContext)
+    private static async Task<Results<Ok<CarrierListDto>, NotFound>> GetCarrier(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var carrier = await dbContext.Carriers.FindAsync(id);
         if (carrier == null) return TypedResults.NotFound();
 
-        return TypedResults.Ok(carrier);
+        return TypedResults.Ok(mapper.Map<CarrierListDto>(carrier));
     }
 
-    private static async Task<Ok<List<Carrier>>> GetCarriers(Data.MasDbContext dbContext)
+    private static async Task<Ok<List<CarrierListDto>>> GetCarriers(Data.MasDbContext dbContext, IMapper mapper)
     {
-        var carriers = await dbContext.Carriers.ToListAsync();
+        var carriers = await dbContext.Carriers
+            .Select(c => mapper
+            .Map<CarrierListDto>(c)).ToListAsync();
         return TypedResults.Ok(carriers);
     }
 
-    private static async Task<Results<Ok<Carrier>, NotFound>> UpdateCarrier(Guid id, CarrierCreateDto carrierRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<CarrierListDto>, NotFound>> UpdateCarrier(Guid id, CarrierCreateDto carrierRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var carrier = await dbContext.Carriers.FindAsync(id);
         if (carrier == null) return TypedResults.NotFound();
@@ -66,7 +68,7 @@ public static class CarrierEndpoints
         dbContext.Carriers.Update(carrier);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Ok(carrier);
+        return TypedResults.Ok(mapper.Map<CarrierListDto>(carrier));
     }
 
     private static async Task<Results<NoContent, NotFound, BadRequest<string>>> DeleteCarrier(Guid id, Data.MasDbContext dbContext)
