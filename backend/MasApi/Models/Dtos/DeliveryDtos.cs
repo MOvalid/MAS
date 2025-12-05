@@ -31,9 +31,9 @@ public class DeliveryDetailsDto
 {
     public required Guid Id { get; set; }
     public required Guid OrderId { get; set; }
-    // TODO: Add OrderDto when implemented
+    public OrderListDto? Order { get; set; }
     public required Guid CarrierId { get; set; }
-    // TODO: Add CarrierDto when implemented
+    public CarrierListDto? Carrier { get; set; }
     public DateTime? DeliveryDate { get; set; }
     public string? Street { get; set; }
     public required string HouseNumber { get; set; }

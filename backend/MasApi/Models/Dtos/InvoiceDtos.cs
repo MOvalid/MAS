@@ -19,7 +19,7 @@ public class InvoiceListDto
 public class InvoiceDetailsDto
 {
     public required Guid Id { get; set; }
-    public required Order Order { get; set; } // TODO: Change to OrderListDto
+    public required OrderListDto Order { get; set; }
     public CompanyListDto? Company { get; set; }
     public required DateTime IssuedAt { get; set; }
     public required string Status { get; set; }

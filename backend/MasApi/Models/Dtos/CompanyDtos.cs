@@ -27,7 +27,7 @@ public class CompanyDetailsDto
     public required string TaxId { get; set; }
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
-    // Add Invoices DTOs
+    public ICollection<InvoiceListDto>? Invoices { get; set; }
 }
 
 public class CompanyListDto

@@ -23,7 +23,7 @@ public class PaymentListDto
 public class PaymentDetailsDto
 {
     public required Guid Id { get; set; }
-    public required Order Order { get; set; } // TODO: Change to OrderListDto
+    public required OrderListDto Order { get; set; }
     public required DateTime PaymentDate { get; set; }
     public required decimal Amount { get; set; }
     public required string PaymentMethod { get; set; }

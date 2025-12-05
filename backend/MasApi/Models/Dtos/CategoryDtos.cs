@@ -18,5 +18,5 @@ public class CategoryDetailsDto
     public required Guid Id { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
-    // TODO add Products DTOs list
+    public ICollection<ProductListDto>? Products { get; set; }
 }

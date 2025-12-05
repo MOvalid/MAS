@@ -7,7 +7,7 @@ public class CarrierProfile : Profile
     public CarrierProfile()
     {
         CreateMap<Models.Dtos.CarrierCreateDto, Models.Carrier>().ReverseMap();
-
+        CreateMap<Models.Dtos.CarrierListDto, Models.Carrier>().ReverseMap();
         
     }
 }
