@@ -1,6 +1,6 @@
 // // types/mappers/product.mapper.ts
-import { ProductDto } from '@/types/dto';
-import { Product, Tag } from '@/types/domain';
+import { ProductDto, ProductStockDto, ProductStockResponseDto } from '@/types/dto';
+import { Product, ProductStock, Tag } from '@/types/domain';
 import { Currency } from '@/types/common';
 
 /**
@@ -29,7 +29,6 @@ export const mapProductDtoToDomain = (dto: ProductDto): Product => ({
     grossPrice: dto.grossPrice,
     vatAmount: dto.vatAmount,
     currency: Currency[dto.currency as keyof typeof Currency],
-    tags: mapTagsDtoToDomain(dto.tags),
 });
 
 /**
@@ -66,4 +65,18 @@ export const mapProductDomainToDto = (product: Product): ProductDto => ({
     grossPrice: product.grossPrice,
     vatAmount: product.vatAmount,
     currency: product.currency,
+});
+
+export const mapProductStockDto = (dto: ProductStockDto): ProductStock => ({
+    id: dto.id,
+    name: dto.productName,
+    stock: dto.stockValue,
+    unit: dto.unit,
+});
+
+export const mapProductStockResponseDto = (dto: ProductStockResponseDto) => ({
+    items: dto.items.map(mapProductStockDto),
+    total: dto.total,
+    page: dto.page,
+    limit: dto.limit,
 });

@@ -8,6 +8,7 @@ import { ClientListScreen } from '../screens/client';
 import { ProductListScreen } from '../screens/product';
 import { OrderListScreen } from '../screens/order';
 import { NavigationConfig } from '@/types/navigation';
+import { StockListScreen } from '../screens/stock';
 
 export type NavigationConfigItem = {
     name: string;
@@ -26,7 +27,7 @@ const navigationConfig: NavigationConfig = [
         label: 'Faktury',
         icon: 'clipboard-text-outline',
     },
-    { name: 'Magazine', label: 'Magazyn', icon: 'warehouse' },
+    { name: 'Stock', label: 'Stan magazynowy', icon: 'warehouse', initialScreen: StockListScreen },
 ];
 
 export const AppDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {

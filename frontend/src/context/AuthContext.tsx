@@ -1,11 +1,14 @@
+// src/context/AuthContext.ts
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { getAccessToken, setAccessToken, removeTokens } from '../api/authStorage';
+import { apiClient } from '@/api/apiClient';
+import { getAccessToken, setAccessToken, removeTokens } from '@/api/authStorage';
 
 interface AuthContextType {
     accessToken: string | null;
     setAccessToken: (token: string) => Promise<void>;
     getAccessToken: () => Promise<string | null>;
     removeTokens: () => Promise<void>;
+    api: typeof apiClient;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setAccessToken: setAccessTokenFn,
                 getAccessToken: getAccessTokenFn,
                 removeTokens: removeTokensFn,
+                api: apiClient,
             }}
         >
             {children}

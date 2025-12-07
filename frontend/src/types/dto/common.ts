@@ -3,8 +3,3 @@ export type ApiResponse<T> = {
     status: number;
     message?: string;
 };
-
-export type ApiError = {
-    error: string;
-    code?: number;
-};

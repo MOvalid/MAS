@@ -1,9 +1,16 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { getAccessToken, setAccessToken, removeTokens } from './authStorage';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import {
+    getAccessToken,
+    getRefreshToken,
+    setAccessToken,
+    setRefreshToken,
+    removeTokens,
+} from './authStorage';
 import { refreshTokenAPI } from './authApi';
 import { BASE_URL, TIMEOUT } from '../config';
+import { normalizeApiError } from './errorNormalizer';
 
-interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+interface RetryableRequestConfig extends AxiosRequestConfig {
     _retry?: boolean;
 }
 
@@ -13,9 +20,9 @@ export const apiClient = axios.create({
     headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor
+// Request interceptor: attach access token
 apiClient.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
+    async (config) => {
         const token = await getAccessToken();
         if (token) {
             config.headers = config.headers ?? {};
@@ -26,30 +33,34 @@ apiClient.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response interceptor
+// Response interceptor: handle 401, refresh token, and normalize errors
 apiClient.interceptors.response.use(
-    (response) => response,
-    async (error: AxiosError<unknown>) => {
+    (response: AxiosResponse) => response,
+    async (error: AxiosError) => {
         const originalRequest = error.config as RetryableRequestConfig;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
-
             try {
-                const newToken = await refreshTokenAPI();
-                await setAccessToken(newToken);
+                const refreshToken = await getRefreshToken();
+                if (!refreshToken) throw new Error('No refresh token available');
+
+                const newTokens = await refreshTokenAPI(refreshToken);
+
+                await setAccessToken(newTokens.accessToken);
+                await setRefreshToken(newTokens.refreshToken);
 
                 if (originalRequest.headers) {
-                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                    originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
                 }
 
                 return apiClient(originalRequest);
             } catch (refreshError) {
                 await removeTokens();
-                return Promise.reject(refreshError);
+                return Promise.reject(normalizeApiError(refreshError as AxiosError));
             }
         }
 
-        return Promise.reject(error);
+        return Promise.reject(normalizeApiError(error));
     }
 );

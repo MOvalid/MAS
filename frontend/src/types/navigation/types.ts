@@ -33,6 +33,10 @@ export type DrawerParamList = {
         screen?: keyof OrderStackParamList;
         params?: OrderStackParamList[keyof OrderStackParamList];
     };
+    Stock: {
+        screen?: keyof StockStackParamList;
+        params?: StockStackParamList[keyof StockStackParamList];
+    };
     Invoice: undefined;
     Magazine: undefined;
 };
@@ -65,4 +69,8 @@ export type OrderStackParamList = {
     OrderAdd: undefined;
     OrderEdit: { id: string };
     OrderDetails: { id: string };
+};
+
+export type StockStackParamList = {
+    OrderList: undefined;
 };

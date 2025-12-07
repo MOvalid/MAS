@@ -12,8 +12,18 @@ export interface ProductDto {
     grossPrice: number;
     vatAmount: number;
     currency: string;
-    tags?: {
-        id: string; // UUID
-        name: string;
-    }[];
+}
+
+export interface ProductStockDto {
+    id: string;
+    productName: string;
+    stockValue: number;
+    unit: string;
+}
+
+export interface ProductStockResponseDto {
+    items: ProductStockDto[];
+    total: number;
+    page: number;
+    limit: number;
 }

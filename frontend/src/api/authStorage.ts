@@ -9,7 +9,14 @@ export const setAccessToken = async (token: string): Promise<void> => {
     await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
 };
 
+export const getRefreshToken = async (): Promise<string | null> => {
+    return AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+};
+
+export const setRefreshToken = async (token: string): Promise<void> => {
+    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
+};
+
 export const removeTokens = async (): Promise<void> => {
-    await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-    await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+    await AsyncStorage.multiRemove([STORAGE_KEYS.ACCESS_TOKEN, STORAGE_KEYS.REFRESH_TOKEN]);
 };

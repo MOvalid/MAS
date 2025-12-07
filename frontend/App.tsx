@@ -14,11 +14,12 @@ import {
     CustomerNavigator,
     OrderNavigator,
     ProductNavigator,
+    StockNavigator,
 } from './src/components/navigation';
 import { DrawerParamList } from './src/types/navigation';
 import { AuthProvider } from './src/context/AuthContext';
 
-import { HomeScreen, InvoiceScreen, MagazineScreen } from './src/components/screens';
+import { HomeScreen, InvoiceScreen } from './src/components/screens';
 import { AppDrawerContent, AppScreenWrapper } from './src/components/common';
 
 const Stack = createNativeStackNavigator();
@@ -77,7 +78,12 @@ const linking = {
                         },
                     },
                     Invoice: 'invoice',
-                    Magazine: 'magazine',
+                    Stock: {
+                        path: 'stock',
+                        screens: {
+                            StockList: '',
+                        },
+                    },
                 },
             },
         },
@@ -179,11 +185,11 @@ function DrawerNavigator() {
                 }}
             />
             <Drawer.Screen
-                name="Magazine"
-                component={withScreenWrapper(MagazineScreen)}
+                name="Stock"
+                component={StockNavigator}
                 options={{
-                    drawerLabel: 'Magazyn',
-                    title: 'Magazyn',
+                    drawerLabel: 'Stan magazynowy',
+                    title: 'Stan magazynowy',
                 }}
             />
         </Drawer.Navigator>

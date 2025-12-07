@@ -73,3 +73,12 @@ export type ProductOption = {
     value: string;
     unitPrice: number;
 };
+
+export interface ProductStock {
+    id: string;
+    name: string;
+    stock: number;
+    unit: string;
+}
+
+export type ProductSortField = 'name' | 'stock';
