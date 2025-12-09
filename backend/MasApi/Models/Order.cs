@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MasApi.Models
 {
@@ -17,5 +18,12 @@ namespace MasApi.Models
         public Delivery? Delivery { get; set; }
         public ICollection<Payment>? Payments { get; set; }
         public ICollection<OrderItem>? OrderProducts { get; set; }
+
+        [NotMapped]
+        public decimal TotalNetPrice => OrderProducts?.Sum(op => op.TotalNetPrice) ?? 0;
+        [NotMapped]
+        public decimal TotalVatAmount => OrderProducts?.Sum(op => op.TotalVatAmount) ?? 0;
+        [NotMapped]
+        public decimal TotalGrossPrice => OrderProducts?.Sum(op => op.TotalGrossPrice) ?? 0;
     }
 }

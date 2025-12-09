@@ -2,6 +2,7 @@ using MasApi.Models;
 using MasApi.Models.Dtos;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace MasApi.Endpoints;
 
@@ -31,107 +32,50 @@ public static class CompanyEndpoints
         return app;
     }
 
-    private static async Task<Results<Created<Company>, BadRequest<string>>> CreateCompany(CompanyCreateDto companyRequest, Data.MasDbContext dbContext)
+    private static async Task<Results<Created<CompanyDetailsDto>, BadRequest<string>>> CreateCompany(CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var company = new Company
-        {
-            Id = Guid.NewGuid(),
-            Name = companyRequest.Name,
-            Description = companyRequest.Description,
-            Street = companyRequest.Street,
-            HouseNumber = companyRequest.HouseNumber,
-            City = companyRequest.City,
-            PostalCode = companyRequest.PostalCode,
-            Country = companyRequest.Country,
-            TaxId = companyRequest.TaxId,
-            Email = companyRequest.Email,
-            PhoneNumber = companyRequest.PhoneNumber
-        };
+        var company = mapper.Map<Company>(companyRequest);
 
         dbContext.Companies.Add(company);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Created($"/companies/{company.Id}", company);
+        return TypedResults.Created($"/companies/{company.Id}", mapper.Map<CompanyDetailsDto>(company));
     }
 
-    private static async Task<Results<Ok<CompanyDetailsDto>, NotFound>> GetCompany(Guid id, Data.MasDbContext dbContext)
+    private static async Task<Results<Ok<CompanyDetailsDto>, NotFound>> GetCompany(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var company = await dbContext.Companies.FindAsync(id);
+        var company = await dbContext.Companies
+            .Include(c => c.Invoices)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (company == null) return TypedResults.NotFound();
 
-        var companyDto = new CompanyDetailsDto
-        {
-            Id = company.Id,
-            Name = company.Name,
-            Description = company.Description,
-            Street = company.Street,
-            HouseNumber = company.HouseNumber,
-            City = company.City,
-            PostalCode = company.PostalCode,
-            Country = company.Country,
-            TaxId = company.TaxId,
-            Email = company.Email,
-            PhoneNumber = company.PhoneNumber
-        };
+        var companyDto = mapper.Map<CompanyDetailsDto>(company);
 
         return TypedResults.Ok(companyDto);
     }
 
-    private static async Task<Results<Ok<List<CompanyListDto>>, NotFound>> GetCompanies(Data.MasDbContext dbContext)
+    private static async Task<Results<Ok<List<CompanyListDto>>, NotFound>> GetCompanies(Data.MasDbContext dbContext, IMapper mapper)
     {
         var companyDtos = await dbContext.Companies
-        .Select(company => new CompanyListDto
-        {
-            Id = company.Id,
-            Name = company.Name,
-            Description = company.Description,
-            Street = company.Street,
-            HouseNumber = company.HouseNumber,
-            City = company.City,
-            PostalCode = company.PostalCode,
-            Country = company.Country,
-            TaxId = company.TaxId,
-            Email = company.Email,
-            PhoneNumber = company.PhoneNumber
-        })
+        .Select(company => mapper.Map<CompanyListDto>(company))
         .ToListAsync();
 
         return TypedResults.Ok(companyDtos);
     }
 
-    private static async Task<Results<Ok<CompanyListDto>, NotFound>> UpdateCompany(Guid id, CompanyCreateDto companyRequest, Data.MasDbContext dbContext)
+    private static async Task<Results<Ok<CompanyDetailsDto>, NotFound>> UpdateCompany(Guid id, CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var company = await dbContext.Companies.FindAsync(id);
+        var company = await dbContext.Companies
+            .Include(c => c.Invoices)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (company == null) return TypedResults.NotFound();
 
-        company.Name = companyRequest.Name;
-        company.Description = companyRequest.Description;
-        company.Street = companyRequest.Street;
-        company.HouseNumber = companyRequest.HouseNumber;
-        company.City = companyRequest.City;
-        company.PostalCode = companyRequest.PostalCode;
-        company.Country = companyRequest.Country;
-        company.TaxId = companyRequest.TaxId;
-        company.Email = companyRequest.Email;
-        company.PhoneNumber = companyRequest.PhoneNumber;
+        mapper.Map(companyRequest, company);
 
         dbContext.Companies.Update(company);
         await dbContext.SaveChangesAsync();
 
-        var companyDto = new CompanyListDto
-        {
-            Id = company.Id,
-            Name = company.Name,
-            Description = company.Description,
-            Street = company.Street,
-            HouseNumber = company.HouseNumber,
-            City = company.City,
-            PostalCode = company.PostalCode,
-            Country = company.Country,
-            TaxId = company.TaxId,
-            Email = company.Email,
-            PhoneNumber = company.PhoneNumber
-        };
+        var companyDto = mapper.Map<CompanyDetailsDto>(company);
 
         return TypedResults.Ok(companyDto);
     }
@@ -141,10 +85,10 @@ public static class CompanyEndpoints
         var company = await dbContext.Companies
             .Include(c => c.Invoices)
             .FirstOrDefaultAsync(c => c.Id == id);
-        
+
         if (company == null) return TypedResults.NotFound();
         if (company.Invoices != null && company.Invoices.Count != 0) return TypedResults.BadRequest("Cannot delete a company with existing invoices.");
-        
+
         dbContext.Companies.Remove(company);
         await dbContext.SaveChangesAsync();
 

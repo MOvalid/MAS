@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MasApi.Endpoints;
+using AutoMapper;
 
 namespace MasApi;
 
@@ -79,6 +80,8 @@ internal class Program
                         .AllowAnyHeader());
         });
 
+        builder.Services.AddAutoMapper(typeof(Program));
+
         var app = builder.Build();
 
         app.UseCors();
@@ -100,6 +103,12 @@ internal class Program
         app.MapCompanyEndpoints();
         app.MapCategoryEndpoints();
         app.MapCarrierEndpoints();
+        app.MapCustomerEndpoints();
+        app.MapDeliveryEndpoints();
+        app.MapProductEndpoints();
+        app.MapPaymentEndpoints();
+        app.MapInvoiceEndpoints();
+        app.MapOrderEndpoints();
 
         var cultureInfo = new System.Globalization.CultureInfo("en-US");
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
