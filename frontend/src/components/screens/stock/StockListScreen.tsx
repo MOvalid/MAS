@@ -1,123 +1,199 @@
 // StockListScreen.tsx
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { AppCard, AppText } from '@/components/common';
-import { AppTable } from '@/components/common/table/AppTable';
-import { metrics } from '@/theme/metrics';
-import { useProductStock } from '@/composables/useProductStock';
-import { AppAutocomplete } from '@/components/common/AppAutocomplete';
+import { AppCard, AppDropdown, AppText, AppTextInput } from '@/components/common';
+import { AppTable, TableColumn } from '@/components/common/table/AppTable';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
+import { metrics } from '@/theme/metrics';
 import { StockLevelFilter, StockSortOption } from '@/types/domain/stock-filters';
+import { StockProductDto } from '@/types/dto/product';
+import { AppStockBar } from '@/components/common/AppStockBar';
+import { getMockStockProducts } from '@/utils/data-generator';
+import { mapStockList } from '@/mappers/product.mapper';
+import { StockProductViewModel } from '@/types/view-model/product';
+
+const mockAllProducts: StockProductDto[] = getMockStockProducts(200);
 
 export const StockListScreen = () => {
     const theme = useTheme();
-
     const [search, setSearch] = useState('');
     const [stockLevel, setStockLevel] = useState<StockLevelFilter>(StockLevelFilter.All);
     const [sortBy, setSortBy] = useState<StockSortOption>(StockSortOption.NameAscending);
-
     const [page, setPage] = useState(1);
-    const limit = 20;
+    const limit = 10;
 
-    const { items, total, loading, error, refetch } = useProductStock({
-        search,
-        stockLevel,
-        sortBy,
-        page,
-        limit,
-    });
+    const { items, total } = useMemo(() => {
+        let data = [...mockAllProducts];
 
-    useEffect(() => {
-        refetch();
-    }, [search, stockLevel, sortBy, page, refetch]);
+        // filtracja
+        if (stockLevel !== StockLevelFilter.All) {
+            data = data.filter((p) => {
+                if (stockLevel === StockLevelFilter.None) return p.stockQuantity === 0;
+                if (stockLevel === StockLevelFilter.Low)
+                    return p.stockQuantity > 0 && p.stockQuantity < 30;
+                if (stockLevel === StockLevelFilter.Medium)
+                    return p.stockQuantity >= 30 && p.stockQuantity < 100;
+                if (stockLevel === StockLevelFilter.High) return p.stockQuantity >= 100;
+                return true;
+            });
+        }
 
-    const styles = StyleSheet.create({
-        container: { flex: 1, padding: metrics.spacing.lg },
-        card: { paddingVertical: metrics.spacing.md },
-        filtersRow: {
-            flexDirection: 'row',
-            gap: metrics.spacing.md,
-            flexWrap: 'wrap',
-            marginBottom: metrics.spacing.lg,
-        },
-        paginationRow: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            marginTop: metrics.spacing.lg,
-        },
-    });
+        if (search.trim()) {
+            data = data.filter(
+                (p) =>
+                    p.name.toLowerCase().includes(search.toLowerCase()) ||
+                    p.manufacturer?.name.toLowerCase().includes(search.toLowerCase())
+            );
+        }
 
-    const stockLevelOptions = [
-        { label: 'All', value: StockLevelFilter.All },
-        { label: 'None', value: StockLevelFilter.None },
-        { label: 'Low', value: StockLevelFilter.Low },
-        { label: 'Medium', value: StockLevelFilter.Medium },
-        { label: 'High', value: StockLevelFilter.High },
-    ];
+        // sortowanie
+        switch (sortBy) {
+            case StockSortOption.NameAscending:
+                data.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+            case StockSortOption.NameDescending:
+                data.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+            case StockSortOption.StockAscending:
+                data.sort((a, b) => a.stockQuantity - b.stockQuantity);
+                break;
+            case StockSortOption.StockDescending:
+                data.sort((a, b) => b.stockQuantity - a.stockQuantity);
+                break;
+        }
 
-    const sortOptions = [
-        { label: 'Name A → Z', value: StockSortOption.NameAscending },
-        { label: 'Name Z → A', value: StockSortOption.NameDescending },
-        { label: 'Stock ↑', value: StockSortOption.StockAscending },
-        { label: 'Stock ↓', value: StockSortOption.StockDescending },
-    ];
+        const total = data.length;
+        const start = (page - 1) * limit;
+        const paginated = data.slice(start, start + limit);
+
+        const mapped = mapStockList(paginated);
+
+        return { items: mapped, total };
+    }, [search, stockLevel, sortBy, page]);
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
 
+    const stockLevelOptions = [
+        { label: 'Wszystkie', value: StockLevelFilter.All },
+        { label: 'Brak', value: StockLevelFilter.None },
+        { label: 'Niska', value: StockLevelFilter.Low },
+        { label: 'Średnia', value: StockLevelFilter.Medium },
+        { label: 'Wysoka', value: StockLevelFilter.High },
+    ];
+
+    const sortOptions = [
+        { label: 'Nazwa A → Z', value: StockSortOption.NameAscending },
+        { label: 'Nazwa Z → A', value: StockSortOption.NameDescending },
+        { label: 'Stan rosnąco', value: StockSortOption.StockAscending },
+        { label: 'Stan malejąco', value: StockSortOption.StockDescending },
+    ];
+
+    const columns: TableColumn<StockProductViewModel>[] = [
+        {
+            key: 'name',
+            title: 'Nazwa produktu',
+            flex: 2,
+            render: (item) => <AppText>{item.name}</AppText>,
+        },
+        {
+            key: 'manufacturerName',
+            title: 'Producent',
+            flex: 2,
+            render: (item) => <AppText>{item.manufacturerName}</AppText>,
+        },
+        {
+            key: 'stockQuantity',
+            title: 'Stan',
+            flex: 2,
+            align: 'center',
+            render: (item) => <AppStockBar stockQuantity={item.stockQuantity} />,
+        },
+        { key: 'unit', title: 'Jednostka', flex: 0.5, align: 'center' },
+        {
+            key: 'grossPrice',
+            title: 'Cena brutto',
+            flex: 1,
+            align: 'right',
+            render: (item) => <AppText>{item.grossPrice}</AppText>,
+        },
+        {
+            key: 'currency',
+            title: 'Waluta',
+            flex: 1,
+            align: 'center',
+        },
+        {
+            key: 'lastRestocked',
+            title: 'Uzupełniono',
+            flex: 1,
+            render: (item) => <AppText>{item.lastRestocked}</AppText>,
+        },
+    ];
+
+    const styles = StyleSheet.create({
+        container: { flex: 1, padding: metrics.spacing.lg },
+        card: { paddingVertical: metrics.spacing.md, paddingHorizontal: metrics.spacing.md },
+        filtersRow: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: metrics.spacing.md,
+            marginBottom: metrics.spacing.sm,
+        },
+        filterItem: { justifyContent: 'flex-start' },
+        labelText: { color: theme.colors.onSurfaceVariant, marginBottom: metrics.spacing.xs },
+        paginationRow: { marginTop: metrics.spacing.sm, width: '100%', alignItems: 'center' },
+    });
+
     return (
         <ScrollView style={styles.container}>
             <AppText variant="headlineMedium" style={{ marginBottom: metrics.spacing.lg }}>
-                Inventory Stock Levels
+                Stan magazynowy
             </AppText>
 
             <AppCard style={styles.card}>
                 <View style={styles.filtersRow}>
-                    <View style={{ flex: 2 }}>
-                        <AppAutocomplete
-                            label="Search product"
-                            value={{ label: search, value: search }}
-                            options={[]}
-                            getOptionLabel={(o) => o.label}
-                            onChange={(o) => setSearch(o?.value ?? '')}
-                            placeholder="Product name..."
+                    <View style={{ flex: 2, ...styles.filterItem }}>
+                        <AppText variant="bodyLarge" style={styles.labelText}>
+                            Filtruj po nazwie
+                        </AppText>
+                        <AppTextInput
+                            margin="smd"
+                            label="Produkt"
+                            height={40}
+                            value={search}
+                            onChangeValue={setSearch}
+                            fullWidth
                         />
                     </View>
 
-                    <View style={{ flex: 1 }}>
-                        <AppAutocomplete
-                            label="Stock level"
-                            value={stockLevelOptions.find((o) => o.value === stockLevel)}
+                    <View style={{ flex: 1, ...styles.filterItem }}>
+                        <AppText variant="bodyLarge" style={styles.labelText}>
+                            Poziom stanu
+                        </AppText>
+                        <AppDropdown
                             options={stockLevelOptions}
-                            getOptionLabel={(o) => o.label}
-                            onChange={(o) => o && setStockLevel(o.value)}
+                            width="100%"
+                            value={stockLevel}
+                            onChange={(val) => setStockLevel(val as StockLevelFilter)}
                         />
                     </View>
 
-                    <View style={{ flex: 1 }}>
-                        <AppAutocomplete
-                            label="Sort by"
-                            value={sortOptions.find((o) => o.value === sortBy)}
+                    <View style={{ flex: 1, ...styles.filterItem }}>
+                        <AppText variant="bodyLarge" style={styles.labelText}>
+                            Sortuj według
+                        </AppText>
+                        <AppDropdown
                             options={sortOptions}
-                            getOptionLabel={(o) => o.label}
-                            onChange={(o) => o && setSortBy(o.value)}
+                            width="100%"
+                            value={sortBy}
+                            onChange={(val) => setSortBy(val as StockSortOption)}
                         />
                     </View>
                 </View>
 
-                {/* {loading ? (
-                    <ActivityIndicator size="large" />
-                ) : ( */}
-                <AppTable
-                    title="Products"
-                    columns={[
-                        { key: 'name', title: 'Product', flex: 2 },
-                        { key: 'stock', title: 'Stock', flex: 1, align: 'center' },
-                        { key: 'unit', title: 'Unit', flex: 1, align: 'center' },
-                    ]}
-                    data={items}
-                />
+                <AppTable title="Produkty" columns={columns} data={items} />
 
                 <View style={styles.paginationRow}>
                     <AppPaginationControls

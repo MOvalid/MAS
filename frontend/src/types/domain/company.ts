@@ -5,8 +5,8 @@ export interface Company {
     name: string;
     taxId: string;
     address: Address;
-    email: string | null;
-    phone: string | null;
+    email?: string;
+    phone?: string;
 }
 
 export interface CompanyTableRow {

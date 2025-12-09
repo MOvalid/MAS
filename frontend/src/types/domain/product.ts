@@ -9,7 +9,7 @@ export interface ProductTableRow {
     categoryName: string;
     price: string;
     available: boolean;
-    stockQuantity?: number;
+    stockQuantity: number;
 }
 
 export interface Tag {
@@ -29,21 +29,22 @@ export interface Product {
     grossPrice: number;
     vatAmount: number;
     currency: string;
+    lastRestockedAt: string | null;
 }
 
 export interface ProductSpecification {
-    weight?: number; // kg
+    productId: string; // UUID
+    weight: number | null; // kg
     dimensions?: {
         length: number;
         width: number;
         height: number;
     };
-    material?: string;
-    color?: string;
-    manufacturer?: string;
-    countryOfOrigin?: string;
-    warranty?: number;
-    ean?: string;
+    material: string | null;
+    color: string | null;
+    manufacturer: string | null;
+    countryOfOrigin: string | null;
+    warranty: number | null;
 }
 
 export interface ProductDetails {
@@ -60,12 +61,12 @@ export interface ProductDetails {
     vatAmount: number;
     currency: string;
 
-    imageUrl?: string;
-    specification?: ProductSpecification;
+    imageUrl: string | null;
+    specification: ProductSpecification | null;
 
-    createdAt?: string; // ISO date
-    updatedAt?: string; // ISO date
-    lastRestockedAt?: string;
+    createdAt: string | null; // ISO date
+    updatedAt: string | null; // ISO date
+    lastRestockedAt?: string | null;
 }
 
 export type ProductOption = {

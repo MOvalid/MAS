@@ -5,6 +5,6 @@ export interface CompanyDto {
     name: string;
     taxId: string;
     address: AddressDto;
-    email?: string | null;
-    phone?: string | null;
+    email: string | null;
+    phone: string | null;
 }

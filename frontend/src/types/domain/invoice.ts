@@ -13,15 +13,15 @@ export interface InvoiceProduct {
 
 export interface ClientBillingData {
     name: string;
-    nip?: string;
-    email?: string;
+    nip: string | null;
+    email: string | null;
 }
 
 export interface InvoiceTableRow {
     lp: number;
     id: string;
     issueDate: string;
-    paymentDate?: string | null;
+    paymentDate: string | null;
     invoiceNumber: string;
     amount: string;
     status: string;

@@ -1,4 +1,4 @@
-import { AddressDto, CompanyDto, OrderItemDetailsDto, PaymentDto } from '.';
+import { CompanyDto, CustomerDto, OrderItemDto, PaymentDto } from '.';
 import { Currency, InvoiceStatus } from '../common/enums';
 
 export interface ApiInvoiceProduct {
@@ -19,13 +19,13 @@ export interface ApiInvoice {
     issued_by_name: string;
     client_billing_data: {
         name: string;
-        nip?: string;
-        email?: string;
+        nip: string | null;
+        email: string | null;
     };
     currency: keyof typeof Currency;
     issue_date: string;
     payment_due_date: string;
-    payment_date?: string | null;
+    payment_date: string | null;
     status: keyof typeof InvoiceStatus;
     products: ApiInvoiceProduct[];
     total_amount: number;
@@ -42,17 +42,15 @@ export interface InvoiceSummaryDto {
     id: string; // UUID
     invoiceNumber: string;
     orderId: string; // UUID
-    customerFirstName: string;
-    customerLastName: string;
-    customerAddress: AddressDto;
-    company?: CompanyDto | null;
+    customer: CustomerDto;
+    company: CompanyDto | null;
     status: string;
     issuedAt: string; // ISO datetime
     paymentDueDate: string; // ISO datetime
-    items: OrderItemDetailsDto[];
+    items: OrderItemDto[];
     totalNet: number;
     totalVat: number;
     totalGross: number;
     currency: string;
-    payments?: PaymentDto[] | null;
+    payments: PaymentDto[] | null;
 }

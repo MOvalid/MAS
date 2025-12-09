@@ -156,7 +156,7 @@ export const InvoiceScreen = () => {
                         align: 'left',
                         flex: 1,
                     },
-                    { key: 'number', title: 'Numer faktury', align: 'left', flex: 1 },
+                    { key: 'invoiceNumber', title: 'Numer faktury', align: 'left', flex: 1 },
                     { key: 'amount', title: 'Kwota', align: 'left', flex: 1 },
                     { key: 'status', title: 'Status', align: 'left', flex: 1 },
                 ]}

@@ -49,16 +49,25 @@ export const calculateVat = (netPrice: number, vatRate: number): number => {
  * @returns A formatted price string (e.g. "123.45")
  */
 export const formatPrice = (value: number | string): string => {
+    console.log(value);
     if (value === null || value === undefined) return '0.00';
 
     let numericValue: number;
 
     if (typeof value === 'string') {
-        const sanitized = sanitizeNumericInput(value);
-        numericValue = Number(sanitized) || 0;
+        let sanitized = value.replace(/[^\d.,-]/g, '').trim();
+
+        if (sanitized.includes(',')) {
+            sanitized = sanitized.replace(',', '.');
+        }
+
+        numericValue = parseFloat(sanitized) || 0;
     } else {
         numericValue = value;
     }
 
-    return numericValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return new Intl.NumberFormat('pl-PL', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(numericValue);
 };

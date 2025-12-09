@@ -5,7 +5,7 @@ import { useAppTheme } from '../../../theme/AppThemeContext';
 import { metrics } from '../../../theme/metrics';
 
 interface AppTableCellProps {
-    text?: string | number | null;
+    content?: React.ReactNode;
     variant?: 'header' | 'cell';
     flex?: number;
     align?: 'left' | 'center' | 'right';
@@ -13,7 +13,7 @@ interface AppTableCellProps {
 }
 
 export const AppTableCell: React.FC<AppTableCellProps> = ({
-    text,
+    content,
     variant = 'cell',
     flex = 1,
     align = 'left',
@@ -24,18 +24,22 @@ export const AppTableCell: React.FC<AppTableCellProps> = ({
 
     return (
         <View style={[styles.base, { flex, alignItems: alignMap[align] }, style]}>
-            <AppText
-                variant={isHeader ? 'labelLarge' : 'bodyLarge'}
-                style={[
-                    isHeader ? styles.headerText : styles.cellText,
-                    {
-                        color: isHeader ? colors.onSecondaryContainer : colors.onSurface,
-                        textAlign: align,
-                    },
-                ]}
-            >
-                {text ?? '—'}
-            </AppText>
+            {typeof content === 'string' || typeof content === 'number' ? (
+                <AppText
+                    variant={isHeader ? 'labelLarge' : 'bodyLarge'}
+                    style={[
+                        isHeader ? styles.headerText : styles.cellText,
+                        {
+                            color: isHeader ? colors.onSecondaryContainer : colors.onSurface,
+                            textAlign: align,
+                        },
+                    ]}
+                >
+                    {content}
+                </AppText>
+            ) : (
+                content
+            )}
         </View>
     );
 };

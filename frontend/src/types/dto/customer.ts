@@ -5,7 +5,7 @@ export interface CustomerDto {
     firstName: string;
     lastName: string;
     email: string;
-    phoneNumber?: string | null;
-    address?: AddressDto | null;
-    orders?: OrderDto[] | null;
+    phoneNumber: string | null;
+    address: AddressDto | null;
+    orders: OrderDto[] | null;
 }

@@ -91,6 +91,16 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
                 value={internalValue}
                 onChangeText={handleChangeText}
                 {...props}
+                right={
+                    internalValue ? (
+                        <TextInput.Icon
+                            icon="close"
+                            size={20}
+                            color={colors.onSurfaceVariant}
+                            onPress={() => handleChangeText('')}
+                        />
+                    ) : undefined
+                }
             />
             <View style={styles.errorContainer}>
                 {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}

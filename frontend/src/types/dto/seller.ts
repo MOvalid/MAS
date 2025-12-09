@@ -5,5 +5,5 @@ export interface SellerDto {
     firstName: string;
     lastName: string;
     email: string;
-    orders?: OrderDto[] | null;
+    orders: OrderDto[] | null;
 }

@@ -5,13 +5,7 @@ import { useAppTheme } from '../../../theme/AppThemeContext';
 import { metrics } from '../../../theme/metrics';
 import AppTableRowActions from './AppTableRowActions';
 import { IconValue } from '../icons';
-
-interface TableColumn {
-    key: string;
-    title: string;
-    align?: 'left' | 'center' | 'right';
-    flex?: number;
-}
+import { TableColumn } from './AppTable';
 
 interface Action {
     icon: IconValue;
@@ -20,7 +14,7 @@ interface Action {
 }
 
 interface AppTableContentProps<T> {
-    columns: TableColumn[];
+    columns: TableColumn<T>[];
     data: T[];
     actions?: (row: T) => Action[];
     onRowPress?: (row: T) => void;
@@ -52,10 +46,10 @@ export const AppTableContent = <T extends Record<string, any>>({
                     {columns.map((col) => (
                         <AppTableCell
                             key={col.key}
-                            text={row[col.key]}
-                            variant="cell"
-                            align={col.align ?? 'left'}
+                            content={col.render ? col.render(row) : String(row[col.key] ?? '—')}
                             flex={col.flex ?? 1}
+                            align={col.align ?? 'left'}
+                            variant="cell"
                         />
                     ))}
 

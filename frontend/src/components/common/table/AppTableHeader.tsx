@@ -3,20 +3,14 @@ import { View, StyleSheet } from 'react-native';
 import { AppTableCell } from './AppTableCell';
 import { useAppTheme } from '../../../theme/AppThemeContext';
 import { metrics } from '../../../theme/metrics';
+import { TableColumn } from './AppTable';
 
-export interface TableColumn {
-    key: string;
-    title: string;
-    align?: 'left' | 'center' | 'right';
-    flex?: number;
-}
-
-interface AppTableHeaderProps {
-    columns: TableColumn[];
+interface AppTableHeaderProps<T> {
+    columns: TableColumn<T>[];
     hasActions?: boolean;
 }
 
-export const AppTableHeader: React.FC<AppTableHeaderProps> = ({ columns }) => {
+export const AppTableHeader = <T,>({ columns, hasActions }: AppTableHeaderProps<T>) => {
     const { colors } = useAppTheme();
 
     return (
@@ -32,12 +26,14 @@ export const AppTableHeader: React.FC<AppTableHeaderProps> = ({ columns }) => {
             {columns.map((col) => (
                 <AppTableCell
                     key={col.key}
-                    text={col.title}
+                    content={col.title}
                     variant="header"
                     align={col.align ?? 'left'}
                     flex={col.flex ?? 1}
                 />
             ))}
+
+            {hasActions && <AppTableCell content="" variant="header" flex={1} align="center" />}
         </View>
     );
 };

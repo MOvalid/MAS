@@ -20,9 +20,9 @@ export const AppPaginationControls: React.FC<AppPaginationControlsProps> = ({
     const styles = StyleSheet.create({
         container: {
             flexDirection: 'row',
-            justifyContent: 'space-between',
-            marginTop: metrics.spacing.lg,
+            justifyContent: 'center',
             alignItems: 'center',
+            width: '100%',
         },
     });
 
@@ -32,7 +32,7 @@ export const AppPaginationControls: React.FC<AppPaginationControlsProps> = ({
                 Previous
             </AppButton>
 
-            <AppText>
+            <AppText style={{ marginHorizontal: metrics.spacing.lg }}>
                 {page} / {Math.max(1, totalPages)}
             </AppText>
 

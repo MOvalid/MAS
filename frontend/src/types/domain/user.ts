@@ -4,7 +4,7 @@ export type User = {
     id: string;
     fullName: string;
     email: string;
-    avatar?: string;
+    avatar: string | null;
 };
 
 export function mapApiUser(apiUser: ApiUser): User {

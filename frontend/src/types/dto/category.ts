@@ -3,6 +3,6 @@ import { ProductDto } from '.';
 export interface CategoryDto {
     id: string; // UUID
     name: string;
-    description?: string | null;
-    products?: ProductDto[] | null;
+    description: string | null;
+    products: ProductDto[] | null;
 }

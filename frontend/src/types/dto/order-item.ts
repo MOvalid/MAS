@@ -1,13 +1,8 @@
+import { ProductDto } from './product';
+
 export interface OrderItemDto {
     orderId: string; // UUID
-    productId: string; // UUID
-    quantity: number;
-    unitPrice: number;
-}
-
-export interface OrderItemDetailsDto {
-    orderId: string; // UUID
-    productId: string; // UUID
+    product: ProductDto;
     quantity: number;
     unitPrice: number;
     netPrice: number;
