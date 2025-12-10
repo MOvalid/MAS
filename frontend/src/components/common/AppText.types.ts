@@ -21,6 +21,7 @@ export type AppTextVariant =
 
 export interface AppTextProps extends TextProps {
     size?: TextSize;
+    fontSize?: number;
     weight?: AppFontWeight;
     variant?: AppTextVariant;
     color?: keyof ReturnType<typeof useAppTheme>['colors'] | string;

@@ -1,18 +1,9 @@
 import React, { useState } from 'react';
-import {
-    View,
-    StyleSheet,
-    TouchableOpacity,
-    Platform,
-    ViewStyle,
-    DimensionValue,
-    Text,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, ViewStyle } from 'react-native';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { AppText } from './AppText';
 import { useAppTheme } from '../../theme/AppThemeContext';
 import { metrics } from '../../theme/metrics';
-import { MD3Colors, MD3Typescale } from 'react-native-paper/lib/typescript/types';
 
 interface AppDatePickerProps {
     value: string;
@@ -31,65 +22,49 @@ export const AppDatePicker = ({
     width = '100%',
     errorMessage,
 }: AppDatePickerProps): React.JSX.Element => {
-    const { colors, fonts } = useAppTheme();
+    const { colors } = useAppTheme();
     const [visible, setVisible] = useState(false);
 
-    const dateParts = value ? value.split('-').map(Number) : [];
-    const currentDate =
-        dateParts.length === 3 ? new Date(dateParts[0], dateParts[1] - 1, dateParts[2]) : undefined;
-
-    const errorMessageStyle = {
-        color: colors.error,
-        fontSize: metrics.text.small,
-        marginTop: metrics.spacing.xs,
-        marginLeft: metrics.spacing.md,
-    };
-
-    if (Platform.OS === 'web') {
-        return (
-            <View style={[styles.webContainer, webContainerStyle(colors, width), style]}>
-                <input
-                    type="date"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    style={webInputStyle(colors, fonts, errorMessage)}
-                />
-                <View style={styles.errorContainer}>
-                    {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
-                </View>
-            </View>
-        );
-    }
+    const currentDate = value ? new Date(value) : undefined;
 
     const handleDismiss = () => setVisible(false);
 
-    const handleConfirm = ({ date }: { date: Date | undefined }) => {
+    const handleConfirm = ({ date }: { date?: Date }) => {
         setVisible(false);
-        if (date) {
-            const formatted = date.toISOString().split('T')[0];
-            onChange(formatted);
-        }
+        if (date) onChange(date.toISOString().split('T')[0]);
     };
 
+    const errorStyle = {
+        color: colors.error,
+        marginTop: metrics.spacing.xs,
+        marginLeft: metrics.spacing.md,
+        fontSize: metrics.text.small,
+    };
     return (
-        <View style={[styles.nativeContainer, nativeContainerStyle(colors, width), style]}>
+        <View style={[styles.nativeContainer, style]}>
             <TouchableOpacity onPress={() => setVisible(true)} style={styles.nativeTouchable}>
-                <AppText variant="bodyLarge" style={nativeTextStyle(colors, value)}>
+                <AppText
+                    variant="displayLarge"
+                    style={[
+                        {
+                            color: value ? colors.onSecondaryContainer : colors.primary,
+                        },
+                    ]}
+                >
                     {value || placeholder}
                 </AppText>
             </TouchableOpacity>
 
             <DatePickerModal
-                locale="pl"
                 mode="single"
                 visible={visible}
                 onDismiss={handleDismiss}
                 date={currentDate}
                 onConfirm={handleConfirm}
+                locale="pl"
             />
-            <View style={styles.errorContainer}>
-                {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
-            </View>
+
+            {errorMessage && <Text style={errorStyle}>{errorMessage}</Text>}
         </View>
     );
 };
@@ -102,59 +77,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: metrics.spacing.smd,
         height: metrics.element.height,
     },
-    nativeTouchable: {
-        flex: 1,
-        justifyContent: 'center',
-    },
+    nativeTouchable: { flex: 1, justifyContent: 'center' },
     webContainer: {
         height: metrics.element.height,
-        borderWidth: 1,
-        borderRadius: metrics.radius.xl,
-
         justifyContent: 'center',
+        borderRadius: metrics.radius.xl,
     },
-    errorContainer: {
-        position: 'absolute' as const,
-        bottom: -metrics.spacing.lg,
-        left: 0,
-        right: 0,
-        height: metrics.spacing.lg,
-        justifyContent: 'center' as const,
+    webInput: {
+        width: '100%',
+        height: '100%',
+        borderRadius: metrics.radius.md,
+        paddingHorizontal: metrics.spacing.md,
+        borderWidth: 0,
     },
-});
-
-const nativeContainerStyle = (colors: MD3Colors, width: string | number) => ({
-    backgroundColor: colors.secondaryContainer,
-    borderColor: colors.outlineVariant ?? colors.outline,
-    width: width as DimensionValue,
-});
-
-const nativeTextStyle = (colors: MD3Colors, value?: string) => ({
-    color: value ? colors.onSecondaryContainer : colors.primary,
-});
-
-const webContainerStyle = (colors: MD3Colors, width: string | number) => ({
-    backgroundColor: colors.secondaryContainer,
-    borderColor: colors.outlineVariant ?? colors.outline,
-    width: width as DimensionValue,
-});
-
-const webInputStyle = (
-    colors: MD3Colors,
-    fonts: MD3Typescale,
-    errorMessage: string
-): React.CSSProperties => ({
-    width: '80%',
-    height: '100%',
-    border: 'none',
-    backgroundColor: 'transparent',
-    borderRadius: metrics.radius.md,
-    paddingLeft: metrics.spacing.md,
-    outline: 'none',
-    cursor: 'pointer',
-    color: colors.onSecondaryContainer,
-    fontFamily: fonts.bodyLarge.fontFamily,
-    fontSize: fonts.bodyLarge.fontSize,
-    borderWidth: errorMessage ? 5 : 0,
-    borderColor: errorMessage ? colors.error : 'transparent',
 });

@@ -31,16 +31,16 @@ const EMPTY_PRODUCT: ProductDetails = {
     grossPrice: 0,
     vatAmount: 0,
     currency: 'PLN',
-    imageUrl: undefined,
+    imageUrl: null,
     specification: {
-        weight: undefined,
+        productId: '',
+        weight: null,
         dimensions: { length: 0, width: 0, height: 0 },
         material: '',
         color: '',
         manufacturer: '',
         countryOfOrigin: '',
-        warranty: undefined,
-        ean: '',
+        warranty: null,
     },
     createdAt: '',
     updatedAt: '',
@@ -62,6 +62,7 @@ const mockProduct: ProductDetails = {
     currency: 'PLN',
     imageUrl: 'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764505258/rudy_c7ebby.png',
     specification: {
+        productId: '123',
         weight: 3.2,
         dimensions: { length: 40, width: 15, height: 25 },
         material: 'Futro + kości + mięśnie',
@@ -69,7 +70,6 @@ const mockProduct: ProductDetails = {
         manufacturer: 'Mother Nature',
         countryOfOrigin: 'Polska',
         warranty: 0,
-        ean: '0000000000000',
     },
     createdAt: '2025-01-01T08:00:00Z',
     updatedAt: '2025-11-30T10:00:00Z',
@@ -118,7 +118,6 @@ export const ProductAddEditScreen = () => {
     const [material, setMaterial] = useState(initial.specification?.material || '');
     const [color, setColor] = useState(initial.specification?.color || '');
     const [warranty, setWarranty] = useState(initial.specification?.warranty?.toString() || '');
-    const [ean, setEan] = useState(initial.specification?.ean || '');
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -137,7 +136,6 @@ export const ProductAddEditScreen = () => {
             width,
             height,
             warranty,
-            ean,
             description,
         };
 
@@ -170,7 +168,6 @@ export const ProductAddEditScreen = () => {
                 material,
                 color,
                 warranty: Number(warranty),
-                ean,
             },
         };
 
@@ -277,7 +274,7 @@ export const ProductAddEditScreen = () => {
                     <AppImageUpload
                         imageUrl={imageUrl}
                         onImageSelected={setImageUrl}
-                        onImageRemoved={() => setImageUrl(undefined)}
+                        onImageRemoved={() => setImageUrl(null)}
                     />
                 </View>
 
@@ -495,19 +492,6 @@ export const ProductAddEditScreen = () => {
                                 placeholder="0"
                                 keyboardType="number-pad"
                                 errorMessage={errors.warranty}
-                            />
-                        </View>
-
-                        <View style={styles.inputRow}>
-                            <AppText variant="bodyMedium" style={styles.inputLabel}>
-                                EAN
-                            </AppText>
-                            <AppTextInput
-                                value={ean}
-                                fullWidth
-                                onChangeText={setEan}
-                                placeholder="Wprowadź kod EAN"
-                                errorMessage={errors.ean}
                             />
                         </View>
                     </View>

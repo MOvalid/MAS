@@ -8,7 +8,7 @@ import AppIconButton from './AppIconButton';
 import { IconName } from './icons';
 
 interface AppImageUploadProps {
-    imageUrl?: string;
+    imageUrl: string | null;
     onImageSelected: (uri: string) => void;
     onImageRemoved?: () => void;
 }
@@ -19,7 +19,7 @@ export const AppImageUpload: React.FC<AppImageUploadProps> = ({
     onImageRemoved,
 }) => {
     const theme = useTheme();
-    const [localImageUri, setLocalImageUri] = useState<string | undefined>(imageUrl);
+    const [localImageUri, setLocalImageUri] = useState<string | null>(imageUrl);
 
     const requestPermissions = async () => {
         if (Platform.OS !== 'web') {
@@ -51,7 +51,7 @@ export const AppImageUpload: React.FC<AppImageUploadProps> = ({
     };
 
     const removeImage = () => {
-        setLocalImageUri(undefined);
+        setLocalImageUri(null);
         onImageRemoved?.();
     };
 
@@ -117,15 +117,17 @@ export const AppImageUpload: React.FC<AppImageUploadProps> = ({
                                 icon={IconName.close}
                                 iconColor={theme.colors.backdrop}
                                 size={32}
+                                onPress={() => console.log()}
                             />
                         </TouchableOpacity>
                     </>
                 ) : (
                     <View style={styles.placeholder}>
                         <AppIconButton
-                            icon="camera-plus"
+                            icon={IconName.camera}
                             iconColor={theme.colors.primary}
                             size={48}
+                            onPress={() => console.log()}
                         />
                         <AppText variant="bodyLarge" style={styles.placeholderText}>
                             Kliknij aby dodać zdjęcie

@@ -2,6 +2,7 @@ import { InvoiceDto, InvoiceSummaryDto } from '@/types/dto';
 import { Invoice, InvoiceTableRow } from '@/types/domain';
 import { InvoiceStatus } from '@/types/common';
 import { formatCurrency, formatPolishDate } from '@/utils/formatters';
+import { formatPrice } from '@/utils/price-utils';
 
 /**
  * Mapper: API → Domain (Invoice)
@@ -78,8 +79,9 @@ export const mapInvoiceSummaryDtoToTableRow = (
     lp: index + 1,
     id: invoice.id,
     invoiceNumber: invoice.invoiceNumber,
-    issueDate: formatPolishDate(invoice.issuedAt),
-    paymentDate: formatPolishDate(invoice.paymentDueDate),
-    amount: formatCurrency(invoice.totalGross, invoice.currency),
+    issueDate: formatPolishDate(invoice.issuedAt, false),
+    paymentDate: formatPolishDate(invoice.paymentDueDate, false),
+    amount: formatPrice(invoice.totalGross),
+    currency: invoice.currency,
     status: translateStatus(convertStringToInvoiceStatus(invoice.status)),
 });

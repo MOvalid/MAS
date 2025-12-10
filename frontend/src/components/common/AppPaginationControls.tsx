@@ -29,7 +29,7 @@ export const AppPaginationControls: React.FC<AppPaginationControlsProps> = ({
     return (
         <View style={styles.container}>
             <AppButton mode="outlined" disabled={page === 1} onPress={onPrevious}>
-                Previous
+                Poprzednia
             </AppButton>
 
             <AppText style={{ marginHorizontal: metrics.spacing.lg }}>
@@ -37,7 +37,7 @@ export const AppPaginationControls: React.FC<AppPaginationControlsProps> = ({
             </AppText>
 
             <AppButton mode="outlined" disabled={page >= totalPages} onPress={onNext}>
-                Next
+                Następna
             </AppButton>
         </View>
     );

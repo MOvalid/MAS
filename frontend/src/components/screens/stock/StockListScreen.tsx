@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { AppCard, AppDropdown, AppText, AppTextInput } from '@/components/common';
+import { AppText } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table/AppTable';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
 import { metrics } from '@/theme/metrics';
@@ -12,6 +12,7 @@ import { AppStockBar } from '@/components/common/AppStockBar';
 import { getMockStockProducts } from '@/utils/data-generator';
 import { mapStockList } from '@/mappers/product.mapper';
 import { StockProductViewModel } from '@/types/view-model/product';
+import { StockListFilters } from './StockListFilters';
 
 const mockAllProducts: StockProductDto[] = getMockStockProducts(200);
 
@@ -26,7 +27,6 @@ export const StockListScreen = () => {
     const { items, total } = useMemo(() => {
         let data = [...mockAllProducts];
 
-        // filtracja
         if (stockLevel !== StockLevelFilter.All) {
             data = data.filter((p) => {
                 if (stockLevel === StockLevelFilter.None) return p.stockQuantity === 0;
@@ -47,13 +47,22 @@ export const StockListScreen = () => {
             );
         }
 
-        // sortowanie
         switch (sortBy) {
             case StockSortOption.NameAscending:
                 data.sort((a, b) => a.name.localeCompare(b.name));
                 break;
             case StockSortOption.NameDescending:
                 data.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+            case StockSortOption.ManufacturerAscending:
+                data.sort((a, b) =>
+                    (a.manufacturer?.name ?? '').localeCompare(b.manufacturer?.name ?? '')
+                );
+                break;
+            case StockSortOption.ManufacturerDescending:
+                data.sort((a, b) =>
+                    (b.manufacturer?.name ?? '').localeCompare(a.manufacturer?.name ?? '')
+                );
                 break;
             case StockSortOption.StockAscending:
                 data.sort((a, b) => a.stockQuantity - b.stockQuantity);
@@ -74,21 +83,6 @@ export const StockListScreen = () => {
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
-
-    const stockLevelOptions = [
-        { label: 'Wszystkie', value: StockLevelFilter.All },
-        { label: 'Brak', value: StockLevelFilter.None },
-        { label: 'Niska', value: StockLevelFilter.Low },
-        { label: 'Średnia', value: StockLevelFilter.Medium },
-        { label: 'Wysoka', value: StockLevelFilter.High },
-    ];
-
-    const sortOptions = [
-        { label: 'Nazwa A → Z', value: StockSortOption.NameAscending },
-        { label: 'Nazwa Z → A', value: StockSortOption.NameDescending },
-        { label: 'Stan rosnąco', value: StockSortOption.StockAscending },
-        { label: 'Stan malejąco', value: StockSortOption.StockDescending },
-    ];
 
     const columns: TableColumn<StockProductViewModel>[] = [
         {
@@ -133,7 +127,7 @@ export const StockListScreen = () => {
     ];
 
     const styles = StyleSheet.create({
-        container: { flex: 1, padding: metrics.spacing.lg },
+        container: { flex: 1 },
         card: { paddingVertical: metrics.spacing.md, paddingHorizontal: metrics.spacing.md },
         filtersRow: {
             flexDirection: 'row',
@@ -144,66 +138,34 @@ export const StockListScreen = () => {
         filterItem: { justifyContent: 'flex-start' },
         labelText: { color: theme.colors.onSurfaceVariant, marginBottom: metrics.spacing.xs },
         paginationRow: { marginTop: metrics.spacing.sm, width: '100%', alignItems: 'center' },
+        pageTitle: { flexShrink: 1, marginVertical: 20 },
     });
 
     return (
         <ScrollView style={styles.container}>
-            <AppText variant="headlineMedium" style={{ marginBottom: metrics.spacing.lg }}>
+            <AppText variant="headlineLarge" style={styles.pageTitle}>
                 Stan magazynowy
             </AppText>
 
-            <AppCard style={styles.card}>
-                <View style={styles.filtersRow}>
-                    <View style={{ flex: 2, ...styles.filterItem }}>
-                        <AppText variant="bodyLarge" style={styles.labelText}>
-                            Filtruj po nazwie
-                        </AppText>
-                        <AppTextInput
-                            margin="smd"
-                            label="Produkt"
-                            height={40}
-                            value={search}
-                            onChangeValue={setSearch}
-                            fullWidth
-                        />
-                    </View>
+            <StockListFilters
+                search={search}
+                onSearchChange={setSearch}
+                stockLevel={stockLevel}
+                onStockLevelChange={setStockLevel}
+                sortBy={sortBy}
+                onSortByChange={setSortBy}
+            />
 
-                    <View style={{ flex: 1, ...styles.filterItem }}>
-                        <AppText variant="bodyLarge" style={styles.labelText}>
-                            Poziom stanu
-                        </AppText>
-                        <AppDropdown
-                            options={stockLevelOptions}
-                            width="100%"
-                            value={stockLevel}
-                            onChange={(val) => setStockLevel(val as StockLevelFilter)}
-                        />
-                    </View>
+            <AppTable columns={columns} data={items} />
 
-                    <View style={{ flex: 1, ...styles.filterItem }}>
-                        <AppText variant="bodyLarge" style={styles.labelText}>
-                            Sortuj według
-                        </AppText>
-                        <AppDropdown
-                            options={sortOptions}
-                            width="100%"
-                            value={sortBy}
-                            onChange={(val) => setSortBy(val as StockSortOption)}
-                        />
-                    </View>
-                </View>
-
-                <AppTable title="Produkty" columns={columns} data={items} />
-
-                <View style={styles.paginationRow}>
-                    <AppPaginationControls
-                        page={page}
-                        totalPages={Math.max(1, Math.ceil(total / limit))}
-                        onPrevious={onPrevious}
-                        onNext={onNext}
-                    />
-                </View>
-            </AppCard>
+            <View style={styles.paginationRow}>
+                <AppPaginationControls
+                    page={page}
+                    totalPages={Math.max(1, Math.ceil(total / limit))}
+                    onPrevious={onPrevious}
+                    onNext={onNext}
+                />
+            </View>
         </ScrollView>
     );
 };

@@ -26,7 +26,7 @@ export const AppTableCell: React.FC<AppTableCellProps> = ({
         <View style={[styles.base, { flex, alignItems: alignMap[align] }, style]}>
             {typeof content === 'string' || typeof content === 'number' ? (
                 <AppText
-                    variant={isHeader ? 'labelLarge' : 'bodyLarge'}
+                    variant={isHeader ? 'titleMedium' : 'bodyLarge'}
                     style={[
                         isHeader ? styles.headerText : styles.cellText,
                         {

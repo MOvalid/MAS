@@ -32,6 +32,7 @@ const mockProduct: ProductDetails = {
     currency: 'PLN',
     imageUrl: 'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764505258/rudy_c7ebby.png',
     specification: {
+        productId: '123',
         weight: 3.2,
         dimensions: {
             length: 40,
@@ -43,7 +44,6 @@ const mockProduct: ProductDetails = {
         manufacturer: 'Mother Nature',
         countryOfOrigin: 'Polska',
         warranty: 0,
-        ean: '0000000000000',
     },
     createdAt: '2025-01-01T08:00:00Z',
     updatedAt: '2025-11-30T10:00:00Z',
@@ -390,17 +390,6 @@ export const ProductDetailsScreen = () => {
                                     {product.specification.warranty
                                         ? `${product.specification.warranty} miesięcy`
                                         : 'Brak'}
-                                </AppText>
-                            </View>
-                        )}
-
-                        {product.specification.ean && (
-                            <View style={styles.infoRow}>
-                                <AppText variant="bodyLarge" style={styles.label}>
-                                    EAN:
-                                </AppText>
-                                <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.ean}
                                 </AppText>
                             </View>
                         )}

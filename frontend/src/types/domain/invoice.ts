@@ -24,6 +24,7 @@ export interface InvoiceTableRow {
     paymentDate: string | null;
     invoiceNumber: string;
     amount: string;
+    currency: string;
     status: string;
 }
 

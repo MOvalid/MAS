@@ -1,4 +1,4 @@
 export { AuthScreen } from './AuthScreen';
 export { HomeScreen } from './HomeScreen';
-export { InvoiceScreen } from './InvoiceScreen';
+export { InvoiceListScreen as InvoiceScreen } from './invoice/InvoiceListScreen';
 export { OrderScreen } from './OrderScreen';

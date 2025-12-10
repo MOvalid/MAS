@@ -63,7 +63,7 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
         borderColor: colors.outlineVariant ?? colors.outline,
         backgroundColor: colors.secondaryContainer,
         paddingHorizontal: metrics.spacing.md,
-        paddingVertical: metrics.spacing.smd,
+        paddingVertical: metrics.spacing.md,
         height: height as DimensionValue,
     });
 
@@ -137,8 +137,15 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
                         activeOpacity={0.8}
                         disabled={disabled}
                     >
-                        <AppText style={styles.labelText}>{label ? `${label}: ` : ''}</AppText>
-                        <AppText style={styles.valueText} numberOfLines={1} ellipsizeMode="tail">
+                        <AppText fontSize={metrics.text.normal} style={styles.labelText}>
+                            {label ? `${label}: ` : ''}
+                        </AppText>
+                        <AppText
+                            fontSize={metrics.text.normal}
+                            style={styles.valueText}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
                             {getDisplayLabel()}
                         </AppText>
                         <Icon
@@ -173,7 +180,7 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
 const styles = StyleSheet.create({
     container: {
         justifyContent: 'center',
-        marginVertical: metrics.spacing.smd,
+        marginVertical: metrics.spacing.lmd,
     },
     labelText: {
         marginRight: metrics.spacing.xs,

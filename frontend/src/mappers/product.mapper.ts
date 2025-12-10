@@ -1,64 +1,13 @@
 // // types/mappers/product.mapper.ts
 import { ProductDto, StockProductDto } from '@/types/dto';
-import { Product, Tag } from '@/types/domain';
-import { Currency } from '@/types/common';
-import { StockProductViewModel } from '@/types/view-model/product';
+import { ProductViewModel, StockProductViewModel } from '@/types/view-model/product';
 import { formatPolishDate } from '@/utils/formatters';
 import { formatPrice } from '@/utils/price-utils';
-
-/**
- * Maps a {@link ProductDto} received from the API
- * into a typed {@link Product} domain model used internally in the application.
- *
- * @example
- * const dto: ProductDto = {
- *   id: "1",
- *   name: "Laptop",
- *   sku: "ABC-123",
- *   netPrice: 4500,
- *   grossPrice: 5535,
- *   vatRate: 23,
- *   vatAmount: 1035,
- *   currency: "PLN"
- * }
- *
- * const product = mapProductDtoToDomain(dto)
- * // → { id: "1", name: "Laptop", sku: "ABC-123", netPrice: 4500, ... }
- *
- * @param dto - The raw {@link ProductDto} object received from the backend.
- * @returns A clean, strongly typed {@link Product} domain object.
- */
-export const mapProductDtoToDomain = (dto: ProductDto): Product => ({
-    id: dto.id,
-    name: dto.name,
-    sku: dto.sku,
-    stockQuantity: dto.stockQuantity,
-    description: dto.description ?? null,
-    categoryId: dto.categoryId ?? null,
-    netPrice: dto.netPrice,
-    vatRate: dto.vatRate,
-    grossPrice: dto.grossPrice,
-    vatAmount: dto.vatAmount,
-    currency: Currency[dto.currency as keyof typeof Currency],
-});
 
 /**
  * Maps a {@link StockProductDto} received from the API
  * into a presentation-ready {@link StockProductViewModel}.
  *
- * This mapper belongs to the *presentation layer*.
- * It performs UI-specific formatting:
- *
- * - converts prices into formatted strings (e.g. "123,45 zł"),
- * - formats ISO date strings into Polish locale–friendly format,
- * - ensures that missing manufacturer data shows a placeholder "—",
- * - leaves numeric values as-is when they must remain sortable,
- * - isolates the UI from DTO structure changes.
- *
- * Thanks to this mapper:
- * - the UI never receives raw API numeric prices,
- * - all displayed text is already formatted,
- * - components like tables stay clean and logic-free.
  *
  * @example
  * const vm = mapStockProductToViewModel(dto)
@@ -85,8 +34,6 @@ export const mapStockProductToViewModel = (dto: StockProductDto): StockProductVi
  * Maps an array of {@link StockProductDto} items into an array of
  * presentation-layer {@link StockProductViewModel} objects.
  *
- * This is a convenience wrapper for list mapping.
- *
  * @example
  * mapStockList(dtoArray)
  * // → [{ id: "1", name: "Produkt 1", grossPrice: "10,00 zł" }, ...]
@@ -96,3 +43,51 @@ export const mapStockProductToViewModel = (dto: StockProductDto): StockProductVi
  */
 export const mapStockList = (list: StockProductDto[]): StockProductViewModel[] =>
     list.map(mapStockProductToViewModel);
+
+/**
+ * Maps a {@link ProductDto} returned from the backend
+ * into a presentation-ready {@link ProductViewModel}.
+ *
+ * @example
+ * const vm = mapProductToViewModel(dto);
+ * // → { name: "Laptop X", grossPrice: "3 999,00 zł", lastRestocked: "02.01.2025", ... }
+ *
+ * @param dto - Raw {@link ProductDto} received from API.
+ * @returns A formatted {@link ProductViewModel} used by the UI layer.
+ */
+export const mapProductDtoToViewModel = (dto: ProductDto, lp?: number): ProductViewModel => {
+    return {
+        lp: lp ?? 0,
+        id: dto.id,
+        name: dto.name,
+        manufacturer: dto.manufacturer || '—',
+        sku: dto.sku,
+        description: dto.description ?? '—',
+        netPrice: formatPrice(dto.netPrice),
+        grossPrice: formatPrice(dto.grossPrice),
+        vatAmount: formatPrice(dto.vatAmount),
+        vatRate: `${dto.vatRate}%`,
+        currency: dto.currency,
+        categoryId: dto.categoryId,
+        imageUrl: dto.imageUrl,
+        lastRestocked: dto.lastRestockedAt ? formatPolishDate(dto.lastRestockedAt, false) : '—',
+    };
+};
+
+/**
+ * Maps an array of {@link ProductDto} objects into an array of
+ * UI-ready {@link ProductViewModel} models.
+ *
+ *
+ * @example
+ * const list = mapProductList(dtoArray);
+ * // → [{ id: "1", name: "Produkt A", grossPrice: "19,99 zł" }, ...]
+ *
+ * @param list - List of DTOs from backend.
+ * @returns An array of mapped view models.
+ */
+export const mapProductListToViewModel = (list: ProductDto[]): ProductViewModel[] =>
+    list.map((dto, index) => ({
+        ...mapProductDtoToViewModel(dto),
+        lp: index + 1,
+    }));

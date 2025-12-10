@@ -9,10 +9,12 @@ export enum StockLevelFilter {
 }
 
 export enum StockSortOption {
-    NameAscending = 'name_asc',
-    NameDescending = 'name_desc',
-    StockAscending = 'stock_asc',
-    StockDescending = 'stock_desc',
+    NameAscending = 'NAME_ASC',
+    NameDescending = 'NAME_DESC',
+    ManufacturerAscending = 'MANUFACTURER_ASC',
+    ManufacturerDescending = 'MANUFACTURER_DESC',
+    StockAscending = 'STOCK_ASC',
+    StockDescending = 'STOCK_DESC',
 }
 
 export interface StockFilters extends BaseQueryFilters {

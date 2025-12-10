@@ -49,7 +49,8 @@ const breadcrumbConfig: BreadcrumbConfig = {
     Invoice: { label: 'Faktury' },
 
     // Magazyn
-    Magazine: { label: 'Magazyn' },
+    Stock: { label: 'Magazyn' },
+    StockList: { label: 'Stan magazynowy', screen: 'Stock', nested: 'StockList' },
 };
 
 export const AppBreadcrumb = () => {

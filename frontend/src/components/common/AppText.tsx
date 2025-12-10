@@ -5,6 +5,7 @@ import { AppTextProps } from './AppText.types';
 
 export const AppText: React.FC<AppTextProps> = ({
     variant = 'bodyMedium',
+    fontSize,
     color,
     weight = 'normal',
     italic = false,
@@ -29,6 +30,7 @@ export const AppText: React.FC<AppTextProps> = ({
             fontStyle: italic ? 'italic' : 'normal',
             textAlign: align,
             fontWeight: weight,
+            ...(fontSize ? { fontSize } : {}),
         },
     });
 

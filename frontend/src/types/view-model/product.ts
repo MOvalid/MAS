@@ -9,3 +9,23 @@ export interface StockProductViewModel {
     currency: string;
     lastRestocked: string;
 }
+
+export interface ProductViewModel {
+    lp: number;
+    id: string;
+    name: string;
+    manufacturer: string;
+    sku: string;
+    description: string;
+
+    netPrice: string;
+    grossPrice: string;
+    vatAmount: string;
+    vatRate: string;
+    currency: string;
+
+    categoryId: string | null;
+    imageUrl: string | null;
+
+    lastRestocked: string;
+}

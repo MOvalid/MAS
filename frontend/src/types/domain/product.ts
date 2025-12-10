@@ -66,7 +66,7 @@ export interface ProductDetails {
 
     createdAt: string | null; // ISO date
     updatedAt: string | null; // ISO date
-    lastRestockedAt?: string | null;
+    lastRestockedAt: string | null;
 }
 
 export type ProductOption = {

@@ -46,7 +46,7 @@ export const formatTime = (date?: Date | null): string => {
  * @param withTime - Whether to include the time (default: true).
  * @returns A formatted date string according to the Polish locale.
  */
-export function formatPolishDate(isoString: string | undefined, withTime = true): string {
+export function formatPolishDate(isoString: string | null, withTime = true): string {
     if (!isoString) return '';
 
     const date = new Date(isoString);

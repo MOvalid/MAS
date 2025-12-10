@@ -4,11 +4,13 @@ import { useNavigation } from '@react-navigation/native';
 import { AppButton } from '../../common/AppButton';
 import { AppText } from '../../common/AppText';
 import { AppTable } from '../../common/table/AppTable';
-import { AppTextInput } from '../../common/AppTextInput';
 import { metrics } from '../../../theme/metrics';
 import { IconName } from '../../common';
 import { Customer } from '../../../types/domain/customer';
 import { Company } from '../../../types/domain/company';
+import { ClientListFilters } from './ClientListFilters';
+import { ClientTypeFilter, ClientSort } from '@/types/common';
+import { ClientRow } from '@/types/view-model/client';
 
 // Mock data
 const mockCompanies: Company[] = [
@@ -69,26 +71,21 @@ const mockCustomers: Customer[] = [
     },
 ];
 
-// Unified row type
-interface ClientRow {
-    id: string;
-    name: string;
-    email: string | null;
-    phone: string | null;
-    address: string | null;
-    isCompany: boolean;
-}
-
 export const ClientListScreen = () => {
-    const [search, setSearch] = useState('');
     const navigation = useNavigation();
+
+    // FILTRY
+    const [search, setSearch] = useState('');
+    const [type, setType] = useState<ClientTypeFilter>('ALL');
+    const [sort, setSort] = useState<ClientSort>('ALPHA_ASC');
 
     const tableData: ClientRow[] = useMemo(() => {
         const companyRows: ClientRow[] = mockCompanies.map((c) => ({
             id: c.id,
-            name: `🏢 ${c.name}`,
-            email: c.email,
-            phone: c.phone,
+            icon: `🏢`,
+            name: c.name,
+            email: c.email || '-',
+            phone: c.phone || '-',
             address: c.address
                 ? `${c.address.street} ${c.address.number}, ${c.address.city}`
                 : null,
@@ -97,7 +94,8 @@ export const ClientListScreen = () => {
 
         const customerRows: ClientRow[] = mockCustomers.map((c) => ({
             id: c.id,
-            name: `👤 ${c.firstName} ${c.lastName}`,
+            icon: `👤`,
+            name: `${c.firstName} ${c.lastName}`,
             email: c.email,
             phone: c.phoneNumber,
             address: c.address
@@ -109,16 +107,29 @@ export const ClientListScreen = () => {
         let allRows = [...companyRows, ...customerRows];
 
         if (search) {
+            const q = search.toLowerCase();
             allRows = allRows.filter(
                 (row) =>
-                    row.name.toLowerCase().includes(search.toLowerCase()) ||
-                    (row.email?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+                    row.name.toLowerCase().includes(q) ||
+                    (row.email?.toLowerCase().includes(q) ?? false) ||
                     (row.phone?.includes(search) ?? false)
             );
         }
 
+        if (type === 'CUSTOMER') {
+            allRows = allRows.filter((r) => !r.isCompany);
+        } else if (type === 'COMPANY') {
+            allRows = allRows.filter((r) => r.isCompany);
+        }
+
+        if (sort === 'ALPHA_ASC') {
+            allRows = [...allRows].sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sort === 'ALPHA_DESC') {
+            allRows = [...allRows].sort((a, b) => b.name.localeCompare(a.name));
+        }
+
         return allRows;
-    }, [search]);
+    }, [search, type, sort]);
 
     const handleEdit = (row: ClientRow) => {
         if (row.isCompany) {
@@ -139,25 +150,26 @@ export const ClientListScreen = () => {
                 <AppText variant="headlineLarge" style={styles.pageTitle}>
                     Klienci i firmy
                 </AppText>
+
                 <View style={{ flexDirection: 'row', gap: metrics.spacing.md }}>
                     <AppButton onPress={handleAddCompany}>Nowa firma</AppButton>
                     <AppButton onPress={handleAddCustomer}>Nowy klient</AppButton>
                 </View>
             </View>
 
-            <View style={styles.filters}>
-                <AppTextInput
-                    placeholder="Wyszukaj"
-                    value={search}
-                    width={200}
-                    onChangeText={setSearch}
-                    style={styles.searchInput}
-                />
-            </View>
+            <ClientListFilters
+                search={search}
+                onSearchChange={setSearch}
+                clientType={type}
+                onClientTypeChange={setType}
+                sortBy={sort}
+                onSortByChange={setSort}
+            />
 
             <AppTable
                 columns={[
                     { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
+                    { key: 'icon', title: '', align: 'left', flex: 0.2 },
                     { key: 'name', title: 'Nazwa / Imię i nazwisko', align: 'left', flex: 1.5 },
                     { key: 'email', title: 'Email', align: 'left', flex: 1.8 },
                     { key: 'phone', title: 'Telefon', align: 'left', flex: 1 },
@@ -174,14 +186,7 @@ export const ClientListScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, gap: metrics.spacing.lg },
-    searchInput: { flex: 1 },
-    filters: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: metrics.spacing.xl,
-    },
+    container: { flex: 1 },
     headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     pageTitle: { flexShrink: 1 },
 });
