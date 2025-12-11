@@ -1,74 +1,33 @@
-import React from 'react';
-import { View, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+// AppCard.tsx
+import React, { ReactNode } from 'react';
+import { View, StyleSheet, ViewStyle, ViewProps } from 'react-native';
 import { useAppTheme } from '../../theme/AppThemeContext';
-import { AppText } from './AppText';
 import { metrics } from '../../theme/metrics';
+import { MD3Colors } from 'react-native-paper/lib/typescript/types';
 
-type Alignment = 'left' | 'center' | 'right';
-
-interface AppCardProps {
-  title: string;
-  value: string | number;
-  titleAlign?: Alignment;
-  valueAlign?: Alignment;
-  style?: ViewStyle;
+interface AppCardProps extends ViewProps {
+    children?: ReactNode;
+    style?: ViewStyle;
 }
 
-export const AppCard: React.FC<AppCardProps> = ({
-  title,
-  value,
-  titleAlign = 'left',
-  valueAlign = 'left',
-  style,
-}) => {
-  const { colors } = useAppTheme();
+export const AppCard: React.FC<AppCardProps> = ({ children, style, ...props }) => {
+    const { colors } = useAppTheme();
 
-  return (
-    <View
-      style={[
-        styles.card(colors),
-        style,
-      ]}
-    >
-      <AppText
-        variant="titleMedium"
-        style={[
-          styles.title(colors, titleAlign),
-        ]}
-      >
-        {title}
-      </AppText>
-
-      <AppText
-        variant="headlineSmall"
-        style={[
-          styles.value(colors, valueAlign),
-        ]}
-      >
-        {value}
-      </AppText>
-    </View>
-  );
+    return (
+        <View style={[styles.card(colors), style]} {...props}>
+            {children}
+        </View>
+    );
 };
 
 const styles = {
-  card: (colors: any): ViewStyle => ({
-    borderRadius: metrics.radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.outlineVariant ?? colors.outline,
-    backgroundColor: colors.surface,
-    paddingVertical: metrics.spacing.md,
-    paddingHorizontal: metrics.spacing.lg,
-    marginVertical: metrics.spacing.sm,
-  }),
-  title: (colors: any, align: 'left' | 'center' | 'right'): TextStyle => ({
-    marginBottom: metrics.spacing.sm,
-    textAlign: align,
-    color: colors.onSurface,
-  }),
-  value: (colors: any, align: 'left' | 'center' | 'right'): TextStyle => ({
-    marginTop: metrics.spacing.sm,
-    textAlign: align,
-    color: colors.primary,
-  }),
+    card: (colors: MD3Colors): ViewStyle => ({
+        borderRadius: metrics.radius.lg,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.outlineVariant ?? colors.outline,
+        backgroundColor: colors.surface,
+        paddingVertical: metrics.spacing.md,
+        paddingHorizontal: metrics.spacing.lg,
+        marginVertical: metrics.spacing.sm,
+    }),
 };

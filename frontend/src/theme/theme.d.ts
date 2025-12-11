@@ -1,0 +1,8 @@
+import 'react-native-paper';
+
+declare module 'react-native-paper' {
+    interface MD3Colors {
+        warning?: string;
+        success?: string;
+    }
+}
