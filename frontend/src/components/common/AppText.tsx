@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
-import { useAppTheme } from '../../theme/AppThemeContext';
+import { useAppTheme } from '../../context/AppThemeContext';
 import { AppTextProps } from './AppText.types';
 
 export const AppText: React.FC<AppTextProps> = ({

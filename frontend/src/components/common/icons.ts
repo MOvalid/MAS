@@ -5,6 +5,7 @@ export const IconName = {
     translate: 'translate',
     check: 'check',
     cancel: 'cancel',
+    error: 'alert-circle-outline',
     client: 'account-group',
     seller: 'account-tie',
     document: 'file-document-outline',
@@ -19,6 +20,8 @@ export const IconName = {
     close: 'close-circle',
     payment: 'cash-clock',
     delivery: 'truck-delivery-outline',
+    refresh: 'refresh',
+    back: 'arrow-u-left-top',
 } as const;
 
 export type IconKey = keyof typeof IconName;

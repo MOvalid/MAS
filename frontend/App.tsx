@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as Font from 'expo-font';
 import { PaperProvider } from 'react-native-paper';
 import { LightTheme, DarkTheme, CombinedDarkTheme, CombinedLightTheme } from './src/theme/theme';
-import { AppThemeProvider } from './src/theme/AppThemeContext';
+import { AppThemeProvider } from './src/context/AppThemeContext';
 import { SnackbarProvider } from './src/context/SnackbarContext';
 import { NavigationContainer, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';

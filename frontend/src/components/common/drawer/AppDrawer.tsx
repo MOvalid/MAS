@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Drawer, useTheme } from 'react-native-paper';
-import { AppLogo } from './AppLogo';
 import { AppDrawerButton } from './AppDrawerButton';
+import { AppLogo } from '..';
+import { IconValue } from '../icons';
 
 type AppDrawerProps = {
     navigationItems: {
         label: string;
-        icon: string;
+        icon: IconValue;
         route: string;
     }[];
     activeRoute?: string;

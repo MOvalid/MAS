@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { AppText } from '../AppText';
-import { useAppTheme } from '../../../theme/AppThemeContext';
+import { useAppTheme } from '../../../context/AppThemeContext';
 import { metrics } from '../../../theme/metrics';
 
 interface AppTableCellProps {

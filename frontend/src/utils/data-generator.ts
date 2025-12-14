@@ -1,4 +1,13 @@
-import { INVOICE_STATUS_VALUES, ORDER_STATUS_LABELS, ORDER_STATUS_VALUES } from '@/types/common';
+import {
+    INVOICE_STATUS_VALUES,
+    ORDER_STATUS_LABELS,
+    ORDER_STATUS_VALUES,
+    OrderStatus,
+    PAYMENT_METHOD_VALUES,
+    PAYMENT_STATUS_VALUES,
+    PaymentMethod,
+    PaymentStatus,
+} from '@/types/common';
 import {
     AddressDto,
     CompanyDto,
@@ -8,7 +17,15 @@ import {
     ProductDto,
     OrderDto,
     SellerDto,
+    OrderItemDto,
+    OrderSummaryDto,
+    PaymentDto,
+    StockProductResponseDto,
 } from '@/types/dto';
+import { calculateVat } from './price-utils';
+import { DailySummaryDto } from '@/types/dto/dashboard';
+import { StockLevel } from '@/types/common/filters';
+import { StockLevelFilter, StockSortOption } from '@/types/domain/stock-filters';
 
 const randomId = () => crypto.randomUUID();
 const randomDate = () => new Date(Date.now() - Math.random() * 1e10).toISOString();
@@ -44,7 +61,7 @@ const productNames = [
     'Taśma izolacyjna',
 ];
 
-const productUnits = ['szt.', 'opak.', 'kg', 'm', 'l'];
+const productUnits = ['szt.'];
 
 const buildAddress = (): AddressDto => ({
     street: pick(streetNames),
@@ -92,6 +109,28 @@ export const getMockStockProducts = (count: number): StockProductDto[] => {
         };
     });
 };
+
+export const getMockStockProductsPaginated = (
+    totalCount: number,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    stockLevel?: StockLevelFilter,
+    sortBy?: StockSortOption
+): StockProductResponseDto => {
+    const allProducts = getMockStockProducts(totalCount);
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    return {
+        data: allProducts.slice(startIndex, endIndex),
+        total: totalCount,
+        page,
+        limit,
+    };
+};
+
 export const getMockInvoices = (count: number): InvoiceSummaryDto[] => {
     const statuses = INVOICE_STATUS_VALUES;
 
@@ -194,3 +233,120 @@ export const getMockSellers = (count: number = 10, orders?: OrderDto[]): SellerD
         };
     });
 };
+
+const buildOrderItems = (orderId: string, products: ProductDto[]): OrderItemDto[] => {
+    return products.slice(0, randomNumber(1, 3)).map((product) => {
+        const quantity = randomNumber(1, 3);
+        const netPrice = product.netPrice * quantity;
+        const vatAmount = calculateVat(netPrice, product.vatRate);
+        const grossPrice = netPrice + vatAmount;
+
+        return {
+            orderId,
+            product,
+            quantity,
+            unitPrice: product.netPrice,
+            netPrice,
+            vatRate: product.vatRate,
+            vatAmount,
+            grossPrice,
+            currency: product.currency,
+        };
+    });
+};
+
+const buildPayments = (orderId: string, totalGross: number): PaymentDto[] => [
+    {
+        id: randomId(),
+        orderId,
+        invoiceId: null,
+        amount: totalGross,
+        currency: 'PLN',
+        paymentMethod: pick(PAYMENT_METHOD_VALUES) as PaymentMethod,
+        status: pick(PAYMENT_STATUS_VALUES) as PaymentStatus,
+        paidAt: randomDate(),
+    },
+];
+
+export const getMockOrderSummary = (): OrderSummaryDto => {
+    const orderId = randomId();
+
+    const products = getMockProducts(5);
+    const orderItems = buildOrderItems(orderId, products);
+
+    const totalGross = orderItems.reduce((sum, i) => sum + i.grossPrice, 0);
+
+    return {
+        id: orderId,
+        createdAt: randomDate(),
+        status: pick(ORDER_STATUS_VALUES) as OrderStatus,
+
+        customer: buildCustomer(),
+        company: Math.random() > 0.5 ? buildCompany() : null,
+
+        seller: {
+            id: randomId(),
+            firstName: pick(firstNames),
+            lastName: pick(lastNames),
+            email: `seller.${Math.random().toString(36).slice(2)}@example.com`,
+            orders: null,
+        },
+
+        delivery: {
+            id: randomId(),
+            orderId,
+            deliveryDate: randomDate(),
+            address: buildAddress(),
+            trackingNumber: String(randomNumber(100000000, 999999999)),
+            carrier: pick(['DHL', 'DPD', 'InPost']),
+        },
+
+        invoice: null,
+        orderItems,
+        payments: buildPayments(orderId, totalGross),
+    };
+};
+
+export const getMockDailySummary = (): Promise<DailySummaryDto[]> =>
+    new Promise((resolve) => {
+        setTimeout(() => {
+            resolve([
+                {
+                    id: '1',
+                    key: 'dailyRevenue',
+                    title: 'Przychody dzisiaj',
+                    value: '12 345 PLN',
+                },
+                {
+                    id: '2',
+                    key: 'orders',
+                    title: 'Zamówienia',
+                    value: '58',
+                },
+                {
+                    id: '3',
+                    key: 'newCustomers',
+                    title: 'Nowi klienci',
+                    value: '7',
+                },
+                {
+                    id: '4',
+                    key: 'invoicesSent',
+                    title: 'Wysłane faktury',
+                    value: '21',
+                },
+                {
+                    id: '5',
+                    key: 'stockProducts',
+                    title: 'Produkty w magazynie',
+                    value: '156',
+                },
+                {
+                    id: '6',
+                    key: 'returns',
+                    title: 'Zwroty',
+                    value: '3',
+                },
+            ]);
+        }, 6000);
+    });

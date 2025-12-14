@@ -1,4 +1,4 @@
-import { useAppTheme } from '@/theme/AppThemeContext';
+import { useAppTheme } from '@/context/AppThemeContext';
 import { metrics } from '@/theme/metrics';
 import React from 'react';
 import { TouchableOpacity, TextStyle, StyleSheet, ViewStyle } from 'react-native';

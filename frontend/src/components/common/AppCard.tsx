@@ -1,7 +1,7 @@
 // AppCard.tsx
 import React, { ReactNode } from 'react';
 import { View, StyleSheet, ViewStyle, ViewProps } from 'react-native';
-import { useAppTheme } from '../../theme/AppThemeContext';
+import { useAppTheme } from '../../context/AppThemeContext';
 import { metrics } from '../../theme/metrics';
 import { MD3Colors } from 'react-native-paper/lib/typescript/types';
 

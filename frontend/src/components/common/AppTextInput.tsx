@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, ViewStyle, DimensionValue, StyleSheet, Text } from 'react-native';
 import { TextInput, TextInputProps } from 'react-native-paper';
-import { useAppTheme } from '../../theme/AppThemeContext';
+import { useAppTheme } from '../../context/AppThemeContext';
 import { Spacing } from '../../theme/metrics';
 import { MD3Colors } from 'react-native-paper/lib/typescript/types';
 

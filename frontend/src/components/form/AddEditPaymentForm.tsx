@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppText, AppButton, AppDropdown } from '@/components/common';
 import { metrics } from '@/theme/metrics';
@@ -7,65 +7,59 @@ import { AppNumberInput } from '../common/AppNumberInput';
 import { AppCheckboxGroup } from '../common/AppCheckboxGroup';
 
 interface AddEditPaymentFormProps {
-    initialAmount?: number | null;
-    initialCurrency?: string | null;
-    initialMethod?: PaymentMethod | null;
+    initialAmount?: number;
+    initialCurrency?: string;
+    initialMethod?: PaymentMethod;
     onSave: (amount: number, currency: string, method: PaymentMethod) => void;
     onClose: () => void;
 }
 
 export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
-    initialAmount = null,
+    initialAmount,
     initialCurrency = 'PLN',
-    initialMethod = null,
+    initialMethod,
     onSave,
     onClose,
 }) => {
-    const [amount, setAmount] = useState<string>('');
+    const [amount, setAmount] = useState(initialAmount?.toString() ?? '');
     const [currency] = useState(initialCurrency);
-    const [method, setMethod] = useState<PaymentMethod | null>(null);
-
-    useEffect(() => {
-        if (initialAmount !== null) setAmount(initialAmount.toString());
-        if (initialMethod) setMethod(initialMethod);
-    }, [initialAmount, initialMethod]);
+    const [method, setMethod] = useState<PaymentMethod | undefined>(initialMethod);
 
     const handleSave = () => {
         const amt = parseFloat(amount);
         if (isNaN(amt) || amt <= 0 || !method) return;
-        onSave(amt, currency || '', method);
+        onSave(amt, currency, method);
         onClose();
     };
 
     return (
         <View>
-            <AppText variant="titleLarge">
-                {initialMethod ? 'Edytuj płatność' : 'Dodaj płatność'}
-            </AppText>
+            <AppText variant="titleLarge">{method ? 'Edytuj płatność' : 'Dodaj płatność'}</AppText>
 
             <AppNumberInput label="Kwota" fullWidth value={amount} onChangeValue={setAmount} />
 
             <AppDropdown
                 label="Waluta"
-                disabled={true}
+                disabled
                 fullWidth
                 options={[
                     { label: 'PLN', value: 'PLN' },
                     { label: 'EUR', value: 'EUR' },
                 ]}
-                value={currency || ''}
-                onChange={() => console.log('This action is deprecated')}
+                value={currency}
+                onChange={() => {
+                    console.log('');
+                }}
             />
 
             <View>
-                <AppText variant="bodyMedium" style={{ marginBottom: metrics.spacing.sm }}>
+                <AppText variant="bodyMedium" style={styles.label}>
                     Metoda płatności
                 </AppText>
-
                 <AppCheckboxGroup
                     options={PAYMENT_METHODS}
-                    selectedValue={method || ''}
-                    onChange={(value) => setMethod(value as PaymentMethod)}
+                    selectedValue={method ?? 'BANK_TRANSFER'}
+                    onChange={(v) => setMethod(v as PaymentMethod)}
                 />
             </View>
 
@@ -82,6 +76,7 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
 };
 
 const styles = StyleSheet.create({
+    label: { marginBottom: 8 },
     buttonsRow: {
         flexDirection: 'row',
         gap: metrics.spacing.md,

@@ -36,12 +36,12 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
     return (
         <View style={styles.container}>
             <AppText variant="titleLarge" style={styles.title}>
-                Dodaj / Edytuj dostawę
+                Zarządzanie dostawą
             </AppText>
 
             <ScrollView
                 horizontal={false}
-                contentContainerStyle={{ gap: metrics.spacing.md }}
+                contentContainerStyle={styles.contentContainerStyle}
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.row}>
@@ -55,7 +55,6 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
                         />
                     </View>
 
-                    {/* Kolumna 2 */}
                     <View style={styles.column}>
                         <AppTextInput
                             label="Miasto"
@@ -71,7 +70,6 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
                         />
                     </View>
 
-                    {/* Kolumna 3 */}
                     <View style={styles.column}>
                         <AppTextInput
                             label="Kraj"
@@ -104,6 +102,9 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    contentContainerStyle: {
+        gap: metrics.spacing.md,
     },
     title: {
         marginBottom: metrics.spacing.md,

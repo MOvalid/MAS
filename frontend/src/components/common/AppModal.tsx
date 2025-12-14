@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Modal, StyleSheet, Pressable, View } from 'react-native';
-import { useAppTheme } from '../../theme/AppThemeContext';
+import { useAppTheme } from '../../context/AppThemeContext';
 import { metrics } from '../../theme/metrics';
 import { AppIconButton, IconName } from '@/components/common';
 

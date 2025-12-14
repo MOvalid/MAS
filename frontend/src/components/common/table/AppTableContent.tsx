@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Pressable } from 'react-native';
 import { AppTableCell } from './AppTableCell';
-import { useAppTheme } from '../../../theme/AppThemeContext';
+import { useAppTheme } from '../../../context/AppThemeContext';
 import { metrics } from '../../../theme/metrics';
 import AppTableRowActions from './AppTableRowActions';
 import { IconValue } from '../icons';

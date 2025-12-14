@@ -9,15 +9,12 @@ import { AppTable, TableColumn } from '@/components/common/table';
 import { metrics } from '@/theme/metrics';
 import { formatAddressMultiline, formatPolishDate } from '@/utils/formatters';
 
-import { OrderSummaryDto, PaymentDto, OrderItemDto } from '@/types/dto';
+import { PaymentDto, DeliveryDto } from '@/types/dto';
 import {
-    PAYMENT_STATUS_LABELS,
     ORDER_STATUS_LABELS,
     OrderStatus,
-    PaymentStatus,
-    PaymentMethod,
-    PAYMENT_METHOD_LABELS,
     PAYMENT_SUMMARY_LABELS,
+    PaymentMethod,
     PaymentSummaryStatus,
 } from '@/types/common';
 import { OrderItemTableRow, PaymentTableRow } from '@/types/domain';
@@ -26,80 +23,11 @@ import { AddEditDeliveryForm, AddEditPaymentForm } from '@/components/form';
 import { useOrderPaymentSummary } from '@/hooks/useOrderPaymentSummary';
 import { getPaymentStatusColor } from '@/utils/color-utils';
 import { useSnackbar } from '@/context/SnackbarContext';
+import { mapPaymentListToTableRows } from '@/mappers/payment.mapper';
+import { getMockOrderSummary } from '@/utils/data-generator';
+import { mapOrderItemDtoListToTableRows } from '@/mappers/order.mapper';
 
-const mockOrder: OrderSummaryDto = {
-    id: 'order-123',
-    createdAt: '2025-02-10T09:30:00Z',
-    status: 'PROCESSING',
-    customer: {
-        id: 'cust-1',
-        firstName: 'Jan',
-        lastName: 'Kowalski',
-        email: 'jan.kowalski@example.com',
-        phoneNumber: '123456789',
-        address: null,
-        orders: null,
-    },
-    company: null,
-    seller: {
-        id: 'seller-1',
-        firstName: 'Anna',
-        lastName: 'Nowak',
-        email: 'anna.nowak@example.com',
-        orders: null,
-    },
-    delivery: {
-        id: 'Del-123', // UUID
-        orderId: 'order-123',
-        deliveryDate: '2025-02-13T12:09:00Z', // ISO datetime
-        address: {
-            street: 'ul. Wrocławska',
-            number: '7A',
-            city: 'Wrocław',
-            postalCode: '50-331',
-            country: 'Polska',
-        },
-        trackingNumber: '123456789',
-        carrier: 'DHL',
-    },
-    invoice: null,
-    orderItems: [
-        {
-            orderId: 'order-123',
-            product: { id: 'prod-1', name: 'Laptop Pro 15' },
-            quantity: 1,
-            unitPrice: 4000,
-            netPrice: 4000,
-            vatRate: 23,
-            vatAmount: 920,
-            grossPrice: 4920,
-            currency: 'PLN',
-        },
-        {
-            orderId: 'order-123',
-            product: { id: 'prod-2', name: 'Mysz bezprzewodowa' },
-            quantity: 2,
-            unitPrice: 100,
-            netPrice: 200,
-            vatRate: 23,
-            vatAmount: 46,
-            grossPrice: 246,
-            currency: 'PLN',
-        },
-    ],
-    payments: [
-        {
-            id: 'pay-1',
-            orderId: 'order-123',
-            invoiceId: null,
-            amount: 5166,
-            currency: 'PLN',
-            paymentMethod: 'BANK_TRANSFER',
-            status: 'COMPLETED',
-            paidAt: '2025-02-11T10:15:00Z',
-        },
-    ],
-};
+const mockOrder = getMockOrderSummary();
 
 export const OrderDetailsScreen = () => {
     const navigation = useNavigation();
@@ -108,35 +36,17 @@ export const OrderDetailsScreen = () => {
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<PaymentDto | null>(null);
+    const [selectedDelivery, setSelectedDelivery] = useState<DeliveryDto | null>(null);
 
     const order = mockOrder;
 
     const orderItemsData: OrderItemTableRow[] = useMemo(
-        () =>
-            order.orderItems?.map((item: OrderItemDto) => ({
-                product: item.product.name,
-                quantity: item.quantity,
-                unitPrice: formatPrice(item.unitPrice),
-                netPrice: formatPrice(item.netPrice),
-                unit: 'szt.',
-                vat: `${formatPrice(item.vatAmount)}`,
-                vatRate: `${item.vatRate}%`,
-                grossPrice: formatPrice(item.grossPrice),
-                currency: item.currency,
-            })) ?? [],
+        () => mapOrderItemDtoListToTableRows(order.orderItems ?? []),
         [order.orderItems]
     );
-
     const paymentsData: PaymentTableRow[] = useMemo(
-        () =>
-            order.payments?.map((p: PaymentDto) => ({
-                id: p.id,
-                method: PAYMENT_METHOD_LABELS[p.paymentMethod as PaymentMethod] ?? p.paymentMethod,
-                amount: formatPrice(p.amount),
-                status: PAYMENT_STATUS_LABELS[p.status as PaymentStatus] ?? p.status,
-                paidAt: p.paidAt ? formatPolishDate(p.paidAt, false) : '-',
-                currency: p.currency,
-            })) ?? [],
+        () => mapPaymentListToTableRows(order.payments ?? []),
         [order.payments]
     );
 
@@ -160,8 +70,35 @@ export const OrderDetailsScreen = () => {
         { key: 'paidAt', title: 'Data płatności', align: 'center', flex: 0.75 },
     ];
 
-    const editPayment = (row: PaymentTableRow) => setPaymentModalVisible(true);
+    const addPayment = () => {
+        setSelectedPayment(null);
+        setPaymentModalVisible(true);
+    };
+
+    const editPayment = (row: PaymentTableRow) => {
+        const selectedPayment = order.payments?.find((p) => p.id === row.id);
+        if (!selectedPayment) return;
+        setSelectedPayment(selectedPayment);
+        setPaymentModalVisible(true);
+    };
+
     const cancelPayment = (row: PaymentTableRow) => showSnackbar('CANCEL PAYMENT', 'warning');
+
+    const editDelivery = () => {
+        if (!order.delivery) return;
+        setSelectedDelivery(order.delivery);
+        setDeliveryModalVisible(true);
+    };
+
+    const onClosePaymentModal = () => {
+        setPaymentModalVisible(false);
+        setSelectedPayment(null);
+    };
+
+    const onCloseDeliveryModal = () => {
+        setDeliveryModalVisible(false);
+        setSelectedDelivery(null);
+    };
 
     const handleDelete = () => {
         setDeleteModalVisible(false);
@@ -175,7 +112,9 @@ export const OrderDetailsScreen = () => {
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
                 <View>
-                    <AppText variant="headlineMedium">Zamówienie #{order.id}</AppText>
+                    <AppText variant="headlineMedium">Zamówienie</AppText>
+
+                    <AppText style={styles.subtitle}>ID: {order.id}</AppText>
                     <AppText style={styles.subtitle}>
                         Utworzono: {formatPolishDate(order.createdAt, false)}
                     </AppText>
@@ -356,10 +295,7 @@ export const OrderDetailsScreen = () => {
                     </AppText>
 
                     <View style={styles.buttonRow}>
-                        <AppButton
-                            icon={IconName.delivery}
-                            onPress={() => setDeliveryModalVisible(true)}
-                        >
+                        <AppButton icon={IconName.delivery} onPress={editDelivery}>
                             Zarządzaj dostawą
                         </AppButton>
                     </View>
@@ -434,25 +370,29 @@ export const OrderDetailsScreen = () => {
                     </AppButton>
                 </View>
             </AppModal>
-            <AppModal visible={paymentModalVisible} onClose={() => setPaymentModalVisible(false)}>
+            <AppModal visible={paymentModalVisible} onClose={onClosePaymentModal}>
                 <AddEditPaymentForm
+                    initialAmount={selectedPayment?.amount}
+                    initialCurrency={selectedPayment?.currency ?? 'PLN'}
+                    initialMethod={(selectedPayment?.paymentMethod as PaymentMethod) ?? undefined}
                     onClose={() => setPaymentModalVisible(false)}
-                    onSave={(payment) => {
-                        console.log('Nowa płatność:', payment);
+                    onSave={(amount, currency, method) => {
+                        console.log('Zapisano płatność:', { amount, currency, method });
                         setPaymentModalVisible(false);
                     }}
                 />
             </AppModal>
 
-            <AppModal visible={deliveryModalVisible} onClose={() => setDeliveryModalVisible(false)}>
+            <AppModal visible={deliveryModalVisible} onClose={onCloseDeliveryModal}>
                 <AddEditDeliveryForm
-                    initialAddress={order.delivery?.address}
-                    initialCarrier={order.delivery?.carrier ?? ''}
-                    initialTracking={order.delivery?.trackingNumber ?? ''}
-                    onClose={() => setDeliveryModalVisible(false)}
+                    initialAddress={selectedDelivery?.address}
+                    initialCarrier={selectedDelivery?.carrier ?? ''}
+                    initialTracking={selectedDelivery?.trackingNumber ?? ''}
+                    onClose={onCloseDeliveryModal}
                     onSave={(addr, carrier, tracking) => {
-                        console.log('Aktualizacja dostawy:', { addr, carrier, tracking });
+                        console.log('Zapisano dostawę:', { addr, carrier, tracking });
                         setDeliveryModalVisible(false);
+                        setSelectedDelivery(null);
                     }}
                 />
             </AppModal>

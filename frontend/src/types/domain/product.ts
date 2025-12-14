@@ -1,6 +1,7 @@
 // types/domain/product.ts
 
 import { Category } from './category';
+import { Company } from './company';
 
 export interface ProductTableRow {
     lp: number;
@@ -75,11 +76,16 @@ export type ProductOption = {
     unitPrice: number;
 };
 
-export interface ProductStock {
+export interface StockProduct {
     id: string;
     name: string;
-    stock: number;
+    manufacturer: Company;
+    stockQuantity: number;
     unit: string;
+    netPrice: number;
+    grossPrice: number;
+    currency: string;
+    lastRestockedAt: string | null;
 }
 
 export type ProductSortField = 'name' | 'stock';
