@@ -1,4 +1,6 @@
 import { Currency } from '@/types/common/enums';
+import { Address } from '@/types/domain';
+import { AddressDto } from '@/types/dto';
 
 /**
  * Formats a {@link Date} object into a string using the "DD-MM-YYYY" format.
@@ -127,4 +129,63 @@ export const convertStringToCurrency = (currencyString: string): Currency => {
 export const formatNip = (nip: string | undefined): string => {
     if (!nip || nip.length !== 10) return nip || 'Brak';
     return `${nip.slice(0, 3)}-${nip.slice(3, 6)}-${nip.slice(6, 8)}-${nip.slice(8, 10)}`;
+};
+
+/**
+ * Formats an address into a single-line ERP-style string.
+ *
+ * Intended for tables, lists, and compact UI views.
+ *
+ * Format:
+ *   "Street Number, PostalCode City, Country"
+ *
+ * Example:
+ *   "Wrocławska 7A, 50-331 Wrocław, Polska"
+ *
+ * Returns "—" if the address is null or undefined.
+ *
+ * @param address - Address or AddressDto object.
+ * @returns Single-line formatted address.
+ */
+export const formatAddressInline = (address?: Address | AddressDto | null): string => {
+    if (!address) return '—';
+
+    const street = [address.street, address.number].filter(Boolean).join(' ');
+    const city = [address.postalCode, address.city].filter(Boolean).join(' ');
+
+    const parts = [street, city, address.country].filter(Boolean);
+
+    return parts.length ? parts.join(', ') : '—';
+};
+
+/**
+ * Formats an address into a multi-line ERP-style string.
+ *
+ * Intended for detail views, invoices, order summaries, and documents.
+ *
+ * Format:
+ *   Street Number
+ *   PostalCode City
+ *   Country
+ *
+ * Example:
+ *   Wrocławska 7A
+ *   50-331 Wrocław
+ *   Polska
+ *
+ * Returns "—" if the address is null or undefined.
+ *
+ * @param address - Address or AddressDto object.
+ * @returns Multiline formatted address string.
+ */
+export const formatAddressMultiline = (address?: Address | AddressDto | null): string => {
+    if (!address) return '—';
+
+    const lines = [
+        [address.street, address.number].filter(Boolean).join(' '),
+        [address.postalCode, address.city].filter(Boolean).join(' '),
+        address.country,
+    ].filter(Boolean);
+
+    return lines.length ? lines.join('\n') : '—';
 };

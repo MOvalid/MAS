@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
     LayoutChangeEvent,
 } from 'react-native';
-import { Menu, Icon, Text } from 'react-native-paper';
+import { Menu, Icon, Text, Portal } from 'react-native-paper';
 import { AppText } from './AppText';
 import { useAppTheme } from '../../theme/AppThemeContext';
 import { metrics } from '../../theme/metrics';
@@ -170,6 +170,7 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
                     ))}
                 </View>
             </Menu>
+
             <View style={errorContainerStyle}>
                 {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
             </View>
@@ -180,7 +181,7 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
 const styles = StyleSheet.create({
     container: {
         justifyContent: 'center',
-        marginVertical: metrics.spacing.lmd,
+        marginVertical: metrics.spacing.md,
     },
     labelText: {
         marginRight: metrics.spacing.xs,

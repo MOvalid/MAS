@@ -1,4 +1,4 @@
-import { INVOICE_STATUS_VALUES } from '@/types/common';
+import { INVOICE_STATUS_VALUES, ORDER_STATUS_LABELS, ORDER_STATUS_VALUES } from '@/types/common';
 import {
     AddressDto,
     CompanyDto,
@@ -6,6 +6,8 @@ import {
     StockProductDto,
     InvoiceSummaryDto,
     ProductDto,
+    OrderDto,
+    SellerDto,
 } from '@/types/dto';
 
 const randomId = () => crypto.randomUUID();
@@ -134,7 +136,6 @@ export const getMockProducts = (count: number): ProductDto[] => {
         const grossPrice = parseFloat((netPrice * 1.23).toFixed(2));
         const vatAmount = parseFloat((grossPrice - netPrice).toFixed(2));
 
-        // 🔹 Losowanie kategorii z mockCategories lub null
         const category = Math.random() > 0.2 ? pick(mockCategories) : null;
 
         return {
@@ -159,6 +160,37 @@ export const getMockProducts = (count: number): ProductDto[] => {
                     : null,
 
             lastRestockedAt: Math.random() > 0.3 ? randomDate() : null,
+        };
+    });
+};
+
+const sellers = ['Jan Kowalski', 'Anna Nowak', 'Piotr Wiśniewski'];
+
+export const getMockOrders = (count: number): OrderDto[] =>
+    Array.from({ length: count }).map(() => ({
+        id: randomId(),
+        createdAt: randomDate(),
+        customer: Math.random() > 0.4 ? pick(firstNames) + ' ' + pick(lastNames) : null,
+        company: Math.random() > 0.5 ? pick(companyNames) : null,
+        status: ORDER_STATUS_LABELS[pick(ORDER_STATUS_VALUES)],
+        seller: pick(sellers),
+        deliveryId: Math.random() > 0.6 ? randomId() : null,
+        invoiceNumber: Math.random() > 0.7 ? `FV/${randomNumber(1, 999)}/2025` : null,
+    }));
+
+export const getMockSellers = (count: number = 10, orders?: OrderDto[]): SellerDto[] => {
+    return Array.from({ length: count }).map(() => {
+        const firstName = pick(firstNames);
+        const lastName = pick(lastNames);
+
+        const sellerOrders = orders ? orders.filter(() => Math.random() > 0.7) : null;
+
+        return {
+            id: randomId(),
+            firstName,
+            lastName,
+            email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,
+            orders: sellerOrders?.length ? sellerOrders : null,
         };
     });
 };

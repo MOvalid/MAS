@@ -8,3 +8,12 @@ export interface Payment {
     status: string;
     paidAt: string | null; // ISO datetime
 }
+
+export interface PaymentTableRow {
+    id: string;
+    method: string;
+    amount: string;
+    currency: string;
+    status: string;
+    paidAt: string;
+}

@@ -362,3 +362,7 @@ export const CombinedDarkTheme: CombinedTheme = {
         ...DarkTheme.colors,
     },
 };
+
+export const BLACK = '#000000';
+export const WHITE = '#FFFFFF';
+export const YELLOW = '#FFCC00';

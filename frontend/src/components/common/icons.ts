@@ -4,6 +4,10 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 export const IconName = {
     translate: 'translate',
     check: 'check',
+    cancel: 'cancel',
+    client: 'account-group',
+    seller: 'account-tie',
+    document: 'file-document-outline',
     logout: 'logout',
     notifications: 'bell-outline',
     help: 'help-circle-outline',
@@ -13,6 +17,8 @@ export const IconName = {
     delete: 'delete',
     camera: 'camera-plus',
     close: 'close-circle',
+    payment: 'cash-clock',
+    delivery: 'truck-delivery-outline',
 } as const;
 
 export type IconKey = keyof typeof IconName;

@@ -92,14 +92,12 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
                 onChangeText={handleChangeText}
                 {...props}
                 right={
-                    internalValue ? (
-                        <TextInput.Icon
-                            icon="close"
-                            size={20}
-                            color={colors.onSurfaceVariant}
-                            onPress={() => handleChangeText('')}
-                        />
-                    ) : undefined
+                    <TextInput.Icon
+                        icon="close"
+                        size={20}
+                        color={internalValue ? colors.onSurfaceVariant : 'transparent'}
+                        onPress={internalValue ? () => handleChangeText('') : undefined}
+                    />
                 }
             />
             <View style={styles.errorContainer}>
@@ -121,15 +119,18 @@ const getStyles = (
     const isMultiline = !!(height && height > 48);
 
     return StyleSheet.create({
-        container: {
-            width: (fullWidth ? '100%' : width) as DimensionValue,
-            alignSelf: fullWidth ? 'stretch' : 'center',
+        containerStyle: {
+            width: (fullWidth ? '100%' : (width ?? '100%')) as DimensionValue,
+            alignSelf: fullWidth ? 'stretch' : 'flex-start',
             marginTop: metrics.spacing[margin],
             marginBottom: metrics.spacing[margin],
             borderRadius: metrics.radius.xl,
             backgroundColor: colors.secondaryContainer,
+            flexShrink: 1, // ważne w układzie flex
         },
         input: {
+            flex: 1,
+            width: '100%',
             height: height ?? 48,
             paddingVertical: isMultiline ? metrics.spacing.sm : 0,
             paddingHorizontal: metrics.spacing.md,

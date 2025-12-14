@@ -1,7 +1,8 @@
 import React, { ReactNode } from 'react';
-import { Modal, StyleSheet, Pressable } from 'react-native';
+import { Modal, StyleSheet, Pressable, View } from 'react-native';
 import { useAppTheme } from '../../theme/AppThemeContext';
 import { metrics } from '../../theme/metrics';
+import { AppIconButton, IconName } from '@/components/common';
 
 interface AppModalProps {
     visible: boolean;
@@ -13,13 +14,27 @@ export const AppModal: React.FC<AppModalProps> = ({ visible, onClose, children }
     const { colors } = useAppTheme();
 
     return (
-        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+            presentationStyle="formSheet"
+        >
             <Pressable style={styles.overlay} onPress={onClose}>
                 <Pressable
                     style={[styles.modalContent, { backgroundColor: colors.surface }]}
                     onPress={(e) => e.stopPropagation()}
                 >
-                    {children}
+                    <View style={styles.closeButtonContainer}>
+                        <AppIconButton
+                            icon={IconName.close}
+                            onPress={onClose}
+                            style={styles.closeButton}
+                        />
+                    </View>
+
+                    <View style={styles.contentWrapper}>{children}</View>
                 </Pressable>
             </Pressable>
         </Modal>
@@ -32,6 +47,9 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    contentWrapper: {
+        margin: metrics.spacing.md,
     },
     modalContent: {
         borderRadius: metrics.radius.lg,
@@ -46,5 +64,17 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: metrics.radius.sm,
         elevation: 5,
+        position: 'relative',
+    },
+    closeButtonContainer: {
+        position: 'absolute',
+        top: metrics.spacing.sm,
+        right: metrics.spacing.sm,
+    },
+    closeButton: {
+        minWidth: 40,
+        minHeight: 40,
+        borderRadius: metrics.radius.lg,
+        padding: 0,
     },
 });
