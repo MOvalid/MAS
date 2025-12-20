@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Menu, Icon, Text } from 'react-native-paper';
 import { AppText } from './AppText';
-import { useAppTheme } from '../../theme/AppThemeContext';
+import { useAppTheme } from '../../context/AppThemeContext';
 import { metrics } from '../../theme/metrics';
 import { MD3Colors } from 'react-native-paper/lib/typescript/types';
 
@@ -170,6 +170,7 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
                     ))}
                 </View>
             </Menu>
+
             <View style={errorContainerStyle}>
                 {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
             </View>
@@ -180,7 +181,7 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
 const styles = StyleSheet.create({
     container: {
         justifyContent: 'center',
-        marginVertical: metrics.spacing.lmd,
+        marginVertical: metrics.spacing.md,
     },
     labelText: {
         marginRight: metrics.spacing.xs,

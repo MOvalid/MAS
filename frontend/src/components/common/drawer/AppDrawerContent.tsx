@@ -2,13 +2,14 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Drawer, useTheme } from 'react-native-paper';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
-import { AppLogo } from './AppLogo';
-import { AppDrawerButton, MaterialCommunityIconName } from './AppDrawerButton';
-import { ClientListScreen } from '../screens/client';
-import { ProductListScreen } from '../screens/product';
-import { OrderListScreen } from '../screens/order';
+import { ClientListScreen } from '@/components/screens/client';
+import { OrderListScreen } from '@/components/screens/order';
+import { ProductListScreen } from '@/components/screens/product';
+import { StockListScreen } from '@/components/screens/stock';
 import { NavigationConfig } from '@/types/navigation';
-import { StockListScreen } from '../screens/stock';
+import { MaterialCommunityIconName, AppDrawerButton } from './AppDrawerButton';
+import { AppLogo } from '..';
+import { metrics } from '@/theme/metrics';
 
 export type NavigationConfigItem = {
     name: string;
@@ -77,12 +78,12 @@ const styles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        paddingTop: 16,
+        paddingTop: metrics.spacing.md,
     },
     scrollView: {
         flex: 1,
     },
     drawerSection: {
-        marginTop: 8,
+        marginTop: metrics.spacing.sm,
     },
 });

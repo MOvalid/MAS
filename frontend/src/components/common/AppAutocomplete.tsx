@@ -4,7 +4,7 @@ import { Autocomplete } from 'react-native-paper-autocomplete';
 import { AppText } from '@/components/common';
 import { useTheme } from 'react-native-paper';
 import { metrics } from '@/theme/metrics';
-import { useAppTheme } from '@/theme/AppThemeContext';
+import { useAppTheme } from '@/context/AppThemeContext';
 
 type AppAutocompleteProps<T> = {
     label: string;

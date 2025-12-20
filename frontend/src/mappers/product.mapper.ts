@@ -1,8 +1,10 @@
 // // types/mappers/product.mapper.ts
-import { ProductDto, StockProductDto } from '@/types/dto';
+import { StockProduct } from '@/types/domain';
+import { ProductDto, StockProductDto, StockProductResponseDto } from '@/types/dto';
 import { ProductViewModel, StockProductViewModel } from '@/types/view-model/product';
 import { formatPolishDate } from '@/utils/formatters';
 import { formatPrice } from '@/utils/price-utils';
+import { mapCompanyDtoToCompany } from './company.mapper';
 
 /**
  * Maps a {@link StockProductDto} received from the API
@@ -16,7 +18,7 @@ import { formatPrice } from '@/utils/price-utils';
  * @param dto - Raw {@link StockProductDto} returned from the backend.
  * @returns The formatted {@link StockProductViewModel} for UI rendering.
  */
-export const mapStockProductToViewModel = (dto: StockProductDto): StockProductViewModel => {
+export const mapStockProductDtoToViewModel = (dto: StockProductDto): StockProductViewModel => {
     return {
         id: dto.id,
         name: dto.name,
@@ -41,8 +43,9 @@ export const mapStockProductToViewModel = (dto: StockProductDto): StockProductVi
  * @param list - Array of DTO objects from API.
  * @returns Array of mapped view models for UI usage.
  */
-export const mapStockList = (list: StockProductDto[]): StockProductViewModel[] =>
-    list.map(mapStockProductToViewModel);
+export const mapStockProductDtoListToViewModel = (
+    list: StockProductDto[]
+): StockProductViewModel[] => list.map(mapStockProductDtoToViewModel);
 
 /**
  * Maps a {@link ProductDto} returned from the backend
@@ -91,3 +94,59 @@ export const mapProductListToViewModel = (list: ProductDto[]): ProductViewModel[
         ...mapProductDtoToViewModel(dto),
         lp: index + 1,
     }));
+
+export const mapProductStockResponseDto = (
+    response: StockProductResponseDto
+): { items: StockProduct[]; total: number } => {
+    const items: StockProduct[] = response.data.map(
+        (p: StockProductDto): StockProduct => ({
+            id: p.id,
+            name: p.name,
+            manufacturer: mapCompanyDtoToCompany(p.manufacturer), // ✅ CAŁY OBIEKT
+            stockQuantity: p.stockQuantity,
+            unit: p.unit,
+            netPrice: p.netPrice,
+            grossPrice: p.grossPrice,
+            currency: p.currency,
+            lastRestockedAt: p.lastRestockedAt,
+        })
+    );
+
+    return {
+        items,
+        total: response.total,
+    };
+};
+
+export const mapStockProductDtoToDomain = (dto: StockProductDto): StockProduct => {
+    return {
+        id: dto.id,
+        name: dto.name,
+        manufacturer: mapCompanyDtoToCompany(dto.manufacturer),
+        stockQuantity: dto.stockQuantity,
+        unit: dto.unit,
+        netPrice: dto.netPrice,
+        grossPrice: dto.grossPrice,
+        currency: dto.currency,
+        lastRestockedAt: dto.lastRestockedAt,
+    };
+};
+
+export const mapStockProductListDtoToDomain = (dtos: StockProductDto[]): StockProduct[] => {
+    return dtos.map(mapStockProductDtoToDomain);
+};
+
+export const mapStockProductToViewModel = (product: StockProduct): StockProductViewModel => ({
+    id: product.id,
+    name: product.name,
+    manufacturerName: product.manufacturer.name,
+    stockQuantity: product.stockQuantity,
+    unit: product.unit,
+    netPrice: formatPrice(product.netPrice),
+    grossPrice: formatPrice(product.grossPrice),
+    currency: product.currency,
+    lastRestocked: product.lastRestockedAt ? formatPolishDate(product.lastRestockedAt) : '-',
+});
+
+export const mapStockProductListToViewModel = (list: StockProduct[]): StockProductViewModel[] =>
+    list.map(mapStockProductToViewModel);

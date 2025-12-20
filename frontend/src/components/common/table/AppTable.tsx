@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { AppText } from '../AppText';
-import { useAppTheme } from '../../../theme/AppThemeContext';
+import { useAppTheme } from '../../../context/AppThemeContext';
 import { metrics } from '../../../theme/metrics';
 import { AppTableHeader } from './AppTableHeader';
 import { AppTableContent } from './AppTableContent';

@@ -20,3 +20,15 @@ export interface OrderItemDetails {
     vatAmount: number;
     currency: Currency.PLN;
 }
+
+export interface OrderItemTableRow {
+    product: string;
+    quantity: number;
+    unit: string;
+    unitPrice: string;
+    netPrice: string;
+    vat: string;
+    vatRate: string;
+    grossPrice: string;
+    currency: string;
+}

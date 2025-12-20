@@ -1,4 +1,4 @@
-import { MaterialCommunityIconName } from '@/components/common/AppDrawerButton';
+import { MaterialCommunityIconName } from '@/components/common/drawer/AppDrawerButton';
 import { JSX } from 'react';
 
 export type NavigationConfigItem = {

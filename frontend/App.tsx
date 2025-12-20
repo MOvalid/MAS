@@ -2,7 +2,8 @@ import * as React from 'react';
 import * as Font from 'expo-font';
 import { PaperProvider } from 'react-native-paper';
 import { LightTheme, DarkTheme, CombinedDarkTheme, CombinedLightTheme } from './src/theme/theme';
-import { AppThemeProvider } from './src/theme/AppThemeContext';
+import { AppThemeProvider } from './src/context/AppThemeContext';
+import { SnackbarProvider } from './src/context/SnackbarContext';
 import { NavigationContainer, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator, DrawerScreenProps } from '@react-navigation/drawer';
@@ -221,23 +222,26 @@ export default function App() {
     return (
         <AuthProvider>
             <PaperProvider theme={paperTheme}>
-                <AppThemeProvider>
-                    <NavigationContainer
-                        theme={navigationTheme as unknown as Theme}
-                        linking={linking}
-                        documentTitle={{
-                            formatter: (options, route) => `${options?.title ?? route?.name} - MAS`,
-                        }}
-                    >
-                        <Stack.Navigator
-                            initialRouteName="MainDrawer"
-                            screenOptions={{ headerShown: false }}
+                <SnackbarProvider>
+                    <AppThemeProvider>
+                        <NavigationContainer
+                            theme={navigationTheme as unknown as Theme}
+                            linking={linking}
+                            documentTitle={{
+                                formatter: (options, route) =>
+                                    `${options?.title ?? route?.name} - MAS`,
+                            }}
                         >
-                            <Stack.Screen name="Auth" component={AuthScreen} />
-                            <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
-                        </Stack.Navigator>
-                    </NavigationContainer>
-                </AppThemeProvider>
+                            <Stack.Navigator
+                                initialRouteName="MainDrawer"
+                                screenOptions={{ headerShown: false }}
+                            >
+                                <Stack.Screen name="Auth" component={AuthScreen} />
+                                <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
+                            </Stack.Navigator>
+                        </NavigationContainer>
+                    </AppThemeProvider>
+                </SnackbarProvider>
             </PaperProvider>
         </AuthProvider>
     );

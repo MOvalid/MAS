@@ -1,11 +1,19 @@
-import { AppTextInput, AppDateRangeFilter, AppDropdown, AppText } from '@/components/common';
+import {
+    AppTextInput,
+    AppDateRangeFilter,
+    AppDropdown,
+    AppText,
+    IconName,
+} from '@/components/common';
+import { AppTooltip } from '@/components/common/AppTooltip';
 import { metrics } from '@/theme/metrics';
-import { INVOICE_STATUS_VALUES, InvoiceStatus } from '@/types/common';
+import { ORDER_SORT_OPTIONS, ORDER_STATUS_LABELS, OrderStatus } from '@/types/common';
+import { OrderSortOption } from '@/types/domain';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useTheme } from 'react-native-paper';
+import { Icon, useTheme } from 'react-native-paper';
 
-interface InvoiceListFiltersProps {
+interface OrderListFiltersProps {
     search: string;
     onSearchChange: (value: string) => void;
 
@@ -14,16 +22,29 @@ interface InvoiceListFiltersProps {
     onStartDateChange: (value: string) => void;
     onEndDateChange: (value: string) => void;
 
-    status: InvoiceStatus;
-    onStatusChange: (value: InvoiceStatus) => void;
+    status: OrderStatus;
+    onStatusChange: (value: OrderStatus) => void;
 
-    sortBy: string;
-    onSortByChange: (value: string) => void;
+    seller?: string;
+    onSellerChange?: (value: string) => void;
+    sellerOptions?: { label: string; value: string }[];
+
+    sortBy: OrderSortOption;
+    onSortByChange: (value: OrderSortOption) => void;
 
     dateError?: string | null;
 }
 
-export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
+export const ORDER_STATUS_DROPDOWN_OPTIONS = [
+    ...Object.values(OrderStatus)
+        .map((status) => ({
+            label: ORDER_STATUS_LABELS[status],
+            value: status,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label, 'pl')),
+];
+
+export const OrderListFilters: React.FC<OrderListFiltersProps> = ({
     search,
     onSearchChange,
     startDate,
@@ -32,14 +53,18 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
     onEndDateChange,
     status,
     onStatusChange,
+    seller,
+    onSellerChange,
+    sellerOptions,
     sortBy,
     onSortByChange,
     dateError,
 }) => {
     const theme = useTheme();
+
     const handleStatusChange = (value: string) => {
-        if (INVOICE_STATUS_VALUES.includes(value as InvoiceStatus)) {
-            onStatusChange(value as InvoiceStatus);
+        if (Object.values(OrderStatus).includes(value as OrderStatus)) {
+            onStatusChange(value as OrderStatus);
         }
     };
 
@@ -71,9 +96,26 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
             {/* WIERSZ 1 */}
             <View style={styles.filterRow}>
                 <View style={styles.filterColumn1}>
-                    <AppText variant="bodyLarge" style={styles.labelText}>
-                        Filtruj po nazwie
-                    </AppText>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: metrics.spacing.sm,
+                        }}
+                    >
+                        <AppText variant="bodyLarge" style={styles.labelText}>
+                            Filtrowanie
+                        </AppText>
+
+                        <AppTooltip content="Wyszukuj po nazwie, kliencie lub numerze dokumentu">
+                            <Icon
+                                source={IconName.help}
+                                size={20}
+                                color={theme.colors.onSurfaceVariant}
+                            />
+                        </AppTooltip>
+                    </View>
+
                     <AppTextInput
                         placeholder="Wyszukaj"
                         value={search}
@@ -87,19 +129,7 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
                     endDate={endDate}
                     onStartDateChange={onStartDateChange}
                     onEndDateChange={onEndDateChange}
-                    label="Zakres daty wystawienia"
-                    width="100%"
-                    style={styles.filterColumn2}
-                    startError={dateError ?? undefined}
-                    endError={dateError ?? undefined}
-                />
-
-                <AppDateRangeFilter
-                    startDate={startDate}
-                    endDate={endDate}
-                    onStartDateChange={onStartDateChange}
-                    onEndDateChange={onEndDateChange}
-                    label="Zakres daty opłacenia"
+                    label="Zakres daty zamówienia"
                     width="100%"
                     style={styles.filterColumn2}
                     startError={dateError ?? undefined}
@@ -115,13 +145,17 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
                         fullWidth
                         value={status}
                         onChange={handleStatusChange}
-                        options={[
-                            { label: 'Wszystkie', value: InvoiceStatus.ALL },
-                            { label: 'Wysłane', value: InvoiceStatus.SENT },
-                            { label: 'Opłacone', value: InvoiceStatus.PAID },
-                            { label: 'Przeterminowane', value: InvoiceStatus.OVERDUE },
-                            { label: 'Anulowane', value: InvoiceStatus.CANCELLED },
-                        ]}
+                        options={ORDER_STATUS_DROPDOWN_OPTIONS}
+                    />
+                </View>
+
+                <View style={styles.filterColumn1}>
+                    <AppDropdown
+                        label="Sprzedawca"
+                        fullWidth
+                        value={seller}
+                        onChange={onSellerChange!}
+                        options={sellerOptions ?? []}
                     />
                 </View>
 
@@ -129,16 +163,9 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
                     <AppDropdown
                         label="Sortuj według"
                         value={sortBy}
-                        onChange={onSortByChange}
+                        onChange={(v) => onSortByChange(v as OrderSortOption)}
                         fullWidth
-                        options={[
-                            { label: 'Data wystawienia ↓', value: 'ISSUED_DESC' },
-                            { label: 'Data wystawienia ↑', value: 'ISSUED_ASC' },
-                            { label: 'Data opłacenia ↓', value: 'PAYMENT_DESC' },
-                            { label: 'Data opłacenia ↑', value: 'PAYMENT_ASC' },
-                            { label: 'Kwota ↓', value: 'AMOUNT_DESC' },
-                            { label: 'Kwota ↑', value: 'AMOUNT_ASC' },
-                        ]}
+                        options={ORDER_SORT_OPTIONS}
                     />
                 </View>
             </View>

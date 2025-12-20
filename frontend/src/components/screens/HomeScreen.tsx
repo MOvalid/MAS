@@ -5,24 +5,34 @@ import { AppButton } from '../common/AppButton';
 import { AppText } from '../common/AppText';
 import { metrics } from '../../theme/metrics';
 import { AppCard } from '../common/AppCard';
+import { useDailySummary } from '@/composables/useDailySummary';
+import { LoadingScreen } from './LoadingScreen';
+import { ErrorScreen } from './ErrorScreen';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
 export const HomeScreen = () => {
-    const dailySummary = [
-        { id: 1, title: 'Przychody dzisiaj', value: '12 345 PLN' },
-        { id: 2, title: 'Zamówienia', value: '58' },
-        { id: 3, title: 'Nowi klienci', value: '7' },
-        { id: 4, title: 'Wysłane faktury', value: '21' },
-        { id: 5, title: 'Produkty w magazynie', value: '156' },
-        { id: 6, title: 'Zwroty', value: '3' },
-        { id: 7, title: 'Wysłane faktury', value: '21' },
-        { id: 8, title: 'Produkty w magazynie', value: '156' },
-        { id: 9, title: 'Zwroty', value: '3' },
-    ];
+    const { data, loading, error, refresh } = useDailySummary();
+
+    if (loading) {
+        return <LoadingScreen />;
+    }
+
+    if (error) {
+        const friendly = getFriendlyErrorMessage(error);
+
+        return (
+            <ErrorScreen
+                title="Nie udało się pobrać danych"
+                message={friendly.message}
+                onRetry={refresh}
+            />
+        );
+    }
 
     return (
         <View style={styles.container}>
             <AppText variant="displayMedium" style={styles.title}>
-                Dzień dobry, Jan!!!
+                Dzień dobry, Jan!
             </AppText>
 
             <View style={styles.buttonRow}>
@@ -38,9 +48,11 @@ export const HomeScreen = () => {
             </AppText>
 
             <View style={styles.cardContainer}>
-                {dailySummary.map((item) => (
+                {data.map((item) => (
                     <AppCard key={item.id} style={styles.card}>
-                        <AppText variant="titleMedium">{item.title}</AppText>
+                        <AppText variant="titleMedium" numberOfLines={2} ellipsizeMode="tail">
+                            {item.title}
+                        </AppText>
                         <AppText variant="headlineSmall">{item.value}</AppText>
                     </AppCard>
                 ))}

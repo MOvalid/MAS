@@ -6,6 +6,7 @@ import { IconValue } from '../icons';
 
 export interface Action {
     icon: IconValue;
+    tooltip?: string;
     onPress: () => void;
     iconColor?: string;
 }
@@ -19,7 +20,7 @@ export const AppTableRowActions: React.FC<AppTableRowActionsProps> = ({ actions,
     return (
         <View style={[styles.actionsContainer, style]}>
             {actions.map((action, index) => (
-                <AppIconButton key={index} {...action} />
+                <AppIconButton key={index} {...action}/>
             ))}
         </View>
     );

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, ViewStyle } from 'react-native';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { AppText } from './AppText';
-import { useAppTheme } from '../../theme/AppThemeContext';
+import { useAppTheme } from '../../context/AppThemeContext';
 import { metrics } from '../../theme/metrics';
 
 interface AppDatePickerProps {
