@@ -5,10 +5,14 @@ import { AppButton, AppText } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table/AppTable';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
 import { ProductViewModel } from '@/types/view-model/product';
-import { getMockProducts, mockCategories } from '@/utils/data-generator';
+import { getMockProducts } from '@/utils/data-generator';
 import { mapProductDtoToViewModel } from '@/mappers/product.mapper';
 import { ProductListFilters } from './ProductListFilters';
 import { ProductSortOption } from '@/types/common';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/types/dto/auth';
+import { useCategories } from '@/composables/category';
 
 export const ProductListScreen = () => {
     const [search, setSearch] = useState('');
@@ -17,6 +21,18 @@ export const ProductListScreen = () => {
     const [sort, setSort] = useState<ProductSortOption>('NAME_ASC');
     const [page, setPage] = useState(1);
     const limit = 10;
+
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+    const { items: categories, loading: categoriesLoading } = useCategories();
+
+    const categoryMap = useMemo(() => {
+        return Object.fromEntries(categories.map((c) => [c.id, c.name]));
+    }, [categories]);
+
+    const handleRowPress = (item: ProductViewModel) => {
+        navigation.navigate('ProductDetails', { id: item.id });
+    };
 
     const { items, total } = useMemo(() => {
         let data = [...getMockProducts(100)];
@@ -55,7 +71,10 @@ export const ProductListScreen = () => {
         const start = (page - 1) * limit;
         const paginated = data.slice(start, start + limit);
 
-        return { items: paginated.map(mapProductDtoToViewModel), total };
+        return {
+            items: paginated.map(mapProductDtoToViewModel),
+            total,
+        };
     }, [search, category, manufacturer, sort, page]);
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
@@ -70,7 +89,7 @@ export const ProductListScreen = () => {
             key: 'categoryId',
             title: 'Kategoria',
             flex: 1,
-            render: (item) => mockCategories.find((c) => c.id === item.categoryId)?.name ?? '—',
+            render: (item) => (item.categoryId ? (categoryMap[item.categoryId] ?? '—') : '—'),
         },
         { key: 'netPrice', title: 'Cena netto', flex: 0.75, align: 'center' },
         { key: 'grossPrice', title: 'Cena brutto', flex: 0.75, align: 'center' },
@@ -81,7 +100,9 @@ export const ProductListScreen = () => {
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
                 <AppText variant="headlineLarge">Produkty</AppText>
-                <AppButton onPress={() => console.log('Nowy produkt')}>Nowy produkt</AppButton>
+                <AppButton onPress={() => navigation.navigate('ProductAdd')}>
+                    Nowy produkt
+                </AppButton>
             </View>
 
             <ProductListFilters
@@ -91,6 +112,8 @@ export const ProductListScreen = () => {
                     setPage(1);
                 }}
                 category={category}
+                categories={[{ id: 'ALL', name: 'Wszystkie' }, ...categories]}
+                categoriesLoading={categoriesLoading}
                 onCategoryChange={(val) => {
                     setCategory(val);
                     setPage(1);
@@ -107,7 +130,7 @@ export const ProductListScreen = () => {
                 }}
             />
 
-            <AppTable columns={columns} data={items} />
+            <AppTable columns={columns} data={items} onRowPress={handleRowPress} />
 
             <View style={styles.paginationRow}>
                 <AppPaginationControls
@@ -123,6 +146,14 @@ export const ProductListScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, gap: metrics.spacing.lg },
-    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    paginationRow: { marginTop: metrics.spacing.md, width: '100%', alignItems: 'center' },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    paginationRow: {
+        marginTop: metrics.spacing.md,
+        width: '100%',
+        alignItems: 'center',
+    },
 });

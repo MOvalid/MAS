@@ -4,7 +4,7 @@ import { getMockDailySummary } from '@/utils/data-generator';
 // import { fetchDailySummary } from '@/api/dashboard.api';
 
 const USE_MOCK = true;
-const USE_MOCK_ERROR = true;
+const USE_MOCK_ERROR = false;
 
 export const useDailySummary = () => {
     const [data, setData] = useState<DailySummaryDto[]>([]);

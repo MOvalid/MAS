@@ -3,77 +3,49 @@ import { View, Image, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { metrics } from '@/theme/metrics';
-import { ProductDetails } from '@/types/domain/product';
 import { formatPolishDate } from '@/utils/formatters';
 import { calculateVat } from '@/utils/price-utils';
 import { useState } from 'react';
 import { AppModal } from '@/components/common/AppModal';
+import { getFriendlyErrorMessage } from '@/utils/error-utils';
+import { ErrorScreen } from '../ErrorScreen';
+import { LoadingScreen } from '../LoadingScreen';
+import { useProductDetails } from '@/composables/product';
 
 const NotAvailableImage =
     'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764505262/not-available_kyzgum.png';
-
-const mockProduct: ProductDetails = {
-    id: '123',
-    name: 'Rudy kotek',
-    sku: 'RUDY-2025-001',
-    stockQuantity: 1,
-    description: 'Mały, rudy kotek o puszystym futerku i dużych zielonych oczach',
-    categoryId: 'cat-animals',
-    category: {
-        id: 'cat-animals',
-        name: 'Zwierzęta domowe',
-        description: 'Różne zwierzęta domowe do adopcji i opieki',
-        products: [],
-    },
-    netPrice: 0,
-    vatRate: 0,
-    grossPrice: 0,
-    vatAmount: 0,
-    currency: 'PLN',
-    imageUrl: 'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764505258/rudy_c7ebby.png',
-    specification: {
-        productId: '123',
-        weight: 3.2,
-        dimensions: {
-            length: 40,
-            width: 15,
-            height: 25,
-        },
-        material: 'Futro + kości + mięśnie',
-        color: 'Rudy',
-        manufacturer: 'Mother Nature',
-        countryOfOrigin: 'Polska',
-        warranty: 0,
-    },
-    createdAt: '2025-01-01T08:00:00Z',
-    updatedAt: '2025-11-30T10:00:00Z',
-    lastRestockedAt: '2025-11-25T09:00:00Z',
-};
 
 export const ProductDetailsScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const { id } = route.params;
+
     const theme = useTheme();
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-    const product = mockProduct;
+    // Use the hook to fetch product details
+    const {
+        item: product,
+        loading,
+        error,
+        notFound,
+        refetch: refresh,
+    } = useProductDetails(id, true);
 
-    const getStockStatus = () => {
-        if (product.stockQuantity === 0)
-            return { text: 'Brak w magazynie', color: theme.colors.error };
-        if (product.stockQuantity <= 20) return { text: 'Niski stan', color: theme.colors.warning };
+    const getStockStatus = (stockQuantity: number) => {
+        if (stockQuantity === 0) return { text: 'Brak w magazynie', color: theme.colors.error };
+        if (stockQuantity <= 20) return { text: 'Niski stan', color: theme.colors.warning };
         return { text: 'Dostępny', color: theme.colors.success };
     };
 
-    const stockStatus = getStockStatus();
-
     const handleEdit = () => {
-        navigation.navigate('ProductEdit', { id: product.id });
+        if (product) {
+            navigation.navigate('ProductEdit', { id: product.id });
+        }
     };
 
     const handleDelete = () => {
-        console.log('Usuwanie produktu:', product.id);
+        console.log('Usuwanie produktu:', product?.id);
         setDeleteModalVisible(false);
         navigation.goBack();
     };
@@ -92,6 +64,23 @@ export const ProductDetailsScreen = () => {
         container: {
             flex: 1,
             padding: metrics.spacing.lg,
+        },
+        loadingContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: metrics.spacing.xl,
+        },
+        errorContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: metrics.spacing.xl,
+        },
+        errorText: {
+            marginBottom: metrics.spacing.lg,
+            textAlign: 'center',
+            color: theme.colors.error,
         },
         title: {
             marginBottom: metrics.spacing.xs,
@@ -184,6 +173,33 @@ export const ProductDetailsScreen = () => {
         },
     });
 
+    if (loading) {
+        return <LoadingScreen />;
+    }
+
+    if (!!notFound || !!error) {
+        const friendly = getFriendlyErrorMessage(error);
+
+        return (
+            <ErrorScreen
+                title="Nie udało się pobrać danych"
+                message={friendly.message}
+                onRetry={refresh}
+            />
+        );
+    }
+
+    if (!product) {
+        // Opcjonalnie możesz też pokazać placeholder zamiast null
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <AppText>Brak danych</AppText>
+            </View>
+        );
+    }
+
+    const stockStatus = getStockStatus(product.stockQuantity);
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
@@ -211,7 +227,7 @@ export const ProductDetailsScreen = () => {
             <View style={styles.contentRow}>
                 <View style={styles.imageContainer}>
                     <Image
-                        source={{ uri: product.imageUrl ? product.imageUrl : NotAvailableImage }}
+                        source={{ uri: product.imageUrl || NotAvailableImage }}
                         style={styles.image}
                         resizeMode="cover"
                     />
@@ -283,24 +299,6 @@ export const ProductDetailsScreen = () => {
                         </AppText>
                         <AppText variant="bodyLarge" style={styles.value}>
                             {formatPolishDate(product.lastRestockedAt, false)}
-                        </AppText>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <AppText variant="bodyLarge" style={styles.label}>
-                            Utworzono:
-                        </AppText>
-                        <AppText variant="bodyLarge" style={styles.value}>
-                            {formatPolishDate(product.createdAt, false)}
-                        </AppText>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <AppText variant="bodyLarge" style={styles.label}>
-                            Ostatnia aktualizacja:
-                        </AppText>
-                        <AppText variant="bodyLarge" style={styles.value}>
-                            {formatPolishDate(product.updatedAt, false)}
                         </AppText>
                     </View>
                 </AppCard>
@@ -410,6 +408,7 @@ export const ProductDetailsScreen = () => {
                     </>
                 )}
             </AppCard>
+
             <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
                 <AppText variant="titleLarge" style={styles.modalTitle}>
                     Usuń produkt

@@ -1,6 +1,11 @@
 // // types/mappers/product.mapper.ts
-import { StockProduct } from '@/types/domain';
-import { ProductDto, StockProductDto, StockProductResponseDto } from '@/types/dto';
+import { ProductDetails, ProductSpecification, StockProduct } from '@/types/domain';
+import {
+    ProductDto,
+    ProductSpecificationDto,
+    StockProductDto,
+    StockProductResponseDto,
+} from '@/types/dto';
 import { ProductViewModel, StockProductViewModel } from '@/types/view-model/product';
 import { formatPolishDate } from '@/utils/formatters';
 import { formatPrice } from '@/utils/price-utils';
@@ -150,3 +155,66 @@ export const mapStockProductToViewModel = (product: StockProduct): StockProductV
 
 export const mapStockProductListToViewModel = (list: StockProduct[]): StockProductViewModel[] =>
     list.map(mapStockProductToViewModel);
+
+/**
+ * Maps ProductSpecificationDto to ProductSpecification domain model
+ */
+const mapProductSpecificationDtoToDomain = (dto: ProductSpecificationDto): ProductSpecification => {
+    return {
+        productId: dto.productId,
+        weight: dto.weight,
+        dimensions: dto.dimensions
+            ? {
+                  length: dto.dimensions.length || 0,
+                  width: dto.dimensions.width || 0,
+                  height: dto.dimensions.height || 0,
+              }
+            : undefined,
+        material: dto.material,
+        color: dto.color,
+        manufacturer: dto.manufacturer,
+        countryOfOrigin: dto.countryOfOrigin,
+        warranty: dto.warranty,
+    };
+};
+
+/**
+ * Maps ProductDto and ProductSpecificationDto to ProductDetails domain model
+ * @param productDto - Main product data
+ * @param specificationDto - Optional product specification data
+ */
+export const mapProductDetailsDtoToDomain = (
+    productDto: ProductDto,
+    specificationDto: ProductSpecificationDto | null
+): ProductDetails => {
+    return {
+        // Basic product info
+        id: productDto.id,
+        name: productDto.name,
+        sku: productDto.sku,
+        stockQuantity: productDto.stockQuantity,
+        description: productDto.description,
+        categoryId: productDto.categoryId,
+
+        // Category object is not included in DTO
+        // If you need it, fetch it separately or include in ProductDto response
+        category: undefined,
+
+        // Pricing
+        netPrice: productDto.netPrice,
+        vatRate: productDto.vatRate,
+        grossPrice: productDto.grossPrice,
+        vatAmount: productDto.vatAmount,
+        currency: productDto.currency,
+
+        // Image
+        imageUrl: productDto.imageUrl,
+
+        // Specification (map if exists, otherwise null)
+        specification: specificationDto
+            ? mapProductSpecificationDtoToDomain(specificationDto)
+            : null,
+
+        lastRestockedAt: productDto.lastRestockedAt,
+    };
+};

@@ -9,7 +9,7 @@ import { StockLevelFilter, StockSortOption } from '@/types/domain/stock-filters'
 import { StockProductViewModel } from '@/types/view-model/product';
 import { AppStockBar } from '@/components/common/AppStockBar';
 import { StockListFilters } from './StockListFilters';
-import { useProductStock } from '@/composables/useProductStock';
+import { useProductStock } from '@/composables/stock/useProductStock';
 import { ErrorScreen } from '../ErrorScreen';
 import { LoadingScreen } from '../LoadingScreen';
 import { mapStockProductListToViewModel } from '@/mappers/product.mapper';

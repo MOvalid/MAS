@@ -1,1 +1,11 @@
 export const API_STOCK = '';
+export const API_CARRIERS = '/carriers';
+export const API_CATEGORIES = '/categories';
+export const API_COMPANIES = '/companies';
+export const API_CUSTOMERS = '/customers';
+export const API_DELIVERIES = '/deliveries';
+export const API_INVOICES = '/invoices';
+export const API_ORDERS = '/orders';
+export const API_PAYMENTS = '/payments';
+export const API_PRODUCTS = '/products';
+export const API_SELLERS = '/sellers';

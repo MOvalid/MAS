@@ -5,11 +5,18 @@ import { metrics } from '@/theme/metrics';
 import { useTheme } from 'react-native-paper';
 import { ProductSortOption } from '@/types/common';
 
+interface CategoryOption {
+    id: string;
+    name: string;
+}
+
 interface Props {
     search: string;
     onSearchChange: (v: string) => void;
 
     category: string;
+    categories: CategoryOption[];
+    categoriesLoading?: boolean;
     onCategoryChange: (v: string) => void;
 
     manufacturer: string;
@@ -23,6 +30,8 @@ export const ProductListFilters: React.FC<Props> = ({
     search,
     onSearchChange,
     category,
+    categories,
+    categoriesLoading,
     onCategoryChange,
     manufacturer,
     onManufacturerChange,
@@ -51,12 +60,16 @@ export const ProductListFilters: React.FC<Props> = ({
             flex: 2,
             width: '100%',
         },
-        labelText: { color: theme.colors.onSurfaceVariant, marginBottom: metrics.spacing.xs },
+        labelText: {
+            color: theme.colors.onSurfaceVariant,
+            marginBottom: metrics.spacing.xs,
+        },
     });
 
     return (
         <View style={styles.filtersContainer}>
             <View style={styles.filterRow}>
+
                 <View style={styles.filterColumn2}>
                     <AppText variant="bodyLarge" style={styles.labelText}>
                         Filtruj po nazwie
@@ -77,11 +90,11 @@ export const ProductListFilters: React.FC<Props> = ({
                         value={category}
                         onChange={(v: string) => onCategoryChange(v)}
                         fullWidth
-                        options={[
-                            { label: 'Wszystkie', value: 'ALL' },
-                            { label: 'Elektronika', value: 'cat-1' },
-                            { label: 'Komputery', value: 'cat-2' },
-                        ]}
+                        // loading={categoriesLoading}
+                        options={categories.map((c) => ({
+                            label: c.name,
+                            value: c.id,
+                        }))}
                     />
                 </View>
 
