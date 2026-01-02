@@ -13,6 +13,7 @@ namespace MasApi.Models
         public required Guid SellerId { get; set; }
         public Seller? Seller { get; set; }
         public required Enums.Currency Currency { get; set; }
+        public required Enums.OrderStatus Status { get; set; }
 
         public Invoice? Invoice { get; set; }
         public Delivery? Delivery { get; set; }

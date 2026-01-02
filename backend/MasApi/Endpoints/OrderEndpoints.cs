@@ -43,6 +43,7 @@ public static class OrderEndpoints
         if (customer == null) return TypedResults.BadRequest("Customer does not exist.");
 
         var order = mapper.Map<Order>(orderRequest);
+        order.Status = Models.Enums.OrderStatus.Draft;
 
         using var transaction = await dbContext.Database.BeginTransactionAsync();
 
