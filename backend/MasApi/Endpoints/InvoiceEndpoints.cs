@@ -49,10 +49,15 @@ public static class InvoiceEndpoints
             company = await dbContext.Companies.FindAsync(invoiceRequest.CompanyId.Value);
             if (company == null) return TypedResults.BadRequest("Company does not exist.");
         }
+        
+        int todayInvoiceCount = await dbContext.Invoices
+            .CountAsync(i => i.IssuedAt.Date == DateTime.UtcNow.Date) + 1;
 
         var invoice = mapper.Map<Invoice>(invoiceRequest);
 
         invoice.IssuedAt = DateTime.UtcNow;
+        invoice.PaymentDueDate = invoice.IssuedAt.AddDays(PaymentDueDays);
+        invoice.InvoiceNumber = $"{DateTime.UtcNow:yyyy/MM/dd}-{todayInvoiceCount.ToString().PadLeft(5, '0')}";
         invoice.Status = InvoiceStatus.Draft;
         invoice.Company = company;
         invoice.Order = order;
