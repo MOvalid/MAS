@@ -54,6 +54,7 @@ public static class ProductEndpoints
     {
         var product = await dbContext.Products
             .Include(p => p.Category)
+            .Include(p => p.Manufacturer)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (product == null) return TypedResults.NotFound();
 
@@ -65,6 +66,7 @@ public static class ProductEndpoints
     private static async Task<Results<Ok<List<ProductListDto>>, NotFound>> GetProducts(Data.MasDbContext dbContext, IMapper mapper)
     {
         var products = await dbContext.Products
+            .Include(p => p.Manufacturer)
             .Select(product => mapper.Map<ProductListDto>(product))
             .ToListAsync();
 
