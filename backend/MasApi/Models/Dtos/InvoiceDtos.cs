@@ -6,6 +6,11 @@ public class InvoiceCreateDto
     public Guid? CompanyId { get; set; }
 }
 
+public class InvoiceUpdateDto
+{
+    public required string Status { get; set; }
+}
+
 public class InvoiceListDto
 {
     public required Guid Id { get; set; }

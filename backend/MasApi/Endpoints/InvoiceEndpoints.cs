@@ -101,24 +101,14 @@ public static class InvoiceEndpoints
         return TypedResults.Ok(invoices);
     }
 
-    private static async Task<Results<Ok<InvoiceDetailsDto>, NotFound, BadRequest<string>>> UpdateInvoice(Guid id, InvoiceCreateDto invoiceRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<InvoiceDetailsDto>, NotFound, BadRequest<string>>> UpdateInvoice(Guid id, InvoiceUpdateDto invoiceRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        // TODO: Is this needed?
         var invoice = await dbContext.Invoices
             .Include(i => i.Order)
                 .ThenInclude(o => o!.OrderProducts)
             .Include(i => i.Company)
             .FirstOrDefaultAsync(i => i.Id == id);
         if (invoice == null) return TypedResults.NotFound();
-
-        var order = await dbContext.Orders.FindAsync(invoiceRequest.OrderId);
-        if (order == null) return TypedResults.BadRequest("Order does not exist.");
-
-        if (invoiceRequest.CompanyId != null)
-        {
-            var company = await dbContext.Companies.FindAsync(invoiceRequest.CompanyId.Value);
-            if (company == null) return TypedResults.BadRequest("Company does not exist.");
-        }
 
         mapper.Map(invoiceRequest, invoice);
 
@@ -128,8 +118,6 @@ public static class InvoiceEndpoints
             var errorMessage = string.Join("; ", validationErrors);
             return TypedResults.BadRequest(errorMessage);
         }
-
-        // TODO: Generate PDF and store it somewhere
 
         dbContext.Invoices.Update(invoice);
         await dbContext.SaveChangesAsync();
