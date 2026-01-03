@@ -1,7 +1,7 @@
 using MasApi.Models;
 using MasApi.Models.Dtos;
+using MasApi.Models.Enums;
 using Microsoft.AspNetCore.Http.HttpResults;
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 
@@ -40,19 +40,32 @@ public static class PaymentEndpoints
 
         var order = await dbContext.Orders
             .Include(o => o.OrderProducts)
+            .Include(o => o.Payments)
             .FirstOrDefaultAsync(o => o.Id == paymentRequest.OrderId);
         if (order == null) return TypedResults.BadRequest("Order does not exist.");
 
         var payment = mapper.Map<Payment>(paymentRequest);
 
         payment.PaymentDate = DateTime.UtcNow.AddDays(PaymentDueDays);
-        payment.Order = order;
 
         var (isValid, validationErrors) = payment.Validate();
         if (!isValid)
         {
             var errorMessage = string.Join("; ", validationErrors);
             return TypedResults.BadRequest(errorMessage);
+        }
+
+        if (
+            (
+                order.Payments?
+                    .Where(p => !p.Status.Equals(PaymentStatus.Cancelled))
+                    .Sum(p => p.Amount)
+                + payment.Amount
+            )
+                > order.TotalGrossPrice
+            )
+        {
+            return TypedResults.BadRequest("Payment amount exceeds order total.");
         }
 
         dbContext.Payments.Add(payment);
@@ -84,16 +97,13 @@ public static class PaymentEndpoints
         return TypedResults.Ok(payments);
     }
 
-    private static async Task<Results<Ok<PaymentDetailsDto>, NotFound, BadRequest<string>>> UpdatePayment(Guid id, PaymentCreateDto paymentRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<PaymentDetailsDto>, NotFound, BadRequest<string>>> UpdatePayment(Guid id, PaymentUpdateDto paymentRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var payment = await dbContext.Payments
             .Include(p => p.Order)
                 .ThenInclude(o => o!.OrderProducts)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (payment == null) return TypedResults.NotFound();
-
-        var order = await dbContext.Orders.FindAsync(paymentRequest.OrderId);
-        if (order == null) return TypedResults.BadRequest("Order does not exist.");
 
         mapper.Map(paymentRequest, payment);
 

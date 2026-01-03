@@ -9,6 +9,11 @@ public class PaymentCreateDto
     public required string Currency { get; set; }
 }
 
+public class PaymentUpdateDto
+{
+    public required string Status { get; set; }
+}
+
 public class PaymentListDto
 {
     public required Guid Id { get; set; }
