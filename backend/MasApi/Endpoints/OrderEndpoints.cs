@@ -128,7 +128,7 @@ public static class OrderEndpoints
         return TypedResults.Ok(orders);
     }
 
-    private static async Task<Results<Ok<OrderDetailsDto>, NotFound, BadRequest<string>>> UpdateOrder(Guid id, OrderCreateDto orderRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<OrderDetailsDto>, NotFound, BadRequest<string>>> UpdateOrder(Guid id, OrderUpdateDto orderRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var order = await dbContext.Orders
             .Include(o => o.Customer)
@@ -140,9 +140,6 @@ public static class OrderEndpoints
             .Include(o => o.Delivery)
             .FirstOrDefaultAsync(o => o.Id == id);
         if (order == null) return TypedResults.NotFound();
-
-        var seller = await dbContext.Orders.FindAsync(orderRequest.SellerId);
-        if (seller == null) return TypedResults.BadRequest("Seller does not exist.");
 
         mapper.Map(orderRequest, order);
 

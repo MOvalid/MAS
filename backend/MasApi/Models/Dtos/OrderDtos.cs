@@ -14,6 +14,11 @@ public class OrderItemCreateDto
     public required int Quantity { get; set; }
 }
 
+public class OrderUpdateDto
+{
+    public required string Status { get; set; }
+}
+
 public class OrderListDto
 {
     public required Guid Id { get; set; }
