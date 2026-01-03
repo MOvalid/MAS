@@ -99,9 +99,14 @@ public static class CompanyEndpoints
         var company = await dbContext.Companies
             .Include(c => c.Invoices)
             .FirstOrDefaultAsync(c => c.Id == id);
+        
+        var productsCount = await dbContext.Products
+            .Where(p => p.ManufacturerId == id)
+            .CountAsync();
 
         if (company == null) return TypedResults.NotFound();
         if (company.Invoices != null && company.Invoices.Count != 0) return TypedResults.BadRequest("Cannot delete a company with existing invoices.");
+        if (productsCount > 0) return TypedResults.BadRequest("Cannot delete a company that is a manufacturer of existing products.");
 
         dbContext.Companies.Remove(company);
         await dbContext.SaveChangesAsync();
