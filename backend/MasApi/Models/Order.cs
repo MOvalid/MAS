@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MasApi.Models
 {
-    public class Order
+    public class Order: BaseModel
     {
         [Key]
         public required Guid Id { get; set; }

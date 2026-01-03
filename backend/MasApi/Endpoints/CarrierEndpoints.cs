@@ -36,6 +36,13 @@ public static class CarrierEndpoints
     {
         var carrier = mapper.Map<Carrier>(carrierRequest);
 
+        var (isValid, validationErrors) = carrier.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
+
         dbContext.Carriers.Add(carrier);
         await dbContext.SaveChangesAsync();
 
@@ -58,12 +65,19 @@ public static class CarrierEndpoints
         return TypedResults.Ok(carriers);
     }
 
-    private static async Task<Results<Ok<CarrierListDto>, NotFound>> UpdateCarrier(Guid id, CarrierCreateDto carrierRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<CarrierListDto>, NotFound, BadRequest<string>>> UpdateCarrier(Guid id, CarrierCreateDto carrierRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var carrier = await dbContext.Carriers.FindAsync(id);
         if (carrier == null) return TypedResults.NotFound();
 
         mapper.Map(carrierRequest, carrier);
+
+        var (isValid, validationErrors) = carrier.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Carriers.Update(carrier);
         await dbContext.SaveChangesAsync();

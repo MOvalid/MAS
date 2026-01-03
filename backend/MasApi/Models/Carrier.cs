@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MasApi.Models;
 
-public class Carrier
+public class Carrier: BaseModel
 {
     [Key]
     public required Guid Id { get; set; }

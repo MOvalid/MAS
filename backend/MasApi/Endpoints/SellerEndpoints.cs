@@ -52,6 +52,13 @@ public static class SellerEndpoints
             Email = email
         };
 
+        var (isValid, validationErrors) = seller.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
+
         dbContext.Sellers.Add(seller);
         await dbContext.SaveChangesAsync();
 
@@ -82,7 +89,7 @@ public static class SellerEndpoints
         return TypedResults.Ok(sellers);
     }
 
-    private static async Task<Results<Ok<SellerDetailsDto>, NotFound>> UpdateSeller(Guid id, SellerCreateDto sellerRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<SellerDetailsDto>, BadRequest<string>,NotFound>> UpdateSeller(Guid id, SellerCreateDto sellerRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var seller = await dbContext.Sellers
             .Include(s => s.Orders!)
@@ -91,6 +98,13 @@ public static class SellerEndpoints
         if (seller == null) return TypedResults.NotFound();
 
         mapper.Map(sellerRequest, seller);
+
+        var (isValid, validationErrors) = seller.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Sellers.Update(seller);
         await dbContext.SaveChangesAsync();

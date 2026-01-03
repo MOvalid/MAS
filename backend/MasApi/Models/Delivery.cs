@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MasApi.Models;
 
-public class Delivery
+public class Delivery: BaseModel
 {
     [Key]
     public required Guid Id { get; set; }

@@ -48,6 +48,13 @@ public static class PaymentEndpoints
         payment.PaymentDate = DateTime.UtcNow.AddDays(PaymentDueDays);
         payment.Order = order;
 
+        var (isValid, validationErrors) = payment.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
+
         dbContext.Payments.Add(payment);
         await dbContext.SaveChangesAsync();
 
@@ -89,6 +96,13 @@ public static class PaymentEndpoints
         if (order == null) return TypedResults.BadRequest("Order does not exist.");
 
         mapper.Map(paymentRequest, payment);
+
+        var (isValid, validationErrors) = payment.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Payments.Update(payment);
         await dbContext.SaveChangesAsync();

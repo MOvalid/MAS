@@ -62,6 +62,13 @@ public static class InvoiceEndpoints
         invoice.Company = company;
         invoice.Order = order;
 
+        var (isValid, validationErrors) = invoice.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
+
         // TODO: Generate PDF and store it somewhere
 
         dbContext.Invoices.Add(invoice);
@@ -114,6 +121,13 @@ public static class InvoiceEndpoints
         }
 
         mapper.Map(invoiceRequest, invoice);
+
+        var (isValid, validationErrors) = invoice.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         // TODO: Generate PDF and store it somewhere
 

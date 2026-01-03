@@ -44,6 +44,13 @@ public static class ProductEndpoints
 
         var product = mapper.Map<Product>(productRequest);
 
+        var (isValid, validationResults) = product.Validate();
+        if (!isValid)
+        {
+            var errors = string.Join("; ", validationResults.Select(vr => vr.ErrorMessage));
+            return TypedResults.BadRequest($"Product data is invalid: {errors}");
+        }
+
         dbContext.Products.Add(product);
         await dbContext.SaveChangesAsync();
 
@@ -113,7 +120,25 @@ public static class ProductEndpoints
             if (category == null) return TypedResults.BadRequest("Category does not exist.");
         }
 
+        if (productRequest.ManufacturerId != product.ManufacturerId)
+        {
+            var manufacturer = await dbContext.Companies.FindAsync(productRequest.ManufacturerId);
+            if (manufacturer == null) return TypedResults.BadRequest("Manufacturer does not exist.");
+        }
+
+        if (productRequest.StockQuantity > product.StockQuantity)
+        {
+            product.LastRestockedAt = DateTime.UtcNow;
+        }
+
         mapper.Map(productRequest, product);
+
+        var (isValid, validationResults) = product.Validate();
+        if (!isValid)
+        {
+            var errors = string.Join("; ", validationResults.Select(vr => vr.ErrorMessage));
+            return TypedResults.BadRequest($"Product data is invalid: {errors}");
+        }
 
         dbContext.Products.Update(product);
         await dbContext.SaveChangesAsync();

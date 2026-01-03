@@ -36,6 +36,13 @@ public static class CategoryEndpoints
     {
         var category = mapper.Map<Category>(categoryRequest);
 
+        var (isValid, validationErrors) = category.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
+
         dbContext.Categories.Add(category);
         await dbContext.SaveChangesAsync();
 
@@ -63,7 +70,7 @@ public static class CategoryEndpoints
         return TypedResults.Ok(categories);
     }
 
-    public static async Task<Results<Ok<CategoryDetailsDto>, NotFound>> UpdateCategory(Guid id, CategoryCreateDto categoryRequest, Data.MasDbContext dbContext, IMapper mapper)
+    public static async Task<Results<Ok<CategoryDetailsDto>, NotFound, BadRequest<string>>> UpdateCategory(Guid id, CategoryCreateDto categoryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var category = await dbContext.Categories
             .Include(c => c.Products)
@@ -72,6 +79,13 @@ public static class CategoryEndpoints
         if (category == null) return TypedResults.NotFound();
 
         mapper.Map(categoryRequest, category);
+
+        var (isValid, validationErrors) = category.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Categories.Update(category);
         await dbContext.SaveChangesAsync();

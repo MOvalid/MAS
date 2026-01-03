@@ -43,6 +43,13 @@ public static class DeliveryEndpoints
 
         var delivery = mapper.Map<Delivery>(deliveryRequest);
 
+        var (isValid, validationErrors) = delivery.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
+
         dbContext.Deliveries.Add(delivery);
         await dbContext.SaveChangesAsync();
 
@@ -74,7 +81,7 @@ public static class DeliveryEndpoints
         return TypedResults.Ok(deliveries);
     }
 
-    private static async Task<Results<Ok<DeliveryDetailsDto>, NotFound>> UpdateDelivery(Guid id, DeliveryCreateDto deliveryRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<DeliveryDetailsDto>, NotFound, BadRequest<string>>> UpdateDelivery(Guid id, DeliveryCreateDto deliveryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var delivery = await dbContext.Deliveries
             .Include(d => d.Order)
@@ -84,6 +91,13 @@ public static class DeliveryEndpoints
         if (delivery == null) return TypedResults.NotFound();
 
         mapper.Map(deliveryRequest, delivery);
+
+        var (isValid, validationErrors) = delivery.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Deliveries.Update(delivery);
         await dbContext.SaveChangesAsync();

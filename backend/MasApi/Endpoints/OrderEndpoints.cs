@@ -63,11 +63,26 @@ public static class OrderEndpoints
                     await transaction.RollbackAsync();
                     return TypedResults.BadRequest($"Insufficient stock for product with ID {item.ProductId}.");
                 }
-                
+
                 product.StockQuantity -= item.Quantity;
                 item.UnitNetPrice = product.NetPrice;
                 item.VatRate = product.VatRate;
                 item.Currency = order.Currency;
+
+                var (isItemValid, itemValidationErrors) = item.Validate();
+                if (!isItemValid)
+                {
+                    await transaction.RollbackAsync();
+                    var errorMessage = string.Join("; ", itemValidationErrors);
+                    return TypedResults.BadRequest(errorMessage);
+                }
+            }
+
+            var (isOrderValid, orderValidationErrors) = order.Validate();
+            if (!isOrderValid)
+            {
+                var errorMessage = string.Join("; ", orderValidationErrors);
+                return TypedResults.BadRequest(errorMessage);
             }
 
             dbContext.Orders.Add(order);
@@ -130,6 +145,13 @@ public static class OrderEndpoints
         if (seller == null) return TypedResults.BadRequest("Seller does not exist.");
 
         mapper.Map(orderRequest, order);
+
+        var (isValid, validationErrors) = order.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Orders.Update(order);
         await dbContext.SaveChangesAsync();

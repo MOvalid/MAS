@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MasApi.Models
 {
     [Index(nameof(InvoiceNumber), IsUnique = true)]
-    public class Invoice
+    public class Invoice: BaseModel
     {
         [Key]
         public required Guid Id { get; set; }
