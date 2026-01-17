@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MasApi.Models
 {
     [Index(nameof(Email), IsUnique = true)]
-    public class Customer
+    public class Customer: BaseModel
     {
         [Key]
         public required Guid Id { get; set; }

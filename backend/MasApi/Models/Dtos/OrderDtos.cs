@@ -14,6 +14,11 @@ public class OrderItemCreateDto
     public required int Quantity { get; set; }
 }
 
+public class OrderUpdateDto
+{
+    public required string Status { get; set; }
+}
+
 public class OrderListDto
 {
     public required Guid Id { get; set; }
@@ -21,6 +26,7 @@ public class OrderListDto
     public required Guid CustomerId { get; set; }
     public required Guid SellerId { get; set; }
     public required string Currency { get; set; }
+    public required string Status { get; set; }
     public required decimal TotalNetPrice { get; set; }
     public required decimal TotalVatAmount { get; set; }
     public required decimal TotalGrossPrice { get; set; }
@@ -33,6 +39,7 @@ public class OrderDetailsDto
     public required CustomerListDto Customer { get; set; }
     public required SellerListDto Seller { get; set; }
     public required string Currency { get; set; }
+    public required string Status { get; set; }
     public required decimal TotalNetPrice { get; set; }
     public required decimal TotalVatAmount { get; set; }
     public required decimal TotalGrossPrice { get; set; }

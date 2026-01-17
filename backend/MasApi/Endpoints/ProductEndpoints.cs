@@ -3,6 +3,8 @@ using MasApi.Models.Dtos;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace MasApi.Endpoints;
 
@@ -42,6 +44,13 @@ public static class ProductEndpoints
 
         var product = mapper.Map<Product>(productRequest);
 
+        var (isValid, validationResults) = product.Validate();
+        if (!isValid)
+        {
+            var errors = string.Join("; ", validationResults.Select(vr => vr.ErrorMessage));
+            return TypedResults.BadRequest($"Product data is invalid: {errors}");
+        }
+
         dbContext.Products.Add(product);
         await dbContext.SaveChangesAsync();
 
@@ -54,6 +63,7 @@ public static class ProductEndpoints
     {
         var product = await dbContext.Products
             .Include(p => p.Category)
+            .Include(p => p.Manufacturer)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (product == null) return TypedResults.NotFound();
 
@@ -62,13 +72,41 @@ public static class ProductEndpoints
         return TypedResults.Ok(productDto);
     }
 
-    private static async Task<Results<Ok<List<ProductListDto>>, NotFound>> GetProducts(Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<PagedResults<ProductListDto>>, NotFound>> GetProducts(string? search, string? sortingField, string? sortingOrder, int? pageNumber, int? itemsPerPage, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var products = await dbContext.Products
-            .Select(product => mapper.Map<ProductListDto>(product))
+        IQueryable<Product> productsQuery = dbContext.Products;
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            productsQuery = productsQuery.Where(p => p.Name.ToLower().Contains(search.ToLower()) || p.Sku.ToLower().Contains(search.ToLower()));
+        }
+
+        if (sortingOrder != null && sortingOrder.Contains("desc", StringComparison.CurrentCultureIgnoreCase))
+        {
+            productsQuery = productsQuery.OrderByDescending(GetSortingFieldSelector(sortingField));
+        }
+        else
+        {
+            productsQuery = productsQuery.OrderBy(GetSortingFieldSelector(sortingField));
+        }
+
+        itemsPerPage ??= 10;
+        int totalCount = await productsQuery.CountAsync();
+        var products = await productsQuery
+            .Skip(((pageNumber ?? 1) - 1) * itemsPerPage.Value)
+            .Take(itemsPerPage.Value)
+            .Include(p => p.Manufacturer)
+            .Include(p => p.Category)
+            .Select(p => mapper.Map<ProductListDto>(p))
             .ToListAsync();
 
-        return TypedResults.Ok(products);
+        return TypedResults.Ok(new PagedResults<ProductListDto>
+        {
+            Items = products,
+            TotalCount = totalCount,
+            PageNumber = pageNumber ?? 1,
+            ItemsPerPage = itemsPerPage.Value
+        });
     }
 
     private static async Task<Results<Ok<ProductDetailsDto>, NotFound, BadRequest<string>>> UpdateProduct(Guid id, ProductCreateDto productRequest, Data.MasDbContext dbContext, IMapper mapper)
@@ -82,7 +120,25 @@ public static class ProductEndpoints
             if (category == null) return TypedResults.BadRequest("Category does not exist.");
         }
 
+        if (productRequest.ManufacturerId != product.ManufacturerId)
+        {
+            var manufacturer = await dbContext.Companies.FindAsync(productRequest.ManufacturerId);
+            if (manufacturer == null) return TypedResults.BadRequest("Manufacturer does not exist.");
+        }
+
+        if (productRequest.StockQuantity > product.StockQuantity)
+        {
+            product.LastRestockedAt = DateTime.UtcNow;
+        }
+
         mapper.Map(productRequest, product);
+
+        var (isValid, validationResults) = product.Validate();
+        if (!isValid)
+        {
+            var errors = string.Join("; ", validationResults.Select(vr => vr.ErrorMessage));
+            return TypedResults.BadRequest($"Product data is invalid: {errors}");
+        }
 
         dbContext.Products.Update(product);
         await dbContext.SaveChangesAsync();
@@ -106,5 +162,15 @@ public static class ProductEndpoints
         await dbContext.SaveChangesAsync();
 
         return TypedResults.NoContent();
+    }
+
+    private static Expression<Func<Product, object>> GetSortingFieldSelector(string? sortingField)
+    {
+        return sortingField?.ToLower() switch
+        {
+            "name" => product => product.Name,
+            "stock" => product => product.StockQuantity,
+            _ => product => product.Name
+        };
     }
 }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MasApi.Models
 {
-    public class Category
+    public class Category: BaseModel
     {
         [Key]
         public required Guid Id { get; set; }

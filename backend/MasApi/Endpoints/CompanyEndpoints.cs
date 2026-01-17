@@ -36,6 +36,13 @@ public static class CompanyEndpoints
     {
         var company = mapper.Map<Company>(companyRequest);
 
+        var (isValid, validationErrors) = company.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
+
         dbContext.Companies.Add(company);
         await dbContext.SaveChangesAsync();
 
@@ -63,7 +70,7 @@ public static class CompanyEndpoints
         return TypedResults.Ok(companyDtos);
     }
 
-    private static async Task<Results<Ok<CompanyDetailsDto>, NotFound>> UpdateCompany(Guid id, CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<CompanyDetailsDto>, NotFound, BadRequest<string>>> UpdateCompany(Guid id, CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var company = await dbContext.Companies
             .Include(c => c.Invoices)
@@ -71,6 +78,13 @@ public static class CompanyEndpoints
         if (company == null) return TypedResults.NotFound();
 
         mapper.Map(companyRequest, company);
+
+        var (isValid, validationErrors) = company.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Companies.Update(company);
         await dbContext.SaveChangesAsync();
@@ -85,9 +99,14 @@ public static class CompanyEndpoints
         var company = await dbContext.Companies
             .Include(c => c.Invoices)
             .FirstOrDefaultAsync(c => c.Id == id);
+        
+        var productsCount = await dbContext.Products
+            .Where(p => p.ManufacturerId == id)
+            .CountAsync();
 
         if (company == null) return TypedResults.NotFound();
         if (company.Invoices != null && company.Invoices.Count != 0) return TypedResults.BadRequest("Cannot delete a company with existing invoices.");
+        if (productsCount > 0) return TypedResults.BadRequest("Cannot delete a company that is a manufacturer of existing products.");
 
         dbContext.Companies.Remove(company);
         await dbContext.SaveChangesAsync();

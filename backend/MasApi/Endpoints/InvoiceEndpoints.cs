@@ -49,13 +49,25 @@ public static class InvoiceEndpoints
             company = await dbContext.Companies.FindAsync(invoiceRequest.CompanyId.Value);
             if (company == null) return TypedResults.BadRequest("Company does not exist.");
         }
+        
+        int todayInvoiceCount = await dbContext.Invoices
+            .CountAsync(i => i.IssuedAt.Date == DateTime.UtcNow.Date) + 1;
 
         var invoice = mapper.Map<Invoice>(invoiceRequest);
 
         invoice.IssuedAt = DateTime.UtcNow;
+        invoice.PaymentDueDate = invoice.IssuedAt.AddDays(PaymentDueDays);
+        invoice.InvoiceNumber = $"{DateTime.UtcNow:yyyy/MM/dd}-{todayInvoiceCount.ToString().PadLeft(5, '0')}";
         invoice.Status = InvoiceStatus.Draft;
         invoice.Company = company;
         invoice.Order = order;
+
+        var (isValid, validationErrors) = invoice.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         // TODO: Generate PDF and store it somewhere
 
@@ -89,9 +101,8 @@ public static class InvoiceEndpoints
         return TypedResults.Ok(invoices);
     }
 
-    private static async Task<Results<Ok<InvoiceDetailsDto>, NotFound, BadRequest<string>>> UpdateInvoice(Guid id, InvoiceCreateDto invoiceRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<InvoiceDetailsDto>, NotFound, BadRequest<string>>> UpdateInvoice(Guid id, InvoiceUpdateDto invoiceRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        // TODO: Is this needed?
         var invoice = await dbContext.Invoices
             .Include(i => i.Order)
                 .ThenInclude(o => o!.OrderProducts)
@@ -99,18 +110,14 @@ public static class InvoiceEndpoints
             .FirstOrDefaultAsync(i => i.Id == id);
         if (invoice == null) return TypedResults.NotFound();
 
-        var order = await dbContext.Orders.FindAsync(invoiceRequest.OrderId);
-        if (order == null) return TypedResults.BadRequest("Order does not exist.");
-
-        if (invoiceRequest.CompanyId != null)
-        {
-            var company = await dbContext.Companies.FindAsync(invoiceRequest.CompanyId.Value);
-            if (company == null) return TypedResults.BadRequest("Company does not exist.");
-        }
-
         mapper.Map(invoiceRequest, invoice);
 
-        // TODO: Generate PDF and store it somewhere
+        var (isValid, validationErrors) = invoice.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Invoices.Update(invoice);
         await dbContext.SaveChangesAsync();

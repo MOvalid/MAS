@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MasApi.Models
 {
-    public class Order
+    public class Order: BaseModel
     {
         [Key]
         public required Guid Id { get; set; }
@@ -13,6 +13,7 @@ namespace MasApi.Models
         public required Guid SellerId { get; set; }
         public Seller? Seller { get; set; }
         public required Enums.Currency Currency { get; set; }
+        public required Enums.OrderStatus Status { get; set; }
 
         public Invoice? Invoice { get; set; }
         public Delivery? Delivery { get; set; }

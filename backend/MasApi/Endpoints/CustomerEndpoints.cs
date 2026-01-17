@@ -36,6 +36,13 @@ public static class CustomerEndpoints
     {
         var customer = mapper.Map<Customer>(customerRequest);
 
+        var (isValid, validationErrors) = customer.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
+
         dbContext.Customers.Add(customer);
         await dbContext.SaveChangesAsync();
 
@@ -66,7 +73,7 @@ public static class CustomerEndpoints
         return TypedResults.Ok(customers);
     }
 
-    private static async Task<Results<Ok<CustomerDetailsDto>, NotFound>> UpdateCustomer(Guid id, CustomerCreateDto customerRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<CustomerDetailsDto>, NotFound, BadRequest<string>>> UpdateCustomer(Guid id, CustomerCreateDto customerRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var customer = await dbContext.Customers
             .Include(c => c.Orders!)
@@ -75,6 +82,13 @@ public static class CustomerEndpoints
         if (customer == null) return TypedResults.NotFound();
 
         mapper.Map(customerRequest, customer);
+
+        var (isValid, validationErrors) = customer.Validate();
+        if (!isValid)
+        {
+            var errorMessage = string.Join("; ", validationErrors);
+            return TypedResults.BadRequest(errorMessage);
+        }
 
         dbContext.Customers.Update(customer);
         await dbContext.SaveChangesAsync();
