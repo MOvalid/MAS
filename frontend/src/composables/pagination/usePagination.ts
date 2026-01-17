@@ -7,30 +7,35 @@ export interface PaginatedResponse<T> {
     total: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface UsePaginatedProps<T, TFilters = Record<string, any>> {
+export type BaseFilters<TSort> = {
+    search?: string;
+    sortBy?: TSort;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+};
+
+export interface UsePaginatedProps<T, TSort> {
     endpoint: string;
     enabled?: boolean;
-    initialFilters?: TFilters;
+    initialFilters?: BaseFilters<TSort>;
     initialPage?: number;
     initialLimit?: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function usePaginated<T, TFilters = Record<string, any>>({
+export function usePaginated<T, TSort>({
     endpoint,
     enabled = true,
-    initialFilters = {} as TFilters,
+    initialFilters = {} as BaseFilters<TSort>,
     initialPage = 1,
     initialLimit = 10,
-}: UsePaginatedProps<T, TFilters>) {
+}: UsePaginatedProps<T, TSort>) {
     const { api } = useAuth();
 
     const [items, setItems] = useState<T[]>([]);
     const [total, setTotal] = useState<number>(0);
     const [page, setPage] = useState<number>(initialPage);
     const [limit, setLimit] = useState<number>(initialLimit);
-    const [filters, setFilters] = useState<TFilters>(initialFilters);
+    const [filters, setFilters] = useState<BaseFilters<TSort>>(initialFilters);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -53,8 +58,6 @@ export function usePaginated<T, TFilters = Record<string, any>>({
                     ...filters,
                 },
             });
-
-            console.log(`[usePaginated] Success fetching ${endpoint}`, response.data);
 
             setItems(response.data.items ?? []);
             setTotal(response.data.total ?? 0);

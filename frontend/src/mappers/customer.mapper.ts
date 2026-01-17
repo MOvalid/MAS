@@ -1,5 +1,5 @@
 import { CustomerDto } from '../types/dto/customer';
-import { Customer } from '../types/domain/customer';
+import { Customer, CustomerTableRow } from '../types/domain/customer';
 import { mapAddressDtoToAddress, mapAddressToAddressDto } from './address.mapper';
 import { mapDtoListToDomain } from './common.mapper';
 
@@ -56,5 +56,26 @@ export const mapCustomerDtoToTableRow = (dto: CustomerDto, index: number) => {
         email: dto.email,
         phone: dto.phoneNumber || '-',
         city: dto.address?.city || '-',
+    };
+};
+
+export const mapCustomerToTableRow = (
+    customer: Customer, 
+    index: number, 
+    page: number = 1, 
+    limit: number = 10
+): CustomerTableRow => {
+    const rowNumber = (page - 1) * limit + index + 1;
+    const { city, street, number } = customer.address;
+    const formattedAddress = `${city}, ${street} ${number}`;
+
+    return {
+        id: customer.id,
+        lp: rowNumber.toString(),
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        email: customer.email || '-',
+        phone: customer.phoneNumber || '-',
+        address: formattedAddress,
     };
 };

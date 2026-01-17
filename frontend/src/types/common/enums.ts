@@ -93,17 +93,26 @@ export const PAYMENT_SUMMARY_LABELS = {
 } as const;
 
 export const ORDER_SORT_OPTIONS = [
-    { label: 'Lp. ↑', value: 'LP_ASC' },
-    { label: 'Lp. ↓', value: 'LP_DESC' },
-    { label: 'Klient A → Z', value: 'CUSTOMER_ASC' },
-    { label: 'Klient Z → A', value: 'CUSTOMER_DESC' },
-    { label: 'Firma A → Z', value: 'COMPANY_ASC' },
-    { label: 'Firma Z → A', value: 'COMPANY_DESC' },
+    { label: 'Zamawiający A → Z', value: 'CLIENT_ASC' },
+    { label: 'Zamawiający Z → A', value: 'CLIENT_DESC' },
     { label: 'Data zamówienia ↑', value: 'CREATED_ASC' },
     { label: 'Data zamówienia ↓', value: 'CREATED_DESC' },
 ];
 
-export type ProductSortOption = 'NAME_ASC' | 'NAME_DESC' | 'MANUFACTURER_ASC' | 'PRICE_ASC';
-
-export type ClientTypeFilter = 'ALL' | 'CUSTOMER' | 'COMPANY';
-export type ClientSort = 'ALPHA_ASC' | 'ALPHA_DESC';
+export type ProductSortOption =
+    | 'NAME_ASC'
+    | 'NAME_DESC'
+    | 'MANUFACTURER_ASC'
+    | 'MANUFACTURER_ASC'
+    | 'PRICE_ASC'
+    | 'PRICE_DESC';
+export type StockProductSortOption =
+    | 'NAME_ASC'
+    | 'NAME_DESC'
+    | 'MANUFACTURER_ASC'
+    | 'MANUFACTURER_ASC'
+    | 'PRICE_ASC'
+    | 'PRICE_DESC';
+export type OrderSortOption = 'CLIENT_ASC' | 'CLIENT_DESC' | 'CREATED_ASC' | 'CREATED_DESC';
+export type CustomerSort = 'ALPHA_ASC' | 'ALPHA_DESC';
+export type CompanySort = 'ALPHA_ASC' | 'ALPHA_DESC';

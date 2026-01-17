@@ -1,21 +1,18 @@
-import { Company } from '@/types/domain/company';
+import { Company, CompanyTableRow } from '@/types/domain/company';
 import { API_COMPANIES } from '@/constants/Endpoints';
 import { usePaginated } from '../pagination/usePagination';
 import { useCreate } from '../common/useCreate';
 import { useUpdate } from '../common/useUpdate';
 import { CompanyDto } from '@/types/dto';
-import { mapCompanyDtoToDomain, mapCompanyToDto } from '@/mappers/company.mapper';
+import {
+    mapCompanyDtoToDomain,
+    mapCompanyToTableRow,
+    mapCompanyToDto,
+} from '@/mappers/company.mapper';
 import { useDelete } from '../common/useDelete';
 import { useGet } from '../common/useGet';
-
-export const useCompanies = (enabled: boolean = true) => {
-    return usePaginated<Company>({
-        endpoint: API_COMPANIES,
-        enabled,
-        initialPage: 1,
-        initialLimit: 10,
-    });
-};
+import { useMemo } from 'react';
+import { CompanySort } from '@/types/common';
 
 export type CreateCompanyPayload = Omit<Company, 'id'>;
 
@@ -62,11 +59,33 @@ export const useDeleteCompany = (onSuccess?: () => void, onError?: (error: strin
     });
 };
 
-
 export const useCompany = (id?: string) => {
     return useGet<Company, CompanyDto>({
         endpoint: API_COMPANIES,
         id,
         transformResponse: mapCompanyDtoToDomain,
     });
+};
+
+export const useCompanies = (enabled = true, initialFilters = {}) => {
+    const { items, total, page, setPage, limit, loading, error, refetch, setFilters } =
+        usePaginated<CompanyDto, CompanySort>({
+            endpoint: API_COMPANIES,
+            enabled,
+            initialFilters,
+        });
+
+    const companies = useMemo(() => items.map(mapCompanyDtoToDomain), [items]);
+
+    return { companies, total, page, setPage, limit, loading, error, refetch, setFilters };
+};
+
+export const useCompanyTableData = (
+    companyDtos: Company[],
+    page: number = 1,
+    limit: number = 10
+): CompanyTableRow[] => {
+    return useMemo(() => {
+        return companyDtos.map((dto, index) => mapCompanyToTableRow(dto, index, page, limit));
+    }, [companyDtos, page, limit]);
 };

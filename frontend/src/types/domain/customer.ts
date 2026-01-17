@@ -9,4 +9,14 @@ export interface Customer {
     phoneNumber?: string;
     address: Address;
     orders: Order[] | null;
-}
+};
+
+export interface CustomerTableRow {
+    id: string;
+    lp: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+};

@@ -10,7 +10,6 @@ import { createDrawerNavigator, DrawerScreenProps } from '@react-navigation/draw
 import { useColorScheme, View, ActivityIndicator } from 'react-native';
 import AuthScreen from './src/components/screens/AuthScreen';
 import {
-    ClientNavigator,
     CompanyNavigator,
     CustomerNavigator,
     OrderNavigator,
@@ -42,18 +41,10 @@ const linking = {
                 path: '',
                 screens: {
                     Home: 'home',
-                    Client: {
-                        path: 'client',
-                        screens: {
-                            ClientList: '',
-                            ClientAdd: 'add',
-                            ClientEdit: 'edit/:id',
-                            ClientDetails: ':id',
-                        },
-                    },
                     Company: {
                         path: 'company',
                         screens: {
+                            CompanyList: '',
                             CompanyAdd: 'add',
                             CompanyEdit: 'edit/:id',
                             CompanyDetails: ':id',
@@ -62,6 +53,7 @@ const linking = {
                     Customer: {
                         path: 'customer',
                         screens: {
+                            CustomerList: '',
                             CustomerAdd: 'add',
                             CustomerEdit: 'edit/:id',
                             CustomerDetails: ':id',
@@ -142,14 +134,6 @@ function DrawerNavigator() {
                 options={{
                     drawerLabel: 'Settings',
                     title: 'Settings',
-                }}
-            />
-            <Drawer.Screen
-                name="Client"
-                component={ClientNavigator}
-                options={{
-                    drawerLabel: 'Klienci',
-                    title: 'Klienci',
                 }}
             />
             <Drawer.Screen

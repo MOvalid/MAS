@@ -31,13 +31,23 @@ export const mapCompanyDtoListToDomain = (dtos: CompanyDto[]): Company[] => {
     return mapDtoListToDomain<CompanyDto, Company>(dtos, mapCompanyDtoToDomain);
 };
 
-export const mapCompanyDtoToTableRow = (dto: CompanyDto, index: number): CompanyTableRow => {
+export const mapCompanyToTableRow = (
+    company: Company, 
+    index: number, 
+    page: number = 1, 
+    limit: number = 10
+): CompanyTableRow => {
+    const rowNumber = (page - 1) * limit + index + 1;
+    const { city, street, number } = company.address;
+    const formattedAddress = `${city}, ${street} ${number}`;
+
     return {
-        id: dto.id,
-        lp: (index + 1).toString(),
-        name: dto.name,
-        taxId: formatNip(dto.taxId),
-        email: dto.email || '-',
-        phone: dto.phone || '-',
+        id: company.id,
+        lp: rowNumber.toString(),
+        name: company.name,
+        taxId: formatNip(company.taxId),
+        email: company.email || '-',
+        phone: company.phoneNumber || '-',
+        address: formattedAddress,
     };
 };

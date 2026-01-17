@@ -2,7 +2,6 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Drawer, useTheme } from 'react-native-paper';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
-import { ClientListScreen } from '@/components/screens/client';
 import { OrderListScreen } from '@/components/screens/order';
 import { ProductListScreen } from '@/components/screens/product';
 import { StockListScreen } from '@/components/screens/stock';
@@ -10,6 +9,8 @@ import { NavigationConfig } from '@/types/navigation';
 import { MaterialCommunityIconName, AppDrawerButton } from './AppDrawerButton';
 import { AppLogo } from '..';
 import { metrics } from '@/theme/metrics';
+import { CompanyListScreen } from '@/components/screens/company';
+import { CustomerListScreen } from '@/components/screens/customer';
 
 export type NavigationConfigItem = {
     name: string;
@@ -20,7 +21,13 @@ export type NavigationConfigItem = {
 
 const navigationConfig: NavigationConfig = [
     { name: 'Home', label: 'Strona główna', icon: 'home-outline' },
-    { name: 'Client', label: 'Klienci', icon: 'account-outline', initialScreen: ClientListScreen },
+    { name: 'Company', label: 'Firmy', icon: 'domain', initialScreen: CompanyListScreen },
+    {
+        name: 'Customer',
+        label: 'Klienci',
+        icon: 'account-outline',
+        initialScreen: CustomerListScreen,
+    },
     { name: 'Product', label: 'Produkty', icon: 'grid', initialScreen: ProductListScreen },
     { name: 'Order', label: 'Zamówienia', icon: 'cart-outline', initialScreen: OrderListScreen },
     {

@@ -16,4 +16,5 @@ export interface CompanyTableRow {
     taxId: string;
     email: string;
     phone: string;
+    address: string;
 }

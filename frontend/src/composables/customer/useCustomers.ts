@@ -1,24 +1,18 @@
-import { Customer } from '@/types/domain/customer';
+import { Customer, CustomerTableRow } from '@/types/domain/customer';
 import { API_CUSTOMERS } from '@/constants/Endpoints';
 import { usePaginated } from '../pagination/usePagination';
 import { useCreate } from '../common/useCreate';
 import { useUpdate } from '../common/useUpdate';
 import { CustomerDto } from '@/types/dto';
 import { useDelete } from '../common/useDelete';
-import { mapCustomerDtoToDomain, mapCustomerToDto } from '@/mappers/customer.mapper';
+import {
+    mapCustomerDtoToDomain,
+    mapCustomerToDto,
+    mapCustomerToTableRow,
+} from '@/mappers/customer.mapper';
 import { useGet } from '../common/useGet';
-
-/**
- * Pobieranie listy klientów (zagnieżdżony adres jest częścią obiektu Customer)
- */
-export const useCustomers = (enabled: boolean = true) => {
-    return usePaginated<Customer>({
-        endpoint: API_CUSTOMERS,
-        enabled,
-        initialPage: 1,
-        initialLimit: 10,
-    });
-};
+import { useMemo } from 'react';
+import { CustomerSort } from '@/types/common';
 
 export type CreateCustomerPayload = Omit<Customer, 'id' | 'orders'>;
 
@@ -61,4 +55,27 @@ export const useCustomer = (id?: string) => {
         id,
         transformResponse: mapCustomerDtoToDomain,
     });
+};
+
+export const useCustomers = (enabled = true, initialFilters = {}) => {
+    const { items, total, page, setPage, limit, loading, error, refetch, setFilters } =
+        usePaginated<CustomerDto, CustomerSort>({
+            endpoint: API_CUSTOMERS,
+            enabled,
+            initialFilters,
+        });
+
+    const customers = items.map(mapCustomerDtoToDomain);
+
+    return { customers, total, page, setPage, limit, loading, error, refetch, setFilters };
+};
+
+export const useCustomerTableData = (
+    customerDtos: Customer[],
+    page: number = 1,
+    limit: number = 10
+): CustomerTableRow[] => {
+    return useMemo(() => {
+        return customerDtos.map((dto, index) => mapCustomerToTableRow(dto, index, page, limit));
+    }, [customerDtos, page, limit]);
 };
