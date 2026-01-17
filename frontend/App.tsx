@@ -20,8 +20,8 @@ import {
 import { DrawerParamList } from './src/types/navigation';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
-import { HomeScreen, InvoiceScreen, SignUpScreen } from './src/components/screens';
-import { AppDrawerContent, AppScreenWrapper } from './src/components/common';
+import { FaqScreen, HomeScreen, InvoiceScreen, SettingsScreen, SignUpScreen } from './src/components/screens';
+import { AppDrawerContent, AppLoadingOverlay, AppScreenWrapper } from './src/components/common';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -123,6 +123,22 @@ function DrawerNavigator() {
                 }}
             />
             <Drawer.Screen
+                name="FAQ"
+                component={withScreenWrapper(FaqScreen)}
+                options={{
+                    drawerLabel: 'FAQ',
+                    title: 'FAQ',
+                }}
+            />
+            <Drawer.Screen
+                name="Settings"
+                component={withScreenWrapper(SettingsScreen)}
+                options={{
+                    drawerLabel: 'Settings',
+                    title: 'Settings',
+                }}
+            />
+            <Drawer.Screen
                 name="Client"
                 component={ClientNavigator}
                 options={{
@@ -194,9 +210,15 @@ function DrawerNavigator() {
 function AppNavigator() {
     const { isAuthenticated, isLoading } = useAuth();
 
-    if (isLoading) {
+    if (isLoading && !isAuthenticated) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View
+                style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
                 <ActivityIndicator size="large" />
             </View>
         );
@@ -255,6 +277,10 @@ export default function App() {
                             }}
                         >
                             <AppNavigator />
+                            <AppLoadingOverlay
+                                visible={useAuth().isLoading}
+                                text="Trwa przetwarzanie..."
+                            />
                         </NavigationContainer>
                     </AppThemeProvider>
                 </SnackbarProvider>

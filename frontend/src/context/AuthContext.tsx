@@ -9,6 +9,7 @@ import {
     fetchAuthSession,
     getCurrentUser,
     fetchUserAttributes,
+    updatePassword,
 } from 'aws-amplify/auth';
 import axios from 'axios';
 import { amplifyConfiguration } from '@/configuration/amplify-configuration';
@@ -109,11 +110,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Response interceptor to handle 401 errors
             api.interceptors.response.use(
                 (response) => {
-                    console.log('✅ Response:', response.status, response.config.url);
+                    console.log('Response:', response.status, response.config.url);
                     return response;
                 },
                 async (error) => {
-                    console.error('❌ Response error:', {
+                    console.error('Response error:', {
                         status: error.response?.status,
                         url: error.config?.url,
                         message: error.message,
@@ -121,17 +122,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     });
 
                     if (error.response?.status === 401) {
-                        console.log('❌ 401 Unauthorized - signing out');
-                        // Token expired or invalid - force sign out
+                        console.log('401 Unauthorized - signing out');
+
                         try {
+                            setIsLoading(true);
                             await signOut();
                         } catch (e) {
                             console.error('Error during forced sign out:', e);
+                        } finally {
+                            cachedIdToken = null;
+                            tokenExpiration = 0;
+                            setIsAuthenticated(false);
+                            setUserEmail(null);
+                            setIsLoading(false);
                         }
-                        cachedIdToken = null;
-                        tokenExpiration = 0;
-                        setIsAuthenticated(false);
-                        setUserEmail(null);
                     }
                     return Promise.reject(error);
                 }
@@ -242,16 +246,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const handleSignOut = async () => {
+        setIsLoading(true);
+
         try {
             await signOut();
         } catch (error) {
             console.error('Sign out error:', error);
+            throw error;
         } finally {
-            // Always clear state even if sign out fails
             cachedIdToken = null;
             tokenExpiration = 0;
             setIsAuthenticated(false);
             setUserEmail(null);
+            setIsLoading(false);
+        }
+    };
+
+    const handleUpdatePassword = async (oldPassword: string, newPassword: string) => {
+        try {
+            await updatePassword({
+                oldPassword,
+                newPassword,
+            });
+        } catch (error) {
+            console.error('Update password error:', error);
+            throw error;
         }
     };
 
@@ -261,11 +280,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
                 // Check if user is authenticated
                 const currentUser = await getCurrentUser();
-                console.log('✅ Current user found:', currentUser.username);
+                console.log('Current user found:', currentUser.username);
 
                 const token = await getIdToken(setIsAuthenticated);
                 if (token) {
-                    console.log('✅ Token retrieved successfully');
+                    console.log('Token retrieved successfully');
                     setIsAuthenticated(true);
 
                     // Get user email
@@ -277,7 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setIsAuthenticated(false);
                 }
             } catch (error) {
-                console.log('ℹ️ No authenticated user found');
+                console.log('No authenticated user found');
                 setIsAuthenticated(false);
                 setUserEmail(null);
             } finally {
@@ -297,6 +316,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         confirmSignUp: handleConfirmSignUp,
         signIn: handleSignIn,
         signOut: handleSignOut,
+        updatePassword: handleUpdatePassword,
         api,
     };
 

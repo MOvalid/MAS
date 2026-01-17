@@ -20,6 +20,7 @@ export interface AuthProps {
     confirmSignUp?: (email: string, code: string) => Promise<any>;
     signIn?: (credentials: Credentials) => Promise<any>;
     signOut?: () => Promise<any>;
+    updatePassword?: (oldPassword: string, newPassword: string) => Promise<void>;
     api?: AxiosInstance | null;
 }
 

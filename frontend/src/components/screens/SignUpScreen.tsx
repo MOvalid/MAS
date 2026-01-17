@@ -41,7 +41,7 @@ export const SignUpScreen = () => {
                 setStep('confirm');
                 showSnackbar('Kod weryfikacyjny został wysłany na Twój email', 'success');
             }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             console.error(err);
             const message = err?.message || 'Nie udało się zarejestrować';

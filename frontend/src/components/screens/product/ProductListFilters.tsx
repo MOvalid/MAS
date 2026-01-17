@@ -69,7 +69,6 @@ export const ProductListFilters: React.FC<Props> = ({
     return (
         <View style={styles.filtersContainer}>
             <View style={styles.filterRow}>
-
                 <View style={styles.filterColumn2}>
                     <AppText variant="bodyLarge" style={styles.labelText}>
                         Filtruj po nazwie

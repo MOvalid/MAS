@@ -34,7 +34,9 @@ export const ProductDetailsScreen = () => {
 
     const getStockStatus = (stockQuantity: number) => {
         if (stockQuantity === 0) return { text: 'Brak w magazynie', color: theme.colors.error };
+        // @ts-expect-error theme.colors has warning color
         if (stockQuantity <= 20) return { text: 'Niski stan', color: theme.colors.warning };
+        // @ts-expect-error theme.colors has error color
         return { text: 'Dostępny', color: theme.colors.success };
     };
 

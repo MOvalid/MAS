@@ -26,6 +26,7 @@ import { calculateVat } from './price-utils';
 import { DailySummaryDto } from '@/types/dto/dashboard';
 import { StockLevel } from '@/types/common/filters';
 import { StockLevelFilter, StockSortOption } from '@/types/domain/stock-filters';
+import { FaqItem } from '@/components/screens/FaqScreen';
 
 const randomId = () => crypto.randomUUID();
 const randomDate = () => new Date(Date.now() - Math.random() * 1e10).toISOString();
@@ -350,3 +351,67 @@ export const getMockDailySummary = (): Promise<DailySummaryDto[]> =>
             ]);
         }, 6000);
     });
+
+export const getFAQData = (): FaqItem[] => {
+    return [
+        {
+            id: '1',
+            question: 'Czym jest aplikacja Mobilny Asystent Sprzedawcy (MAS)?',
+            answer:
+                'MAS to aplikacja mobilna wspierająca pracę przedstawicieli handlowych. ' +
+                'Umożliwia przeglądanie asortymentu, składanie zamówień oraz generowanie faktur ' +
+                'bezpośrednio w trakcie spotkania z klientem.',
+        },
+        {
+            id: '2',
+            question: 'Jakie funkcje oferuje moduł zarządzania asortymentem?',
+            answer:
+                'Moduł umożliwia dodawanie, edytowanie oraz przeglądanie produktów. ' +
+                'Każdy produkt posiada m.in. nazwę, kod SKU, cenę, kategorię oraz aktualny stan magazynowy. ' +
+                'Dostępne jest także wyszukiwanie i filtrowanie produktów.',
+        },
+        {
+            id: '3',
+            question: 'Jak wygląda proces składania zamówienia?',
+            answer:
+                'Użytkownik wybiera klienta, dodaje produkty do koszyka oraz określa ich ilość. ' +
+                'System automatycznie oblicza wartość zamówienia, które można następnie zatwierdzić.',
+        },
+        {
+            id: '4',
+            question: 'Czy aplikacja generuje faktury?',
+            answer:
+                'Tak. Po zatwierdzeniu zamówienia system automatycznie generuje fakturę (np. w formacie PDF). ' +
+                'Dokument można pobrać lub wysłać bezpośrednio na adres e-mail klienta.',
+        },
+        {
+            id: '5',
+            question: 'Czy muszę być zalogowany, aby korzystać z aplikacji?',
+            answer:
+                'Tak. Dostęp do systemu jest chroniony. Użytkownik musi zalogować się ' +
+                'przy użyciu loginu i hasła, aby korzystać z funkcjonalności aplikacji.',
+        },
+        {
+            id: '6',
+            question: 'Jakie technologie zostały użyte w projekcie?',
+            answer:
+                'Frontend aplikacji został napisany w React, natomiast backend wykorzystuje ' +
+                'ASP.NET Core Web API. Komunikacja odbywa się poprzez REST API, a dane przechowywane są w bazie SQL Server.',
+        },
+        {
+            id: '7',
+            question: 'Czy aplikacja działa na urządzeniach mobilnych?',
+            answer:
+                'Tak. Aplikacja została zaprojektowana z myślą o urządzeniach mobilnych ' +
+                'i działa poprawnie na systemach Android oraz iOS.',
+        },
+        {
+            id: '8',
+            question: 'Jak zabezpieczone są dane użytkowników?',
+            answer:
+                'Cała komunikacja odbywa się z wykorzystaniem HTTPS, a hasła użytkowników ' +
+                'przechowywane są w bazie danych w postaci zaszyfrowanych hashy. ' +
+                'Do autoryzacji wykorzystywane są tokeny JWT.',
+        },
+    ];
+}
