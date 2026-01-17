@@ -1,3 +1,6 @@
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Icon, useTheme } from 'react-native-paper';
 import {
     AppTextInput,
     AppDateRangeFilter,
@@ -9,9 +12,6 @@ import { AppTooltip } from '@/components/common/AppTooltip';
 import { metrics } from '@/theme/metrics';
 import { ORDER_SORT_OPTIONS, ORDER_STATUS_LABELS, OrderStatus } from '@/types/common';
 import { OrderSortOption } from '@/types/domain';
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Icon, useTheme } from 'react-native-paper';
 
 interface OrderListFiltersProps {
     search: string;
@@ -26,7 +26,7 @@ interface OrderListFiltersProps {
     onStatusChange: (value: OrderStatus) => void;
 
     seller?: string;
-    onSellerChange?: (value: string) => void;
+    onSellerChange: (value: string) => void;
     sellerOptions?: { label: string; value: string }[];
 
     sortBy: OrderSortOption;
@@ -93,7 +93,6 @@ export const OrderListFilters: React.FC<OrderListFiltersProps> = ({
 
     return (
         <View style={styles.filtersContainer}>
-            {/* WIERSZ 1 */}
             <View style={styles.filterRow}>
                 <View style={styles.filterColumn1}>
                     <View
@@ -137,7 +136,6 @@ export const OrderListFilters: React.FC<OrderListFiltersProps> = ({
                 />
             </View>
 
-            {/* WIERSZ 2 */}
             <View style={styles.filterRow}>
                 <View style={styles.filterColumn1}>
                     <AppDropdown
@@ -154,7 +152,7 @@ export const OrderListFilters: React.FC<OrderListFiltersProps> = ({
                         label="Sprzedawca"
                         fullWidth
                         value={seller}
-                        onChange={onSellerChange!}
+                        onChange={onSellerChange}
                         options={sellerOptions ?? []}
                     />
                 </View>

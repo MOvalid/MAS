@@ -5,18 +5,14 @@ import { AppButton, AppText, IconName } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
 import { OrderViewModel } from '@/types/view-model/order';
-import { getMockOrders, getMockSellers } from '@/utils/data-generator';
+import { getMockOrders } from '@/utils/data-generator';
 import { mapOrderListToViewModel } from '@/mappers/order.mapper';
 import { OrderListFilters } from './OrderListFilters';
 import { OrderSortOption } from '@/types/domain/order';
 import { OrderStatus } from '@/types/common';
+import { useSellers } from '@/composables/seller';
 
 const mockOrders = getMockOrders(120);
-const mockSellers = getMockSellers(10, mockOrders);
-const sellerOptions = [
-    { label: 'Wszyscy', value: 'ALL' },
-    ...mockSellers.map((s) => ({ label: `${s.firstName} ${s.lastName}`, value: s.id })),
-];
 
 export const OrderListScreen = () => {
     const [search, setSearch] = useState('');
@@ -27,6 +23,21 @@ export const OrderListScreen = () => {
     const [endDate, setEndDate] = useState('');
     const [page, setPage] = useState(1);
     const limit = 10;
+
+    /** Sellers from API */
+    const { items: sellers, loading: sellersLoading } = useSellers();
+
+    /** Dropdown options */
+    const sellerOptions = useMemo(
+        () => [
+            { label: 'Wszyscy', value: 'ALL' },
+            ...sellers.map((s) => ({
+                label: `${s.firstName} ${s.lastName}`,
+                value: s.id,
+            })),
+        ],
+        [sellers]
+    );
 
     const { items, total } = useMemo(() => {
         let data = [...mockOrders];
@@ -41,7 +52,7 @@ export const OrderListScreen = () => {
             );
         }
 
-        if (status !== 'ALL') {
+        if (status !== OrderStatus.ALL) {
             data = data.filter((o) => o.status === status);
         }
 
@@ -53,6 +64,7 @@ export const OrderListScreen = () => {
             const start = new Date(`${startDate}T00:00:00`);
             data = data.filter((o) => new Date(o.createdAt) >= start);
         }
+
         if (endDate) {
             const end = new Date(`${endDate}T23:59:59`);
             data = data.filter((o) => new Date(o.createdAt) <= end);
@@ -77,7 +89,10 @@ export const OrderListScreen = () => {
         const start = (page - 1) * limit;
         const paginated = data.slice(start, start + limit);
 
-        return { items: mapOrderListToViewModel(paginated), total };
+        return {
+            items: mapOrderListToViewModel(paginated),
+            total,
+        };
     }, [search, status, seller, sort, startDate, endDate, page]);
 
     const generateInvoice = (row: OrderViewModel) => console.log('Generuj fakturę', row);
@@ -90,13 +105,9 @@ export const OrderListScreen = () => {
         { key: 'customer', title: 'Klient', flex: 1.5 },
         { key: 'company', title: 'Firma', flex: 1.5 },
         { key: 'seller', title: 'Sprzedawca', flex: 1 },
-        {
-            key: 'status',
-            title: 'Status',
-            flex: 1,
-        },
+        { key: 'status', title: 'Status', flex: 1 },
         { key: 'invoiceNumber', title: 'Faktura', flex: 1 },
-    ] as TableColumn<OrderViewModel>[];
+    ];
 
     return (
         <ScrollView style={styles.container}>
@@ -119,11 +130,11 @@ export const OrderListScreen = () => {
                     setPage(1);
                 }}
                 seller={seller}
+                sellerOptions={sellerOptions}
                 onSellerChange={(v) => {
                     setSeller(v);
                     setPage(1);
                 }}
-                sellerOptions={sellerOptions}
                 sortBy={sort}
                 onSortByChange={(v) => {
                     setSort(v);
@@ -131,8 +142,14 @@ export const OrderListScreen = () => {
                 }}
                 startDate={startDate}
                 endDate={endDate}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
+                onStartDateChange={(v) => {
+                    setStartDate(v);
+                    setPage(1);
+                }}
+                onEndDateChange={(v) => {
+                    setEndDate(v);
+                    setPage(1);
+                }}
             />
 
             <AppTable
@@ -172,6 +189,13 @@ export const OrderListScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, gap: metrics.spacing.lg },
-    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    paginationRow: { marginTop: metrics.spacing.md, alignItems: 'center' },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    paginationRow: {
+        marginTop: metrics.spacing.md,
+        alignItems: 'center',
+    },
 });

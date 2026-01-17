@@ -13,15 +13,13 @@ import { StockProduct } from '@/types/domain';
 const USE_MOCK = true;
 const USE_MOCK_ERROR = false;
 
-interface UseProductStockParams {
-    search?: string;
-    stockLevel?: StockLevelFilter;
-    sortBy?: StockSortOption;
-    page?: number;
-    limit?: number;
-}
-
-export const useProductStock = (params: UseProductStockParams) => {
+export const useProductStock = (
+    search?: string,
+    stockLevel?: StockLevelFilter,
+    sortBy?: StockSortOption,
+    page: number = 1,
+    limit: number = 10
+) => {
     const { api } = useAuth();
 
     const [items, setItems] = useState<StockProduct[]>([]);
@@ -39,24 +37,23 @@ export const useProductStock = (params: UseProductStockParams) => {
 
                 const mockData = await getMockStockProductsPaginated(
                     200,
-                    params.page ?? 1,
-                    params.limit ?? 10,
-                    params.search,
-                    params.stockLevel,
-                    params.sortBy
+                    page,
+                    limit,
+                    search,
+                    stockLevel,
+                    sortBy
                 );
 
                 setItems(mapStockProductListDtoToDomain(mockData.data));
                 setTotal(mockData.total);
             } else {
                 const filters: StockFilters = {
-                    search: params.search,
-                    stockLevel:
-                        params.stockLevel === StockLevelFilter.All ? undefined : params.stockLevel,
-                    sortBy: params.sortBy,
-                    sortDirection: params.sortBy?.endsWith('_asc') ? 'ASC' : 'DESC',
-                    page: params.page ?? 1,
-                    limit: params.limit ?? 10,
+                    search,
+                    stockLevel: stockLevel === StockLevelFilter.All ? undefined : stockLevel,
+                    sortBy,
+                    sortDirection: sortBy?.endsWith('_asc') ? 'ASC' : 'DESC',
+                    page,
+                    limit,
                 };
 
                 const response = await api!.get(API_STOCK, { params: filters });
@@ -70,7 +67,7 @@ export const useProductStock = (params: UseProductStockParams) => {
         } finally {
             setLoading(false);
         }
-    }, [api, params]);
+    }, [api, search, stockLevel, sortBy, page, limit]);
 
     useEffect(() => {
         fetchStock();

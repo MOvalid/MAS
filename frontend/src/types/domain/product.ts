@@ -65,8 +65,6 @@ export interface ProductDetails {
     imageUrl: string | null;
     specification: ProductSpecification | null;
 
-    createdAt: string | null; // ISO date
-    updatedAt: string | null; // ISO date
     lastRestockedAt: string | null;
 }
 

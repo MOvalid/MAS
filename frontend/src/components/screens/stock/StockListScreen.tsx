@@ -1,4 +1,3 @@
-// StockListScreen.tsx
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
@@ -10,13 +9,12 @@ import { StockLevelFilter, StockSortOption } from '@/types/domain/stock-filters'
 import { StockProductViewModel } from '@/types/view-model/product';
 import { AppStockBar } from '@/components/common/AppStockBar';
 import { StockListFilters } from './StockListFilters';
-import { useProductStock } from '@/composables/useProductStock';
+import { useProductStock } from '@/composables/stock/useProductStock';
 import { ErrorScreen } from '../ErrorScreen';
 import { LoadingScreen } from '../LoadingScreen';
 import { mapStockProductListToViewModel } from '@/mappers/product.mapper';
 
 export const StockListScreen = () => {
-    const theme = useTheme();
 
     const [search, setSearch] = useState('');
     const [stockLevel, setStockLevel] = useState<StockLevelFilter>(StockLevelFilter.All);
@@ -24,13 +22,13 @@ export const StockListScreen = () => {
     const [page, setPage] = useState(1);
     const limit = 10;
 
-    const { items, total, loading, error, refetch } = useProductStock({
+    const { items, total, loading, error, refetch } = useProductStock(
         search,
         stockLevel,
         sortBy,
         page,
-        limit,
-    });
+        limit
+    );
 
     const columns: TableColumn<StockProductViewModel>[] = [
         {
@@ -111,16 +109,22 @@ export const StockListScreen = () => {
                 }}
             />
 
-            <AppTable columns={columns} data={mapStockProductListToViewModel(items)} />
+            {loading ? (
+                <LoadingScreen />
+            ) : (
+                <>
+                    <AppTable columns={columns} data={mapStockProductListToViewModel(items)} />
 
-            <View style={styles.paginationRow}>
-                <AppPaginationControls
-                    page={page}
-                    totalPages={Math.max(1, Math.ceil(total / limit))}
-                    onPrevious={onPrevious}
-                    onNext={onNext}
-                />
-            </View>
+                    <View style={styles.paginationRow}>
+                        <AppPaginationControls
+                            page={page}
+                            totalPages={Math.max(1, Math.ceil(total / limit))}
+                            onPrevious={onPrevious}
+                            onNext={onNext}
+                        />
+                    </View>
+                </>
+            )}
         </ScrollView>
     );
 };

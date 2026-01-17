@@ -22,6 +22,7 @@ export const IconName = {
     delivery: 'truck-delivery-outline',
     refresh: 'refresh',
     back: 'arrow-u-left-top',
+    lock: 'lock-outline',
 } as const;
 
 export type IconKey = keyof typeof IconName;

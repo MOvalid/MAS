@@ -12,6 +12,8 @@ export type NavigationConfig = NavigationConfigItem[];
 
 export type DrawerParamList = {
     Home: undefined;
+    FAQ: undefined;
+    Settings: undefined;
     Product: {
         screen?: keyof ProductStackParamList;
         params?: ProductStackParamList[keyof ProductStackParamList];
@@ -38,7 +40,6 @@ export type DrawerParamList = {
         params?: StockStackParamList[keyof StockStackParamList];
     };
     Invoice: undefined;
-    Magazine: undefined;
 };
 
 export type ProductStackParamList = {

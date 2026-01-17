@@ -4,14 +4,20 @@ import { Appbar, Menu, Text, useTheme } from 'react-native-paper';
 import AppIconButton from './AppIconButton';
 import { metrics } from '../../theme/metrics';
 import { IconName } from './icons';
+import { useAuth } from '@/context/AuthContext';
+import { useSnackbar } from '@/context/SnackbarContext';
+import { useNavigation } from '@react-navigation/native';
 
 type Language = 'PL' | 'EN' | 'DE';
 
 export const AppHeader = (): React.JSX.Element => {
+    const { signOut } = useAuth();
     const [languageMenuVisible, setLanguageMenuVisible] = useState<boolean>(false);
     const [currentLanguage, setCurrentLanguage] = useState<Language>('PL');
     const currentUser = 'Jan Kowalski';
     const theme = useTheme();
+    const navigation = useNavigation();
+    const { showSnackbar } = useSnackbar();
 
     const handleLanguageChange = (lang: Language) => {
         setCurrentLanguage(lang);
@@ -19,9 +25,21 @@ export const AppHeader = (): React.JSX.Element => {
     };
 
     const handleNotifications = () => console.log('Powiadomienia');
-    const handleFAQ = () => console.log('FAQ');
-    const handleSettings = () => console.log('Ustawienia');
-    const handleLogout = () => console.log('Wyloguj');
+
+    const handleFAQ = () => {
+        navigation.navigate('FAQ');
+    };
+
+    const handleSettings = () => {
+        navigation.navigate('Settings');
+    };
+    const handleLogout = () => {
+        if (signOut) signOut();
+        else {
+            const error = 'Nie udało się wylogować. Spróbuj ponownie za chwilę.';
+            showSnackbar(error, 'warning');
+        }
+    };
 
     const renderLanguageLabel = () => {
         switch (currentLanguage) {

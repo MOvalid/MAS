@@ -7,7 +7,7 @@ import { SnackbarProvider } from './src/context/SnackbarContext';
 import { NavigationContainer, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator, DrawerScreenProps } from '@react-navigation/drawer';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View, ActivityIndicator } from 'react-native';
 import AuthScreen from './src/components/screens/AuthScreen';
 import {
     ClientNavigator,
@@ -18,10 +18,10 @@ import {
     StockNavigator,
 } from './src/components/navigation';
 import { DrawerParamList } from './src/types/navigation';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 
-import { HomeScreen, InvoiceScreen } from './src/components/screens';
-import { AppDrawerContent, AppScreenWrapper } from './src/components/common';
+import { FaqScreen, HomeScreen, InvoiceScreen, SettingsScreen, SignUpScreen } from './src/components/screens';
+import { AppDrawerContent, AppLoadingOverlay, AppScreenWrapper } from './src/components/common';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -31,6 +31,7 @@ const linking = {
     config: {
         screens: {
             Auth: 'auth',
+            SignUp: 'signup',
             MainDrawer: {
                 path: '',
                 screens: {
@@ -122,6 +123,22 @@ function DrawerNavigator() {
                 }}
             />
             <Drawer.Screen
+                name="FAQ"
+                component={withScreenWrapper(FaqScreen)}
+                options={{
+                    drawerLabel: 'FAQ',
+                    title: 'FAQ',
+                }}
+            />
+            <Drawer.Screen
+                name="Settings"
+                component={withScreenWrapper(SettingsScreen)}
+                options={{
+                    drawerLabel: 'Settings',
+                    title: 'Settings',
+                }}
+            />
+            <Drawer.Screen
                 name="Client"
                 component={ClientNavigator}
                 options={{
@@ -170,14 +187,6 @@ function DrawerNavigator() {
                 }}
             />
             <Drawer.Screen
-                name="Auth"
-                component={withScreenWrapper(AuthScreen)}
-                options={{
-                    drawerLabel: 'Autoryzacja',
-                    title: 'Autoryzacja',
-                }}
-            />
-            <Drawer.Screen
                 name="Invoice"
                 component={withScreenWrapper(InvoiceScreen)}
                 options={{
@@ -194,6 +203,41 @@ function DrawerNavigator() {
                 }}
             />
         </Drawer.Navigator>
+    );
+}
+
+// Protected navigation component
+function AppNavigator() {
+    const { isAuthenticated, isLoading } = useAuth();
+
+    if (isLoading && !isAuthenticated) {
+        return (
+            <View
+                style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <ActivityIndicator size="large" />
+            </View>
+        );
+    }
+
+    return (
+        <Stack.Navigator
+            initialRouteName={isAuthenticated ? 'MainDrawer' : 'Auth'}
+            screenOptions={{ headerShown: false }}
+        >
+            {isAuthenticated ? (
+                <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
+            ) : (
+                <>
+                    <Stack.Screen name="Auth" component={AuthScreen} />
+                    <Stack.Screen name="SignUp" component={SignUpScreen} />
+                </>
+            )}
+        </Stack.Navigator>
     );
 }
 
@@ -232,13 +276,11 @@ export default function App() {
                                     `${options?.title ?? route?.name} - MAS`,
                             }}
                         >
-                            <Stack.Navigator
-                                initialRouteName="MainDrawer"
-                                screenOptions={{ headerShown: false }}
-                            >
-                                <Stack.Screen name="Auth" component={AuthScreen} />
-                                <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
-                            </Stack.Navigator>
+                            <AppNavigator />
+                            <AppLoadingOverlay
+                                visible={useAuth().isLoading}
+                                text="Trwa przetwarzanie..."
+                            />
                         </NavigationContainer>
                     </AppThemeProvider>
                 </SnackbarProvider>

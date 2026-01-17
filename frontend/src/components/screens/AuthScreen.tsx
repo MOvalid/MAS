@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { AppLogo } from '../common/AppLogo';
 import { AppTextInput } from '../common/AppTextInput';
 import { AppButton } from '../common/AppButton';
@@ -8,42 +8,50 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { metrics } from '@/theme/metrics';
 import { useAuth } from '@/context/AuthContext';
-import { loginAPI } from '@/api/authApi';
-import axios, { AxiosError } from 'axios';
-import { RootStackParamList } from '@/types/dto/auth';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSnackbar } from '@/context/SnackbarContext';
 
 const screenWidth = Dimensions.get('window').width;
 
-type AuthScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Auth'>;
-
 export const AuthScreen = () => {
-    const navigation = useNavigation<AuthScreenNavigationProp>();
+    const navigation = useNavigation();
     const theme = useTheme();
-    const { setAccessToken } = useAuth();
+    const { signIn } = useAuth();
+    const { showSnackbar } = useSnackbar();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
 
     const handleSignIn = async () => {
-        if (!email || !password) {
-            Alert.alert('Error', 'Please enter email and password');
-            return;
+        let hasError = false;
+        setEmailError('');
+        setPasswordError('');
+
+        if (!email) {
+            setEmailError('Proszę podać adres email');
+            hasError = true;
         }
+
+        if (!password) {
+            setPasswordError('Proszę podać hasło');
+            hasError = true;
+        }
+
+        if (hasError) return;
 
         setLoading(true);
         try {
-            const data = await loginAPI({ email, password });
-            await setAccessToken(data.accessToken);
-            navigation.replace('Main');
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                const axiosError = error as AxiosError<{ message: string }>;
-                Alert.alert('Login failed', axiosError.response?.data?.message || error.message);
-            } else {
-                Alert.alert('Login failed', 'An unexpected error occurred');
+            if (signIn) {
+                await signIn({ email, password });
+                navigation.replace('MainDrawer');
             }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+            console.error(err);
+            const message = err?.message || 'Nieoczekiwany błąd podczas logowania';
+            showSnackbar(message, 'error');
         } finally {
             setLoading(false);
         }
@@ -55,28 +63,30 @@ export const AuthScreen = () => {
             <View style={styles.formContainer}>
                 <AppTextInput
                     fullWidth
-                    label="Email address"
+                    label="Adres email"
                     keyboardType="email-address"
                     value={email}
                     onChangeText={setEmail}
+                    errorMessage={emailError}
                 />
                 <AppTextInput
                     fullWidth
-                    label="Password"
+                    label="Hasło"
                     secureTextEntry
                     value={password}
                     onChangeText={setPassword}
+                    errorMessage={passwordError}
                 />
                 <AppButton fullWidth onPress={handleSignIn} loading={loading}>
-                    Sign in
+                    Zaloguj się
                 </AppButton>
             </View>
 
             <AppText style={styles.signupText}>
-                Don’t have an account?{' '}
-                <TouchableOpacity onPress={() => console.log('Sign up')}>
+                Nie masz konta?{' '}
+                <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
                     <AppText weight="bold" italic style={{ color: theme.colors.onBackground }}>
-                        Sign up
+                        Zarejestruj się
                     </AppText>
                 </TouchableOpacity>
             </AppText>
