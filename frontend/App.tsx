@@ -20,7 +20,13 @@ import {
 import { DrawerParamList } from './src/types/navigation';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
-import { FaqScreen, HomeScreen, InvoiceScreen, SettingsScreen, SignUpScreen } from './src/components/screens';
+import {
+    FaqScreen,
+    HomeScreen,
+    InvoiceScreen,
+    SettingsScreen,
+    SignUpScreen,
+} from './src/components/screens';
 import { AppDrawerContent, AppLoadingOverlay, AppScreenWrapper } from './src/components/common';
 
 const Stack = createNativeStackNavigator();
@@ -246,6 +252,9 @@ export default function App() {
     const isDark = colorScheme === 'dark';
     const paperTheme = isDark ? DarkTheme : LightTheme;
     const navigationTheme = isDark ? CombinedDarkTheme : CombinedLightTheme;
+
+    const { isLoading: isAuthLoading } = useAuth();
+
     const [fontsLoaded, setFontsLoaded] = React.useState(false);
 
     React.useEffect(() => {
@@ -278,7 +287,7 @@ export default function App() {
                         >
                             <AppNavigator />
                             <AppLoadingOverlay
-                                visible={useAuth().isLoading}
+                                visible={isAuthLoading}
                                 text="Trwa przetwarzanie..."
                             />
                         </NavigationContainer>

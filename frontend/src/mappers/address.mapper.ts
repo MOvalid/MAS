@@ -10,3 +10,13 @@ export const mapAddressDtoToAddress = (dto: AddressDto): Address => {
         country: dto.country,
     };
 };
+
+export const mapAddressToAddressDto = (address: Address): AddressDto => {
+    return {
+        street: address.street,
+        number: address.number,
+        city: address.city,
+        postalCode: address.postalCode,
+        country: address.country,
+    };
+};

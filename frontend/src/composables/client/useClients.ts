@@ -28,10 +28,15 @@ export const useClients = (
     const [error, setError] = useState<string | null>(null);
 
     const fetchClients = useCallback(async () => {
-        if (!api) return;
+        if (!api) {
+            console.warn('[useClients] API not available yet');
+            return;
+        }
 
         setLoading(true);
         setError(null);
+
+        console.log('[useClients] Fetching clients...');
 
         try {
             const [companiesRes, customersRes] = await Promise.all([
@@ -39,14 +44,19 @@ export const useClients = (
                 api.get<Customer[]>(API_CUSTOMERS),
             ]);
 
-            const clients = [...(companiesRes.data ?? []), ...(customersRes.data ?? [])];
-            console.log(`[useClients] Fetched ${clients.length} clients`);
+            const companies = companiesRes.data ?? [];
+            const customers = customersRes.data ?? [];
+            const clients = [...companies, ...customers];
+
+            console.log(
+                `[useClients] Fetched ${companies.length} companies, ${customers.length} customers (total: ${clients.length})`
+            );
 
             setAllClients(clients);
         } catch (err: unknown) {
             console.error('[useClients] Error fetching clients:', err);
             const friendly = getFriendlyErrorMessage(err);
-            setError(friendly.message ?? 'Nieznany błąd');
+            setError(friendly.message ?? 'Nieznany błąd podczas pobierania klientów');
             setAllClients([]);
         } finally {
             setLoading(false);
@@ -63,39 +73,65 @@ export const useClients = (
     const clients = useMemo(() => {
         let filtered = [...allClients];
 
+        // Apply search filter
         if (filters.search) {
             const q = filters.search.toLowerCase();
-            filtered = filtered.filter(
-                (c) =>
-                    ('name' in c && c.name.toLowerCase().includes(q)) ||
-                    ('firstName' in c && `${c.firstName} ${c.lastName}`.toLowerCase().includes(q)) ||
-                    (c.email?.toLowerCase().includes(q) ?? false)
-            );
+            filtered = filtered.filter((c) => {
+                // Company search
+                if ('name' in c) {
+                    return (
+                        c.name.toLowerCase().includes(q) ||
+                        c.email?.toLowerCase().includes(q) ||
+                        c.nip?.toLowerCase().includes(q)
+                    );
+                }
+                // Customer search
+                return (
+                    `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+                    c.email?.toLowerCase().includes(q) ||
+                    c.phone?.toLowerCase().includes(q)
+                );
+            });
         }
 
+        // Apply type filter
         if (filters.type === 'CUSTOMER') {
             filtered = filtered.filter((c) => !('name' in c)); // Customer
         } else if (filters.type === 'COMPANY') {
             filtered = filtered.filter((c) => 'name' in c); // Company
         }
 
+        // Apply pagination
         const start = (page - 1) * limit;
         const paginated = filtered.slice(start, start + limit);
+
+        console.log(
+            `[useClients] Filtered: ${filtered.length}, Paginated: ${paginated.length} (page ${page}/${Math.ceil(filtered.length / limit)})`
+        );
 
         return paginated;
     }, [allClients, filters, page, limit]);
 
+    // Memoized total count (after filtering)
     const total = useMemo(() => {
         let filtered = [...allClients];
 
         if (filters.search) {
             const q = filters.search.toLowerCase();
-            filtered = filtered.filter(
-                (c) =>
-                    ('name' in c && c.name.toLowerCase().includes(q)) ||
-                    ('firstName' in c && `${c.firstName} ${c.lastName}`.toLowerCase().includes(q)) ||
-                    (c.email?.toLowerCase().includes(q) ?? false)
-            );
+            filtered = filtered.filter((c) => {
+                if ('name' in c) {
+                    return (
+                        c.name.toLowerCase().includes(q) ||
+                        c.email?.toLowerCase().includes(q) ||
+                        c.nip?.toLowerCase().includes(q)
+                    );
+                }
+                return (
+                    `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+                    c.email?.toLowerCase().includes(q) ||
+                    c.phone?.toLowerCase().includes(q)
+                );
+            });
         }
 
         if (filters.type === 'CUSTOMER') {
@@ -107,12 +143,28 @@ export const useClients = (
         return filtered.length;
     }, [allClients, filters]);
 
-    const onPrevious = () => setPage((p) => Math.max(1, p - 1));
-    const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
+    const totalPages = Math.ceil(total / limit);
+
+    const onPrevious = useCallback(() => {
+        setPage((p) => Math.max(1, p - 1));
+    }, []);
+
+    const onNext = useCallback(() => {
+        setPage((p) => Math.min(totalPages, p + 1));
+    }, [totalPages]);
+
+    const onFirstPage = useCallback(() => {
+        setPage(1);
+    }, []);
+
+    const onLastPage = useCallback(() => {
+        setPage(totalPages);
+    }, [totalPages]);
 
     return {
         clients,
         total,
+        totalPages,
         page,
         setPage,
         limit,
@@ -124,6 +176,8 @@ export const useClients = (
         refetch: fetchClients,
         onPrevious,
         onNext,
+        onFirstPage,
+        onLastPage,
         setAllClients,
     };
 };

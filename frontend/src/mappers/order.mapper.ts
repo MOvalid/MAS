@@ -32,3 +32,5 @@ export const mapOrderItemToTableRow = (item: OrderItemDto): OrderItemTableRow =>
 export const mapOrderItemDtoListToTableRows = (
     orderItemDtos: OrderItemDto[]
 ): OrderItemTableRow[] => orderItemDtos.map(mapOrderItemToTableRow);
+
+

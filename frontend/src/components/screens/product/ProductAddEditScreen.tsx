@@ -229,8 +229,10 @@ export const ProductAddEditScreen = () => {
         },
         flexInputRow: {
             flexDirection: 'row',
+            justifyContent: 'space-between',
             gap: metrics.spacing.md,
             marginBottom: metrics.spacing.md,
+            width: '100%',
         },
         flexInputWrapper: { flex: 1 },
         button: { minWidth: 160 },
@@ -331,6 +333,7 @@ export const ProductAddEditScreen = () => {
                             <AppTextInput
                                 value={netPrice}
                                 onChangeText={setNetPrice}
+                                fullWidth
                                 placeholder="0.00"
                                 keyboardType="decimal-pad"
                                 errorMessage={errors.netPrice}
@@ -344,6 +347,7 @@ export const ProductAddEditScreen = () => {
                             <AppTextInput
                                 value={vatRate}
                                 onChangeText={setVatRate}
+                                fullWidth
                                 placeholder="23"
                                 keyboardType="decimal-pad"
                                 errorMessage={errors.vatRate}
@@ -421,30 +425,35 @@ export const ProductAddEditScreen = () => {
                             />
                         </View>
 
-                        <View style={styles.inputRow}>
-                            <AppText variant="bodyMedium" style={styles.inputLabel}>
-                                Wymiary (cm)
-                            </AppText>
+                        <AppText variant="bodyMedium" style={styles.inputLabel}>
+                            Wymiary (cm)
+                        </AppText>
 
-                            <View style={{ flexDirection: 'row', gap: metrics.spacing.md }}>
+                        <View style={styles.flexInputRow}>
+                            <View style={styles.flexInputWrapper}>
                                 <AppNumberInput
                                     value={length}
+                                    fullWidth
                                     onChangeValue={setLength}
                                     placeholder="Długość"
                                     width={DIMENSION_INPUT_WIDTH}
                                     errorMessage={errors.length}
                                 />
-
+                            </View>
+                            <View style={styles.flexInputWrapper}>
                                 <AppNumberInput
                                     value={width}
+                                    fullWidth
                                     onChangeValue={setWidth}
                                     placeholder="Szerokość"
                                     width={DIMENSION_INPUT_WIDTH}
                                     errorMessage={errors.width}
                                 />
-
+                            </View>
+                            <View style={styles.flexInputWrapper}>
                                 <AppNumberInput
                                     value={height}
+                                    fullWidth
                                     onChangeValue={setHeight}
                                     placeholder="Wysokość"
                                     width={DIMENSION_INPUT_WIDTH}

@@ -28,7 +28,7 @@ export const useClientTableData = (
             icon: '🏢',
             name: c.name,
             email: c.email ?? '-',
-            phone: c.phone ?? '-',
+            phone: c.phoneNumber ?? '-',
             address: c.address ? formatAddressInline(c.address) : null,
             isCompany: true,
         }));

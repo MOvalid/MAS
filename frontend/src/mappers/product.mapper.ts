@@ -9,7 +9,7 @@ import {
 import { ProductViewModel, StockProductViewModel } from '@/types/view-model/product';
 import { formatPolishDate } from '@/utils/formatters';
 import { formatPrice } from '@/utils/price-utils';
-import { mapCompanyDtoToCompany } from './company.mapper';
+import { mapCompanyDtoToDomain } from './company.mapper';
 
 /**
  * Maps a {@link StockProductDto} received from the API
@@ -107,7 +107,7 @@ export const mapProductStockResponseDto = (
         (p: StockProductDto): StockProduct => ({
             id: p.id,
             name: p.name,
-            manufacturer: mapCompanyDtoToCompany(p.manufacturer), // ✅ CAŁY OBIEKT
+            manufacturer: mapCompanyDtoToDomain(p.manufacturer), // ✅ CAŁY OBIEKT
             stockQuantity: p.stockQuantity,
             unit: p.unit,
             netPrice: p.netPrice,
@@ -127,7 +127,7 @@ export const mapStockProductDtoToDomain = (dto: StockProductDto): StockProduct =
     return {
         id: dto.id,
         name: dto.name,
-        manufacturer: mapCompanyDtoToCompany(dto.manufacturer),
+        manufacturer: mapCompanyDtoToDomain(dto.manufacturer),
         stockQuantity: dto.stockQuantity,
         unit: dto.unit,
         netPrice: dto.netPrice,

@@ -4,8 +4,8 @@ export interface CustomerDto {
     id: string; // UUID
     firstName: string;
     lastName: string;
-    email: string;
+    email: string | null;
     phoneNumber: string | null;
-    address: AddressDto | null;
+    address: AddressDto;
     orders: OrderDto[] | null;
 }
