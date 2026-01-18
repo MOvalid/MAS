@@ -108,6 +108,7 @@ public static class OrderEndpoints
             .Include(o => o.Seller)
             .Include(o => o.OrderProducts!)
                 .ThenInclude(op => op.Product)
+                .ThenInclude(p => p!.Manufacturer)
             .Include(o => o.Payments)
             .Include(o => o.Invoice)
             .Include(o => o.Delivery)
@@ -122,6 +123,11 @@ public static class OrderEndpoints
     {
         var orders = await dbContext.Orders
             .Include(o => o.OrderProducts)
+            .Include(o => o.Customer)
+            .Include(o => o.Seller)
+            .Include(o => o.Delivery)
+            .Include(o => o.Invoice)
+                .ThenInclude(o => o!.Company)
             .Select(order => mapper.Map<OrderListDto>(order))
             .ToListAsync();
 

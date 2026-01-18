@@ -14,6 +14,7 @@ public class OrderProfile : Profile
             .ReverseMap()
             .ForMember(dest => dest.Customer, opt => opt.MapFrom(src => src.Customer!.FirstName + " " + src.Customer.LastName))
             .ForMember(dest => dest.Company, opt => opt.MapFrom(src => src.Invoice!.Company != null ? src.Invoice.Company.Name : null))
+            .ForMember(dest => dest.CompanyId, opt => opt.MapFrom(src => src.Invoice!.Company != null ? src.Invoice.Company.Id : (Guid?)null))
             .ForMember(dest => dest.Seller, opt => opt.MapFrom(src => src.Seller!.FirstName + " " + src.Seller.LastName))
             .ForMember(dest => dest.DeliveryId, opt => opt.MapFrom(src => src.Delivery != null ? src.Delivery.Id : (Guid?)null))
             .ForMember(dest => dest.InvoiceNumber, opt => opt.MapFrom(src => src.Invoice != null ? src.Invoice.InvoiceNumber : null));
