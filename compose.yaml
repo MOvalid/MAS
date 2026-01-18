@@ -31,5 +31,26 @@ services:
       retries: 10
       start_period: 30s
 
+  db-seeder:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserverdb:
+        condition: service_healthy
+    environment:
+      - SA_PASSWORD=${SA_PASSWORD}
+      - SEED_DB=${SEED_DB:-N}
+    volumes:
+      - ./seed.sql:/seed.sql
+    command: >
+      /bin/bash -c "
+      if [ '$SEED_DB' == 'Y' ]; then
+        echo '--> SEED_DB is Y. Starting seeding process...';
+        sleep 10; # Czekamy 10s, aby upewnić się, że migracje (EF Core) zdążyły utworzyć tabele
+        /opt/mssql-tools18/bin/sqlcmd -S sqlserverdb -U sa -P \"$SA_PASSWORD\" -C -d MasDb -i /seed.sql;
+        echo '--> Seeding completed.';
+      else
+        echo '--> SEED_DB is not Y (current value: $SEED_DB). Skipping seeding.';
+      fi"
+
 volumes:
   sqlserverdata:
