@@ -95,6 +95,8 @@ public static class InvoiceEndpoints
     private static async Task<Results<Ok<List<InvoiceListDto>>, NotFound>> GetInvoices(Data.MasDbContext dbContext, IMapper mapper)
     {
         var invoices = await dbContext.Invoices
+            .Include(i => i.Order)
+                .ThenInclude(o => o!.OrderProducts)
             .Select(invoice => mapper.Map<InvoiceListDto>(invoice))
             .ToListAsync();
 
