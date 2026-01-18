@@ -88,11 +88,11 @@ export const useOrders2 = (enabled = true, initialFilters = {}) => {
 };
 
 export const useOrderTableData = (
-    orderDtos: Order2[],
+    orders: Order2[],
     page: number = 1,
     limit: number = 10
 ): OrderTableData[] => {
     return useMemo(() => {
-        return orderDtos.map((dto, index) => mapOrder2ToTableData(dto, index, page, limit));
-    }, [orderDtos, page, limit]);
+        return orders.map((order, index) => mapOrder2ToTableData(order, index, page, limit));
+    }, [orders, page, limit]);
 };

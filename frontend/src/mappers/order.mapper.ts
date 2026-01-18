@@ -1,7 +1,13 @@
 // mappers/order.mapper.ts
-import { Order1, Order2, OrderItem, OrderItemTableData, OrderSummary, OrderTableData } from '@/types/domain';
+import {
+    Order1,
+    Order2,
+    OrderItem,
+    OrderItemTableData,
+    OrderSummary,
+    OrderTableData,
+} from '@/types/domain';
 import { OrderDto1, OrderDto2, OrderItemDto, OrderSummaryDto } from '@/types/dto';
-import { formatPolishDate } from '@/utils/formatters';
 import { formatPrice } from '@/utils/price-utils';
 import { mapPaymentDtoToDomain } from './payment.mapper';
 import { mapCustomerDtoToDomain } from './customer.mapper';
@@ -11,21 +17,6 @@ import { mapProductDtoToDomain } from './product.mapper';
 import { Currency } from '@/types/common';
 import { mapDeliveryDtoToDomain } from './delivery.mapper';
 
-export const mapOrderItemDtoToTableData = (item: OrderItemDto): OrderItemTableData => {
-    const formatVatRate = (rate: number) => `${Math.round(rate * 100)}%`;
-    return {
-        product: item.product?.name || 'Nieznany produkt',
-        quantity: item.quantity,
-        unit: 'szt.',
-        unitPrice: formatPrice(item.unitNetPrice),
-        netPrice: formatPrice(item.totalNetPrice),
-        vat: formatPrice(item.totalVatAmount),
-        vatRate: formatVatRate(item.vatRate),
-        grossPrice: formatPrice(item.totalGrossPrice),
-        currency: 'PLN',
-    };
-};
-
 export const mapOrderItemDtoToDomain = (dto: OrderItemDto): OrderItem => {
     return {
         productId: dto.productId,
@@ -33,7 +24,7 @@ export const mapOrderItemDtoToDomain = (dto: OrderItemDto): OrderItem => {
         quantity: dto.quantity,
         unitNetPrice: dto.unitNetPrice,
         vatRate: dto.vatRate,
-        currency: Currency.PLN, 
+        currency: Currency.PLN,
         totalNetPrice: dto.totalNetPrice,
         totalVatAmount: dto.totalVatAmount,
         totalGrossPrice: dto.totalGrossPrice,
@@ -55,10 +46,6 @@ export const mapOrderItemToTableData = (item: OrderItem, lp: string = ''): Order
         currency: item.currency,
     };
 };
-
-export const mapOrderItemDtoListToTableRows = (
-    orderItemDtos: OrderItemDto[]
-): OrderItemTableData[] => orderItemDtos.map(mapOrderItemDtoToTableData);
 
 export const mapOrder1ToTableData = (
     order: Order1,

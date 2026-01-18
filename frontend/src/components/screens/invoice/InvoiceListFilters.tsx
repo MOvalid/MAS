@@ -14,11 +14,16 @@ interface InvoiceListFiltersProps {
     onStartDateChange: (value: string) => void;
     onEndDateChange: (value: string) => void;
 
+    paymentStartDate: string;
+    paymentEndDate: string;
+    onPaymentStartDateChange: (v: string) => void;
+    onPaymentEndDateChange: (v: string) => void;
+
     status: InvoiceStatus;
     onStatusChange: (value: InvoiceStatus) => void;
 
-    sortBy: string;
-    onSortByChange: (value: string) => void;
+    sort: string;
+    onSortChange: (value: string) => void;
 
     dateError?: string | null;
 }
@@ -30,10 +35,14 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
     endDate,
     onStartDateChange,
     onEndDateChange,
+    paymentStartDate,
+    paymentEndDate,
+    onPaymentStartDateChange,
+    onPaymentEndDateChange,
     status,
     onStatusChange,
-    sortBy,
-    onSortByChange,
+    sort,
+    onSortChange,
     dateError,
 }) => {
     const theme = useTheme();
@@ -68,7 +77,6 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
 
     return (
         <View style={styles.filtersContainer}>
-            {/* WIERSZ 1 */}
             <View style={styles.filterRow}>
                 <View style={styles.filterColumn1}>
                     <AppText variant="bodyLarge" style={styles.labelText}>
@@ -87,7 +95,7 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
                     endDate={endDate}
                     onStartDateChange={onStartDateChange}
                     onEndDateChange={onEndDateChange}
-                    label="Zakres daty wystawienia"
+                    label="Data wystawienia"
                     width="100%"
                     style={styles.filterColumn2}
                     startError={dateError ?? undefined}
@@ -95,11 +103,11 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
                 />
 
                 <AppDateRangeFilter
-                    startDate={startDate}
-                    endDate={endDate}
-                    onStartDateChange={onStartDateChange}
-                    onEndDateChange={onEndDateChange}
-                    label="Zakres daty opłacenia"
+                    startDate={paymentStartDate}
+                    endDate={paymentEndDate}
+                    onStartDateChange={onPaymentStartDateChange}
+                    onEndDateChange={onPaymentEndDateChange}
+                    label="Termin płatności"
                     width="100%"
                     style={styles.filterColumn2}
                     startError={dateError ?? undefined}
@@ -107,7 +115,6 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
                 />
             </View>
 
-            {/* WIERSZ 2 */}
             <View style={styles.filterRow}>
                 <View style={styles.filterColumn1}>
                     <AppDropdown
@@ -128,8 +135,8 @@ export const InvoiceListFilters: React.FC<InvoiceListFiltersProps> = ({
                 <View style={styles.filterColumn1}>
                     <AppDropdown
                         label="Sortuj według"
-                        value={sortBy}
-                        onChange={onSortByChange}
+                        value={sort}
+                        onChange={onSortChange}
                         fullWidth
                         options={[
                             { label: 'Data wystawienia ↓', value: 'ISSUED_DESC' },
