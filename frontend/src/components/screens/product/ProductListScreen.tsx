@@ -1,95 +1,70 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { metrics } from '@/theme/metrics';
-import { AppButton, AppText } from '@/components/common';
+import { AppButton, AppText, IconName } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table/AppTable';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
-import { ProductViewModel } from '@/types/view-model/product';
-import { getMockProducts } from '@/utils/data-generator';
-import { mapProductDtoToViewModel } from '@/mappers/product.mapper';
 import { ProductListFilters } from './ProductListFilters';
-import { ProductSortOption } from '@/types/common';
+import { ProductSort } from '@/types/common';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/types/dto/auth';
 import { useCategories } from '@/composables/category';
+import { useProducts, useProductTableData } from '@/composables/product/useProducts';
+import { ProductTableRow } from '@/types/domain';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export const ProductListScreen = () => {
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('ALL');
     const [manufacturer, setManufacturer] = useState('ALL');
-    const [sort, setSort] = useState<ProductSortOption>('NAME_ASC');
-    const [page, setPage] = useState(1);
-    const limit = 10;
+    const [sort, setSort] = useState<ProductSort>('NAME_ASC');
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-    const { items: categories, loading: categoriesLoading } = useCategories();
+    const { data: categories, loading: categoriesLoading } = useCategories();
+    const {
+        data: products,
+        page,
+        setPage,
+        total,
+        limit,
+        loading,
+        setFilters,
+    } = useProducts(true, { search, sortBy: sort });
 
-    const categoryMap = useMemo(() => {
+    const debouncedSearch = useDebounce(search, 500);
+
+    useEffect(() => {
+        setFilters({
+            search: debouncedSearch,
+            sortBy: sort,
+            categoryId: category === 'ALL' ? undefined : category,
+        });
+    }, [debouncedSearch, sort, category]);
+
+    const tableData = useProductTableData(products, page, limit);
+
+    const categoryOptions = useMemo(() => {
         return Object.fromEntries(categories.map((c) => [c.id, c.name]));
     }, [categories]);
 
-    const handleRowPress = (item: ProductViewModel) => {
+    const handleRowPress = (item: ProductTableRow) => {
         navigation.navigate('ProductDetails', { id: item.id });
     };
-
-    const { items, total } = useMemo(() => {
-        let data = [...getMockProducts(100)];
-
-        if (search.trim()) {
-            const q = search.toLowerCase();
-            data = data.filter(
-                (p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
-            );
-        }
-
-        if (manufacturer !== 'ALL') {
-            data = data.filter((p) => p.manufacturer === manufacturer);
-        }
-
-        if (category !== 'ALL') {
-            data = data.filter((p) => p.categoryId === category);
-        }
-
-        switch (sort) {
-            case 'NAME_ASC':
-                data.sort((a, b) => a.name.localeCompare(b.name));
-                break;
-            case 'NAME_DESC':
-                data.sort((a, b) => b.name.localeCompare(a.name));
-                break;
-            case 'MANUFACTURER_ASC':
-                data.sort((a, b) => a.manufacturer.localeCompare(b.manufacturer));
-                break;
-            case 'PRICE_ASC':
-                data.sort((a, b) => a.grossPrice - b.grossPrice);
-                break;
-        }
-
-        const total = data.length;
-        const start = (page - 1) * limit;
-        const paginated = data.slice(start, start + limit);
-
-        return {
-            items: paginated.map(mapProductDtoToViewModel),
-            total,
-        };
-    }, [search, category, manufacturer, sort, page]);
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
 
-    const columns: TableColumn<ProductViewModel>[] = [
+    const columns: TableColumn<ProductTableRow>[] = [
         { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
         { key: 'name', title: 'Nazwa', flex: 2 },
         { key: 'manufacturer', title: 'Producent', flex: 1.5 },
-        { key: 'sku', title: 'SKU', flex: 1 },
         {
             key: 'categoryId',
             title: 'Kategoria',
             flex: 1,
-            render: (item) => (item.categoryId ? (categoryMap[item.categoryId] ?? '—') : '—'),
+            render: (item) => (item.categoryId ? (categoryOptions[item.categoryId] ?? '—') : '—'),
         },
         { key: 'netPrice', title: 'Cena netto', flex: 0.75, align: 'center' },
         { key: 'grossPrice', title: 'Cena brutto', flex: 0.75, align: 'center' },
@@ -107,10 +82,7 @@ export const ProductListScreen = () => {
 
             <ProductListFilters
                 search={search}
-                onSearchChange={(val) => {
-                    setSearch(val);
-                    setPage(1);
-                }}
+                onSearchChange={setSearch}
                 category={category}
                 categories={[{ id: 'ALL', name: 'Wszystkie' }, ...categories]}
                 categoriesLoading={categoriesLoading}
@@ -130,16 +102,32 @@ export const ProductListScreen = () => {
                 }}
             />
 
-            <AppTable columns={columns} data={items} onRowPress={handleRowPress} />
+            <AppTable
+                columns={columns}
+                data={tableData}
+                onRowPress={handleRowPress}
+                actions={(row) => [
+                    {
+                        icon: IconName.edit,
+                        onPress: () => navigation.navigate('ProductEdit', { id: row.id }),
+                    },
+                    {
+                        icon: IconName.delete,
+                        onPress: () => console.log('Usuwanie produktu'),
+                    },
+                ]}
+            />
 
-            <View style={styles.paginationRow}>
-                <AppPaginationControls
-                    page={page}
-                    totalPages={Math.max(1, Math.ceil(total / limit))}
-                    onPrevious={onPrevious}
-                    onNext={onNext}
-                />
-            </View>
+            {products.length > 0 && !loading && (
+                <View style={styles.paginationRow}>
+                    <AppPaginationControls
+                        page={page}
+                        totalPages={Math.max(1, Math.ceil(total / limit))}
+                        onPrevious={onPrevious}
+                        onNext={onNext}
+                    />
+                </View>
+            )}
         </ScrollView>
     );
 };

@@ -99,7 +99,7 @@ export const ORDER_SORT_OPTIONS = [
     { label: 'Data zamówienia ↓', value: 'CREATED_DESC' },
 ];
 
-export type ProductSortOption =
+export type ProductSort =
     | 'NAME_ASC'
     | 'NAME_DESC'
     | 'MANUFACTURER_ASC'

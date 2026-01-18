@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { API_CATEGORIES } from '@/constants/Endpoints';
 import { getFriendlyErrorMessage } from '@/utils/error-utils';
-import { CategoryDto } from '@/types/dto/category';
+import { CategoryDto, ProductCategoryDto } from '@/types/dto/category';
 
 /**
  * Hook to fetch list of product categories
@@ -11,7 +11,7 @@ import { CategoryDto } from '@/types/dto/category';
 export const useCategories = (enabled: boolean = true) => {
     const { api } = useAuth();
 
-    const [items, setItems] = useState<CategoryDto[]>([]);
+    const [items, setItems] = useState<ProductCategoryDto[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
@@ -26,7 +26,7 @@ export const useCategories = (enabled: boolean = true) => {
 
         try {
             console.log('[useCategories] Fetching categories:', API_CATEGORIES);
-            const response = await api.get<CategoryDto[]>(API_CATEGORIES);
+            const response = await api.get<ProductCategoryDto[]>(API_CATEGORIES);
 
             console.log('[useCategories] Categories response:', response);
             setItems(response.data ?? []);
@@ -48,7 +48,7 @@ export const useCategories = (enabled: boolean = true) => {
     }, [fetchCategories, enabled]);
 
     return {
-        items,
+        data: items,
         loading,
         error,
         refetch: fetchCategories,

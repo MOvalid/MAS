@@ -10,7 +10,7 @@ import { AppModal } from '@/components/common/AppModal';
 import { getFriendlyErrorMessage } from '@/utils/error-utils';
 import { ErrorScreen } from '../ErrorScreen';
 import { LoadingScreen } from '../LoadingScreen';
-import { useProductDetails } from '@/composables/product';
+import { useProductDetails } from '@/composables/product/useProducts';
 
 const NotAvailableImage =
     'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764505262/not-available_kyzgum.png';

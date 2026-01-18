@@ -5,11 +5,7 @@ import { useCreate } from '../common/useCreate';
 import { useUpdate } from '../common/useUpdate';
 import { CustomerDto } from '@/types/dto';
 import { useDelete } from '../common/useDelete';
-import {
-    mapCustomerDtoToDomain,
-    mapCustomerToDto,
-    mapCustomerToTableRow,
-} from '@/mappers/customer.mapper';
+import { mapCustomerDtoToDomain, mapCustomerToTableRow } from '@/mappers/customer.mapper';
 import { useGet } from '../common/useGet';
 import { useMemo } from 'react';
 import { CustomerSort } from '@/types/common';
@@ -32,11 +28,10 @@ export const useUpdateCustomer = (
     onSuccess?: (customer: Customer) => void,
     onError?: (error: string) => void
 ) => {
-    return useUpdate<Customer, CustomerDto>({
+    return useUpdate<Customer, CustomerDto, Customer, CustomerDto>({
         endpoint: API_CUSTOMERS,
         onSuccess,
         onError,
-        transformRequest: mapCustomerToDto,
         transformResponse: mapCustomerDtoToDomain,
     });
 };

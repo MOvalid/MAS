@@ -4,11 +4,7 @@ import { usePaginated } from '../pagination/usePagination';
 import { useCreate } from '../common/useCreate';
 import { useUpdate } from '../common/useUpdate';
 import { CompanyDto } from '@/types/dto';
-import {
-    mapCompanyDtoToDomain,
-    mapCompanyToTableRow,
-    mapCompanyToDto,
-} from '@/mappers/company.mapper';
+import { mapCompanyDtoToDomain, mapCompanyToTableRow } from '@/mappers/company.mapper';
 import { useDelete } from '../common/useDelete';
 import { useGet } from '../common/useGet';
 import { useMemo } from 'react';
@@ -37,11 +33,10 @@ export const useUpdateCompany = (
     onSuccess?: (company: Company) => void,
     onError?: (error: string) => void
 ) => {
-    return useUpdate<Company, CompanyDto>({
+    return useUpdate<Company, CompanyDto, Company, CompanyDto>({
         endpoint: API_COMPANIES,
         onSuccess,
         onError,
-        transformRequest: mapCompanyToDto,
         transformResponse: mapCompanyDtoToDomain,
     });
 };
@@ -75,9 +70,9 @@ export const useCompanies = (enabled = true, initialFilters = {}) => {
             initialFilters,
         });
 
-    const companies = useMemo(() => items.map(mapCompanyDtoToDomain), [items]);
+    const data = useMemo(() => items.map(mapCompanyDtoToDomain), [items]);
 
-    return { companies, total, page, setPage, limit, loading, error, refetch, setFilters };
+    return { data, total, page, setPage, limit, loading, error, refetch, setFilters };
 };
 
 export const useCompanyTableData = (

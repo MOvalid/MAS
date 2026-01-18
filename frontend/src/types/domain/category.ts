@@ -6,3 +6,9 @@ export interface Category {
     description: string | null;
     products: Product[] | null;
 }
+
+export interface ProductCategory {
+    id: string; // UUID
+    name: string;
+    description: string | null;
+}

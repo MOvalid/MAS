@@ -11,6 +11,7 @@ import {
     useUpdateCustomer,
     CreateCustomerPayload,
 } from '@/composables/customer/useCustomers';
+import { CustomerDto } from '@/types/dto';
 
 const CustomerImage =
     'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764539847/charlesdeluvio-rRWiVQzLm7k-unsplash_lpwbuq.jpg';
@@ -98,7 +99,7 @@ export const CustomerAddEditScreen = () => {
         };
 
         if (isEdit && customerToEdit) {
-            await update(customerToEdit.id, { ...payload, id: customerToEdit.id } as Customer);
+            await update(customerToEdit.id, { ...payload, id: customerToEdit.id } as CustomerDto);
         } else {
             await create(payload as CreateCustomerPayload);
         }

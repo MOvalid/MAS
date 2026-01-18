@@ -3,27 +3,27 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
-export interface UseUpdateOptions<TDomain, TDto> {
+export interface UseUpdateOptions<TData, TRequest, TResponse, TResponseDto> {
     endpoint: string;
-    onSuccess?: (data: TDomain) => void;
+    onSuccess?: (data: TResponse) => void;
     onError?: (error: string) => void;
-    transformRequest?: (domain: TDomain) => TDto;
-    transformResponse?: (dto: TDto) => TDomain;
+    transformRequest?: (data: TRequest) => TRequest;
+    transformResponse?: (dto: TResponseDto) => TResponse;
 }
 
-export const useUpdate = <TDomain, TDto>({
+export const useUpdate = <TData, TRequest, TResponse, TResponseDto>({
     endpoint,
     onSuccess,
     onError,
     transformRequest,
     transformResponse,
-}: UseUpdateOptions<TDomain, TDto>) => {
+}: UseUpdateOptions<TData, TRequest, TResponse, TResponseDto>) => {
     const { api } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const update = useCallback(
-        async (id: string, payload: TDomain): Promise<TDomain | null> => {
+        async (id: string, payload: TRequest): Promise<TResponse | null> => {
             if (!api) return null;
 
             setLoading(true);
@@ -31,11 +31,11 @@ export const useUpdate = <TDomain, TDto>({
 
             try {
                 const requestData = transformRequest ? transformRequest(payload) : payload;
-                const response = await api.put<TDto>(`${endpoint}/${id}`, requestData);
+                const response = await api.put<TResponseDto>(`${endpoint}/${id}`, requestData);
 
                 const domainData = transformResponse
                     ? transformResponse(response.data)
-                    : (response.data as unknown as TDomain);
+                    : (response.data as unknown as TResponse);
 
                 onSuccess?.(domainData);
                 return domainData;

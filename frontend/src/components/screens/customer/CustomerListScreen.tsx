@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AppButton, AppText, IconName } from '@/components/common';
 import { metrics } from '@/theme/metrics';
@@ -8,13 +8,14 @@ import { useCustomers, useCustomerTableData } from '@/composables/customer/useCu
 import { AppTable } from '@/components/common/table';
 import { CustomerSort } from '@/types/common';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
+import { AppPaginationControls } from '@/components/common/AppPaginationControls';
 
 export const CustomerListScreen = () => {
     const navigation = useNavigation();
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState<CustomerSort>('ALPHA_ASC');
 
-    const { customers, page, setPage, limit, loading, error, refetch, setFilters } = useCustomers(
+    const { customers, page, setPage, total, limit, loading, error, refetch, setFilters } = useCustomers(
         true,
         { search, sortBy: sort }
     );
@@ -23,21 +24,24 @@ export const CustomerListScreen = () => {
 
     const handleSearchChange = (newSearch: string) => {
         setSearch(newSearch);
-        setPage(1);
-        setFilters((prev) => ({ ...prev, search: newSearch }));
     };
 
     const handleSortChange = (newSort: CustomerSort) => {
         setSort(newSort);
-        setPage(1);
-        setFilters((prev) => ({ ...prev, sortBy: newSort }));
     };
 
+    const onPrevious = () => setPage((p) => Math.max(1, p - 1));
+    const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
+
+    useEffect(() => {
+        setFilters({
+            search: search,
+            sortBy: sort,
+        });
+    }, [search, sort, setFilters]);
+
     const styles = StyleSheet.create({
-        container: {
-            flex: 1,
-            padding: metrics.spacing.lg,
-        },
+        container: { flex: 1, gap: metrics.spacing.lg },
         headerRow: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -52,6 +56,11 @@ export const CustomerListScreen = () => {
             justifyContent: 'center',
             alignItems: 'center',
         },
+        paginationRow: {
+            marginTop: metrics.spacing.md,
+            width: '100%',
+            alignItems: 'center',
+        },
     });
 
     if (error) {
@@ -59,7 +68,7 @@ export const CustomerListScreen = () => {
     }
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
                 <AppText variant="headlineLarge" style={styles.pageTitle}>
                     Klienci
@@ -101,9 +110,24 @@ export const CustomerListScreen = () => {
                             icon: IconName.edit,
                             onPress: () => navigation.navigate('CustomerEdit', { id: row.id }),
                         },
+                        {
+                            icon: IconName.delete,
+                            onPress: () => console.log('Usuwanie klienta'),
+                        },
                     ]}
                 />
             )}
-        </View>
+
+            {tableData.length > 0 && !loading && (
+                <View style={styles.paginationRow}>
+                    <AppPaginationControls
+                        page={page}
+                        totalPages={Math.max(1, Math.ceil(total / limit))}
+                        onPrevious={onPrevious}
+                        onNext={onNext}
+                    />
+                </View>
+            )}
+        </ScrollView>
     );
 };

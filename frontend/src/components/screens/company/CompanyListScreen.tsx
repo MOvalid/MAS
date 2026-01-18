@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AppButton, AppText, IconName } from '@/components/common';
 import { metrics } from '@/theme/metrics';
@@ -8,36 +8,46 @@ import { useCompanies, useCompanyTableData } from '@/composables/company/useComp
 import { AppTable } from '@/components/common/table';
 import { CompanySort } from '@/types/common';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
+import { AppPaginationControls } from '@/components/common/AppPaginationControls';
 
 export const CompanyListScreen = () => {
     const navigation = useNavigation();
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState<CompanySort>('ALPHA_ASC');
 
-    const { companies, page, setPage, limit, loading, error, refetch, setFilters } = useCompanies(
-        true,
-        { search, sortBy: sort }
-    );
+    const {
+        data: companies,
+        page,
+        setPage,
+        limit,
+        total,
+        loading,
+        error,
+        refetch,
+        setFilters,
+    } = useCompanies(true, { search, sortBy: sort });
 
     const tableData = useCompanyTableData(companies, page, limit);
-
     const handleSearchChange = (newSearch: string) => {
         setSearch(newSearch);
-        setPage(1);
-        setFilters((prev) => ({ ...prev, search: newSearch }));
     };
 
     const handleSortChange = (newSort: CompanySort) => {
         setSort(newSort);
-        setPage(1);
-        setFilters((prev) => ({ ...prev, sortBy: newSort }));
     };
 
+    useEffect(() => {
+        setFilters({
+            search: search,
+            sortBy: sort,
+        });
+    }, [search, sort, setFilters]);
+
+    const onPrevious = () => setPage((p) => Math.max(1, p - 1));
+    const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
+
     const styles = StyleSheet.create({
-        container: {
-            flex: 1,
-            padding: metrics.spacing.lg,
-        },
+        container: { flex: 1, gap: metrics.spacing.lg },
         headerRow: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -56,6 +66,11 @@ export const CompanyListScreen = () => {
             color: 'red',
             marginBottom: metrics.spacing.md,
         },
+        paginationRow: {
+            marginTop: metrics.spacing.md,
+            width: '100%',
+            alignItems: 'center',
+        },
     });
 
     if (error) {
@@ -63,7 +78,7 @@ export const CompanyListScreen = () => {
     }
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
                 <AppText variant="headlineLarge">Firmy</AppText>
                 <AppButton onPress={() => navigation.navigate('CompanyAdd')}>Nowa firma</AppButton>
@@ -100,9 +115,23 @@ export const CompanyListScreen = () => {
                             icon: IconName.edit,
                             onPress: () => navigation.navigate('CompanyEdit', { id: row.id }),
                         },
+                        {
+                            icon: IconName.delete,
+                            onPress: () => console.log('Usuwanie firmy'),
+                        },
                     ]}
                 />
             )}
-        </View>
+            {tableData.length > 0 && !loading && (
+                <View style={styles.paginationRow}>
+                    <AppPaginationControls
+                        page={page}
+                        totalPages={Math.max(1, Math.ceil(total / limit))}
+                        onPrevious={onPrevious}
+                        onNext={onNext}
+                    />
+                </View>
+            )}
+        </ScrollView>
     );
 };

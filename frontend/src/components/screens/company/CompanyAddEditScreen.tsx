@@ -12,6 +12,7 @@ import {
     useCreateCompany,
     useUpdateCompany,
 } from '@/composables/company/useCompanies';
+import { CompanyDto } from '@/types/dto';
 
 const CompanyImage =
     'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764533804/modern-urban-buildings-view_vhmzbe.jpg';
@@ -30,12 +31,10 @@ export const CompanyAddEditScreen = () => {
     const navigation = useNavigation();
     const theme = useTheme();
 
-    // Pobieramy dane z params (jeśli edycja)
     const { company: companyToEdit } = (route.params as { company?: Company }) ?? {};
     const isEdit = Boolean(companyToEdit?.id);
     const initial = isEdit ? companyToEdit! : EMPTY_COMPANY;
 
-    // Form State
     const [name, setName] = useState(initial.name);
     const [taxId, setTaxId] = useState(initial.taxId);
     const [street, setStreet] = useState(initial.address.street);
@@ -92,7 +91,7 @@ export const CompanyAddEditScreen = () => {
         };
 
         if (isEdit && companyToEdit) {
-            await update(companyToEdit.id, { ...payload, id: companyToEdit.id } as Company);
+            await update(companyToEdit.id, { ...payload, id: companyToEdit.id } as CompanyDto);
         } else {
             await create(payload as CreateCompanyPayload);
         }
