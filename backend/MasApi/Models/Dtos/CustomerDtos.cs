@@ -6,11 +6,7 @@ public class CustomerCreateDto
     public required string LastName { get; set; }
     public required string Email { get; set; }
     public string? PhoneNumber { get; set; }
-    public string? Street { get; set; }
-    public required string HouseNumber { get; set; }
-    public required string City { get; set; }
-    public required string PostalCode { get; set; }
-    public required string Country { get; set; }
+    public required AddressDto Address { get; set; }
 }
 
 public class CustomerListDto
@@ -20,11 +16,7 @@ public class CustomerListDto
     public required string LastName { get; set; }
     public required string Email { get; set; }
     public string? PhoneNumber { get; set; }
-    public string? Street { get; set; }
-    public required string HouseNumber { get; set; }
-    public required string City { get; set; }
-    public required string PostalCode { get; set; }
-    public required string Country { get; set; }
+    public required AddressDto Address { get; set; }
 }
 
 public class CustomerDetailsDto
@@ -34,10 +26,6 @@ public class CustomerDetailsDto
     public required string LastName { get; set; }
     public required string Email { get; set; }
     public string? PhoneNumber { get; set; }
-    public string? Street { get; set; }
-    public required string HouseNumber { get; set; }
-    public required string City { get; set; }
-    public required string PostalCode { get; set; }
-    public required string Country { get; set; }
+    public required AddressDto Address { get; set; }
     public ICollection<OrderListDto>? Orders { get; set; }
 }

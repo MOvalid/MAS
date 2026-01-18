@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace MasApi.Models
@@ -30,6 +31,18 @@ namespace MasApi.Models
         [Range(0.0, double.MaxValue)]
         public required decimal Height { get; set; }
         public DateTime? LastRestockedAt { get; set; }
+
+        [NotMapped]
+        public Enums.StockLevel StockLevel
+        {
+            get
+            {
+                if (StockQuantity == 0) return Enums.StockLevel.None;
+                if (StockQuantity < 20) return Enums.StockLevel.Low;
+                if (StockQuantity < 40) return Enums.StockLevel.Medium;
+                return Enums.StockLevel.High;
+            }
+        }
 
         public Guid? CategoryId { get; set; }
         public Category? Category { get; set; }

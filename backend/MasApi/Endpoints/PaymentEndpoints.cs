@@ -79,8 +79,11 @@ public static class PaymentEndpoints
     private static async Task<Results<Ok<PaymentDetailsDto>, NotFound>> GetPayment(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var payment = await dbContext.Payments
-            .Include(p => p.Order)
-                .ThenInclude(o => o!.OrderProducts)
+            .Include(p => p.Order!.OrderProducts)
+            .Include(p => p.Order!.Invoice!.Company)
+            .Include(p => p.Order!.Customer)
+            .Include(p => p.Order!.Delivery)
+            .Include(p => p.Order!.Seller)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (payment == null) return TypedResults.NotFound();
 
@@ -91,6 +94,8 @@ public static class PaymentEndpoints
     private static async Task<Results<Ok<List<PaymentListDto>>, NotFound>> GetPayments(Data.MasDbContext dbContext, IMapper mapper)
     {
         var payments = await dbContext.Payments
+            .Include(p => p.Order)
+                .ThenInclude(o => o!.Invoice)
             .Select(payment => mapper.Map<PaymentListDto>(payment))
             .ToListAsync();
 
@@ -102,6 +107,8 @@ public static class PaymentEndpoints
         var payment = await dbContext.Payments
             .Include(p => p.Order)
                 .ThenInclude(o => o!.OrderProducts)
+            .Include(p => p.Order)
+                .ThenInclude(o => o!.Invoice)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (payment == null) return TypedResults.NotFound();
 
