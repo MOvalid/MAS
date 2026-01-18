@@ -1,7 +1,7 @@
 import { CompanyDto } from '../types/dto/company';
 import { Company } from '../types/domain/company';
 import { CompanyTableRow } from '../types/domain';
-import { mapAddressDtoToAddress, mapAddressToAddressDto } from './address.mapper';
+import { mapAddressDtoToDomain, mapAddressToDto } from './address.mapper';
 import { mapDtoListToDomain } from './common.mapper';
 import { formatNip } from '@/utils/formatters';
 
@@ -10,7 +10,7 @@ export const mapCompanyDtoToDomain = (dto: CompanyDto): Company => {
         id: dto.id,
         name: dto.name,
         taxId: dto.taxId,
-        address: mapAddressDtoToAddress(dto.address),
+        address: mapAddressDtoToDomain(dto.address),
         email: dto.email ?? undefined,
         phoneNumber: dto.phone ?? undefined,
     };
@@ -21,7 +21,7 @@ export const mapCompanyToDto = (company: Company): CompanyDto => {
         id: company.id,
         name: company.name,
         taxId: company.taxId,
-        address: mapAddressToAddressDto(company.address),
+        address: mapAddressToDto(company.address),
         email: company.email ?? null,
         phone: company.phoneNumber ?? null,
     };

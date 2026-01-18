@@ -15,10 +15,17 @@ export const CustomerListScreen = () => {
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState<CustomerSort>('ALPHA_ASC');
 
-    const { customers, page, setPage, total, limit, loading, error, refetch, setFilters } = useCustomers(
-        true,
-        { search, sortBy: sort }
-    );
+    const {
+        data: customers,
+        page,
+        setPage,
+        total,
+        limit,
+        loading,
+        error,
+        refetch,
+        setFilters,
+    } = useCustomers(true, { search, sortBy: sort });
 
     const tableData = useCustomerTableData(customers, page, limit);
 

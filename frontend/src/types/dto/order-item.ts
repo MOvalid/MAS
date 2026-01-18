@@ -1,13 +1,13 @@
 import { ProductDto } from './product';
 
 export interface OrderItemDto {
-    orderId: string; // UUID
+    productId: string; // UUID
     product: ProductDto;
     quantity: number;
-    unitPrice: number;
-    netPrice: number;
+    unitNetPrice: number;
     vatRate: number;
-    grossPrice: number;
-    vatAmount: number;
     currency: string;
+    totalNetPrice: number;
+    totalVatAmount: number;
+    totalGrossPrice: number;
 }

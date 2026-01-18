@@ -77,6 +77,7 @@ export const AppCurrencyInput: React.FC<AppCurrencyInputProps> = ({
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                     fullWidth={fullWidth}
+                    disabled={!editable}
                     editable={editable}
                     {...props}
                 />
@@ -90,7 +91,7 @@ export const AppCurrencyInput: React.FC<AppCurrencyInputProps> = ({
                         if (editable) onChangeCurrency?.(val as Currency);
                     }}
                     width="100%"
-                    disabled={!editable}
+                    disabled={true}
                 />
             </View>
         </View>

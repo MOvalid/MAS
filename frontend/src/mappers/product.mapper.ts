@@ -2,7 +2,7 @@ import { calculateVat, formatPrice } from '@/utils/price-utils';
 import {
     Product,
     ProductDetails,
-    ProductTableRow,
+    ProductTableData,
     ProductDimensions,
 } from '../types/domain/product';
 import { ProductDto, ProductDetailsDto, UpdateProductPayload } from '../types/dto/product';
@@ -112,7 +112,7 @@ export const mapProductToTableRow = (
     index: number,
     page: number = 1,
     limit: number = 10
-): ProductTableRow => {
+): ProductTableData => {
     const rowNumber = (page - 1) * limit + index + 1;
 
     return {

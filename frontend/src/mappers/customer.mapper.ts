@@ -1,6 +1,6 @@
 import { CustomerDto } from '../types/dto/customer';
 import { Customer, CustomerTableRow } from '../types/domain/customer';
-import { mapAddressDtoToAddress, mapAddressToAddressDto } from './address.mapper';
+import { mapAddressDtoToDomain, mapAddressToDto } from './address.mapper';
 import { mapDtoListToDomain } from './common.mapper';
 
 export const mapCustomerDtoToDomain = (dto: CustomerDto): Customer => {
@@ -10,7 +10,7 @@ export const mapCustomerDtoToDomain = (dto: CustomerDto): Customer => {
         lastName: dto.lastName,
         email: dto.email ?? undefined,
         phoneNumber: dto.phoneNumber ?? undefined,
-        address: mapAddressDtoToAddress(dto.address),
+        address: mapAddressDtoToDomain(dto.address),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         orders: dto.orders ? (dto.orders as any) : [],
     };
@@ -26,7 +26,7 @@ export const mapCustomerToDto = (customer: Customer): CustomerDto => {
         lastName: customer.lastName,
         email: customer.email ?? null,
         phoneNumber: customer.phoneNumber ?? null,
-        address: mapAddressToAddressDto(customer.address),
+        address: mapAddressToDto(customer.address),
         orders: null,
     };
 };

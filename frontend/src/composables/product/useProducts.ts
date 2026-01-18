@@ -1,19 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
     mapProductDetailsDtoToDomain,
-    mapProductDetailsToUpdatePayload,
     mapProductDtoToDomain,
     mapProductToTableRow,
 } from '@/mappers/product.mapper';
 import { API_PRODUCTS } from '@/constants/Endpoints';
-import { useAuth } from '@/context/AuthContext';
-import { getFriendlyErrorMessage } from '@/utils/error-utils';
-import {
-    Product,
-    ProductDetails,
-    ProductDimensions,
-    ProductTableRow,
-} from '@/types/domain/product';
+import { Product, ProductDetails, ProductTableData } from '@/types/domain/product';
 import {
     CreateProductPayload,
     ProductDetailsDto,
@@ -26,6 +18,8 @@ import { useDelete } from '../common/useDelete';
 import { useGet } from '../common/useGet';
 import { usePaginated } from '../pagination/usePagination';
 import { ProductSort } from '@/types/common';
+import { useGetList } from '../common/useGetList';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export const useCreateProduct = (
     onSuccess?: (productDetails: ProductDetails) => void,
@@ -82,12 +76,36 @@ export const useProducts = (enabled = true, initialFilters = {}) => {
     return { data, total, page, setPage, limit, loading, error, refetch, setFilters };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const useProductOptions = (enabled = true, initialFilters: Record<string, any> = {}) => {
+    const transformResponse = useCallback(
+        (dtos: ProductDto[]) => dtos.map(mapProductDtoToDomain),
+        []
+    );
+
+    const { data, loading, error, refresh, filters, setFilters } = useGetList<Product, ProductDto>({
+        endpoint: API_PRODUCTS,
+        enabled,
+        initialFilters,
+        transformResponse,
+    });
+
+    return {
+        data,
+        loading,
+        error,
+        refetch: refresh,
+        filters,
+        setFilters,
+    };
+};
+
 export const useProductTableData = (
-    productDtos: Product[],
+    products: Product[],
     page: number = 1,
     limit: number = 10
-): ProductTableRow[] => {
+): ProductTableData[] => {
     return useMemo(() => {
-        return productDtos.map((dto, index) => mapProductToTableRow(dto, index, page, limit));
-    }, [productDtos, page, limit]);
+        return products.map((dto, index) => mapProductToTableRow(dto, index, page, limit));
+    }, [products, page, limit]);
 };

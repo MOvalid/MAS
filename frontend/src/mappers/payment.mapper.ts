@@ -1,20 +1,47 @@
 // src/mappers/payment.mapper.ts
 import { PaymentDto } from '@/types/dto';
-import { PaymentTableRow } from '@/types/domain';
+import { Payment, PaymentTableData } from '@/types/domain';
 import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '@/types/common';
 import { formatPolishDate } from '@/utils/formatters';
 import { formatPrice } from '@/utils/price-utils';
 import { PaymentMethod, PaymentStatus } from '@/types/common';
 
-export const mapPaymentDtoToTableRow = (payment: PaymentDto): PaymentTableRow => ({
+export const mapPaymentDtoToTableData = (payment: PaymentDto): PaymentTableData => ({
+    lp: '1.',
     id: payment.id,
     method: PAYMENT_METHOD_LABELS[payment.paymentMethod as PaymentMethod] ?? payment.paymentMethod,
     amount: formatPrice(payment.amount),
     status: PAYMENT_STATUS_LABELS[payment.status as PaymentStatus] ?? payment.status,
-    paidAt: payment.paidAt ? formatPolishDate(payment.paidAt, false) : '-',
+    paymentDate: payment.paymentDate ? formatPolishDate(payment.paymentDate, false) : '-',
     currency: payment.currency,
 });
 
-export const mapPaymentListToTableRows = (
+export const mapPaymentListToTableData = (
     payments: PaymentDto[] | null | undefined
-): PaymentTableRow[] => payments?.map(mapPaymentDtoToTableRow) ?? [];
+): PaymentTableData[] => payments?.map(mapPaymentDtoToTableData) ?? [];
+
+export const mapPaymentDtoToDomain = (dto: PaymentDto): Payment => {
+    return {
+        id: dto.id,
+        orderId: dto.orderId ?? null,
+        invoiceId: dto.invoiceId ?? null,
+        amount: dto.amount,
+        currency: 'PLN',
+        paymentMethod: dto.paymentMethod,
+        status: dto.status,
+        paymentDate: dto.paymentDate ?? null,
+    };
+};
+
+export const mapPaymentToTableData = (payment: Payment, lp: string = ''): PaymentTableData => {
+    return {
+        lp,
+        id: payment.id,
+        method:
+            PAYMENT_METHOD_LABELS[payment.paymentMethod as PaymentMethod] ?? payment.paymentMethod,
+        amount: formatPrice(payment.amount),
+        status: PAYMENT_STATUS_LABELS[payment.status as PaymentStatus] ?? payment.status,
+        paymentDate: payment.paymentDate ? formatPolishDate(payment.paymentDate, false) : '-',
+        currency: payment.currency,
+    };
+};

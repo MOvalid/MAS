@@ -1,6 +1,6 @@
 import { ProductCategory, Company } from '.';
 
-export interface ProductTableRow {
+export interface ProductTableData {
     lp: string;
     id: string;
     name: string;

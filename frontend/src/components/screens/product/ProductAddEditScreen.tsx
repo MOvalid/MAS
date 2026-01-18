@@ -29,7 +29,12 @@ export const ProductAddEditScreen = () => {
     const { id } = route.params ?? {};
     const isEdit = Boolean(id);
 
-    const { data: fetchedProduct, error: fetchProductError, loading: fetchProductLoading, refresh } = useProduct(id);
+    const {
+        data: fetchedProduct,
+        error: fetchProductError,
+        loading: fetchProductLoading,
+        refresh,
+    } = useProduct(id);
     const { data: categoriesData, loading: categoriesLoading } = useCategories();
 
     const [searchManufacturer, setSearchManufacturer] = useState('')
@@ -237,7 +242,6 @@ export const ProductAddEditScreen = () => {
             </View>
         </View>
     );
-
 
     if (loading) {
         return <LoadingScreen text="Ładowanie danych..." />;

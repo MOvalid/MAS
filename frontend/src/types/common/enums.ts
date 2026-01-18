@@ -113,6 +113,6 @@ export type StockProductSortOption =
     | 'MANUFACTURER_ASC'
     | 'PRICE_ASC'
     | 'PRICE_DESC';
-export type OrderSortOption = 'CLIENT_ASC' | 'CLIENT_DESC' | 'CREATED_ASC' | 'CREATED_DESC';
+export type OrderSort = 'CLIENT_ASC' | 'CLIENT_DESC' | 'CREATED_ASC' | 'CREATED_DESC';
 export type CustomerSort = 'ALPHA_ASC' | 'ALPHA_DESC';
 export type CompanySort = 'ALPHA_ASC' | 'ALPHA_DESC';

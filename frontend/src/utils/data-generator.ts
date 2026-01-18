@@ -265,7 +265,7 @@ const buildPayments = (orderId: string, totalGross: number): PaymentDto[] => [
         currency: 'PLN',
         paymentMethod: pick(PAYMENT_METHOD_VALUES) as PaymentMethod,
         status: pick(PAYMENT_STATUS_VALUES) as PaymentStatus,
-        paidAt: randomDate(),
+        paymentDate: randomDate(),
     },
 ];
 

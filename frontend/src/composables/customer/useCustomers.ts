@@ -7,8 +7,9 @@ import { CustomerDto } from '@/types/dto';
 import { useDelete } from '../common/useDelete';
 import { mapCustomerDtoToDomain, mapCustomerToTableRow } from '@/mappers/customer.mapper';
 import { useGet } from '../common/useGet';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { CustomerSort } from '@/types/common';
+import { useGetList } from '../common/useGetList';
 
 export type CreateCustomerPayload = Omit<Customer, 'id' | 'orders'>;
 
@@ -60,9 +61,36 @@ export const useCustomers = (enabled = true, initialFilters = {}) => {
             initialFilters,
         });
 
-    const customers = items.map(mapCustomerDtoToDomain);
+    const data = items.map(mapCustomerDtoToDomain);
 
-    return { customers, total, page, setPage, limit, loading, error, refetch, setFilters };
+    return { data, total, page, setPage, limit, loading, error, refetch, setFilters };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const useCustomerOptions = (enabled = true, initialFilters: Record<string, any> = {}) => {
+    const transformResponse = useCallback(
+        (dtos: CustomerDto[]) => dtos.map(mapCustomerDtoToDomain),
+        []
+    );
+
+    const { data, loading, error, refresh, filters, setFilters } = useGetList<
+        Customer,
+        CustomerDto
+    >({
+        endpoint: API_CUSTOMERS,
+        enabled,
+        initialFilters,
+        transformResponse,
+    });
+
+    return {
+        data,
+        loading,
+        error,
+        refetch: refresh,
+        filters,
+        setFilters,
+    };
 };
 
 export const useCustomerTableData = (

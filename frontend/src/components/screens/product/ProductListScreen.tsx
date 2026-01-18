@@ -11,7 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/types/dto/auth';
 import { useCategories } from '@/composables/category';
 import { useProducts, useProductTableData } from '@/composables/product/useProducts';
-import { ProductTableRow } from '@/types/domain';
+import { ProductTableData } from '@/types/domain';
 import { useDebounce } from '@/hooks/useDebounce';
 
 export const ProductListScreen = () => {
@@ -49,14 +49,14 @@ export const ProductListScreen = () => {
         return Object.fromEntries(categories.map((c) => [c.id, c.name]));
     }, [categories]);
 
-    const handleRowPress = (item: ProductTableRow) => {
+    const handleRowPress = (item: ProductTableData) => {
         navigation.navigate('ProductDetails', { id: item.id });
     };
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
 
-    const columns: TableColumn<ProductTableRow>[] = [
+    const columns: TableColumn<ProductTableData>[] = [
         { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
         { key: 'name', title: 'Nazwa', flex: 2 },
         { key: 'manufacturer', title: 'Producent', flex: 1.5 },

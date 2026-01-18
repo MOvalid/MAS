@@ -1,7 +1,7 @@
 import { AddressDto } from '../types/dto/address';
 import { Address } from '../types/domain/address';
 
-export const mapAddressDtoToAddress = (dto: AddressDto): Address => {
+export const mapAddressDtoToDomain = (dto: AddressDto): Address => {
     return {
         street: dto.street,
         number: dto.number,
@@ -11,7 +11,7 @@ export const mapAddressDtoToAddress = (dto: AddressDto): Address => {
     };
 };
 
-export const mapAddressToAddressDto = (address: Address): AddressDto => {
+export const mapAddressToDto = (address: Address): AddressDto => {
     return {
         street: address.street,
         number: address.number,
