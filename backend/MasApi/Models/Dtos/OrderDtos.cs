@@ -24,9 +24,15 @@ public class OrderListDto
     public required Guid Id { get; set; }
     public required DateTime CreatedAt { get; set; }
     public required Guid CustomerId { get; set; }
+    public required string Customer { get; set; }
+    public Guid? CompanyId { get; set; }
+    public string? Company { get; set; }
     public required Guid SellerId { get; set; }
+    public required string Seller { get; set; }
     public required string Currency { get; set; }
     public required string Status { get; set; }
+    public Guid? DeliveryId { get; set; }
+    public string? InvoiceNumber { get; set; }
     public required decimal TotalNetPrice { get; set; }
     public required decimal TotalVatAmount { get; set; }
     public required decimal TotalGrossPrice { get; set; }
