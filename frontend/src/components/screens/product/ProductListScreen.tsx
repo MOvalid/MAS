@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { metrics } from '@/theme/metrics';
 import { AppButton, AppText, IconName } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table/AppTable';
@@ -14,7 +14,6 @@ import { useProducts, useProductTableData } from '@/composables/product/useProdu
 import { ProductTableData } from '@/types/domain';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
-import { LoadingScreen } from '../LoadingScreen';
 
 export const ProductListScreen = () => {
     const [search, setSearch] = useState('');
@@ -54,7 +53,7 @@ export const ProductListScreen = () => {
     }, [categories]);
 
     const handleRowPress = (item: ProductTableData) => {
-        navigation.navigate('ProductDetails', { id: item.id });
+        navigation.navigate('Product', { id: item.id });
     };
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
@@ -110,7 +109,9 @@ export const ProductListScreen = () => {
                 }}
             />
             {loading ? (
-                <LoadingScreen />
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" />
+                </View>
             ) : (
                 <>
                     <AppTable
@@ -147,6 +148,11 @@ export const ProductListScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, gap: metrics.spacing.lg },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',

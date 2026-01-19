@@ -38,7 +38,7 @@ export const mapCompanyToTableRow = (
     limit: number = 10
 ): CompanyTableRow => {
     const rowNumber = (page - 1) * limit + index + 1;
-    const { city, street, number } = company.address;
+    const { city, street, houseNumber: number } = company.address;
     const formattedAddress = `${city}, ${street} ${number}`;
 
     return {

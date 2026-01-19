@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { AppText, AppButton, IconName } from '@/components/common';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
-import { AppTable } from '@/components/common/table';
+import { AppTable, TableColumn } from '@/components/common/table';
 import { metrics } from '@/theme/metrics';
 import { InvoiceSort, InvoiceStatus } from '@/types/common';
 import { InvoiceTableData } from '@/types/domain';
@@ -67,6 +67,16 @@ export const InvoiceListScreen = () => {
     const downloadInvoice = (row: InvoiceTableData) => console.log('Download', row);
     const deleteInvoice = (row: InvoiceTableData) => console.log('Delete', row);
 
+    const columns: TableColumn<InvoiceTableData>[] = [
+        { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
+        { key: 'issuedAt', title: 'Data wystawienia', align: 'center', flex: 1 },
+        { key: 'paymentDueDate', title: 'Data opłacenia', align: 'center', flex: 1 },
+        { key: 'invoiceNumber', title: 'Numer faktury', align: 'center', flex: 1 },
+        { key: 'totalGrossPrice', title: 'Kwota', align: 'center', flex: 1 },
+        { key: 'currency', title: 'Waluta', align: 'center', flex: 1 },
+        { key: 'status', title: 'Status', align: 'center', flex: 1 },
+    ];
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
@@ -93,39 +103,48 @@ export const InvoiceListScreen = () => {
                 onSortChange={(val) => setSort(val as InvoiceSort)}
                 dateError={dateError}
             />
-            <AppTable
-                columns={[
-                    { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
-                    { key: 'issuedAt', title: 'Data wystawienia', align: 'center', flex: 1 },
-                    { key: 'paymentDueDate', title: 'Data opłacenia', align: 'center', flex: 1 },
-                    { key: 'invoiceNumber', title: 'Numer faktury', align: 'center', flex: 1 },
-                    { key: 'totalGrossPrice', title: 'Kwota', align: 'center', flex: 1 },
-                    { key: 'currency', title: 'Waluta', align: 'center', flex: 1 },
-                    { key: 'status', title: 'Status', align: 'center', flex: 1 },
-                ]}
-                data={tableData}
-                onRowPress={handleRowPress}
-                actions={(row) => [
-                    { icon: IconName.download, onPress: () => downloadInvoice(row) },
-                    { icon: IconName.delete, onPress: () => deleteInvoice(row), iconColor: 'red' },
-                ]}
-            />
-
-            {invoices.length > 0 && !loading && (
-                <View style={styles.paginationRow}>
-                    <AppPaginationControls
-                        page={page}
-                        totalPages={Math.max(1, Math.ceil(total / limit))}
-                        onPrevious={onPrevious}
-                        onNext={onNext}
-                    />
+            {loading ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" />
                 </View>
+            ) : (
+                <>
+                    <AppTable
+                        columns={columns}
+                        data={tableData}
+                        onRowPress={handleRowPress}
+                        actions={(row) => [
+                            { icon: IconName.download, onPress: () => downloadInvoice(row) },
+                            {
+                                icon: IconName.delete,
+                                onPress: () => deleteInvoice(row),
+                                iconColor: 'red',
+                            },
+                        ]}
+                    />
+
+                    {invoices.length > 0 && (
+                        <View style={styles.paginationRow}>
+                            <AppPaginationControls
+                                page={page}
+                                totalPages={Math.max(1, Math.ceil(total / limit))}
+                                onPrevious={onPrevious}
+                                onNext={onNext}
+                            />
+                        </View>
+                    )}
+                </>
             )}
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     container: { flex: 1, gap: metrics.spacing.lg },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     paginationRow: { marginTop: metrics.spacing.md, width: '100%', alignItems: 'center' },

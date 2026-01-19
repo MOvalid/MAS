@@ -22,7 +22,7 @@ const EMPTY_CUSTOMER: Customer = {
     lastName: '',
     email: '',
     phoneNumber: '',
-    address: { street: '', number: '', city: '', postalCode: '', country: '' },
+    address: { street: '', houseNumber: '', city: '', postalCode: '', country: '' },
     orders: [],
 };
 
@@ -42,7 +42,7 @@ export const CustomerAddEditScreen = () => {
     const [phone, setPhone] = useState(initial.phoneNumber || '');
 
     const [street, setStreet] = useState(initial.address?.street || '');
-    const [number, setNumber] = useState(initial.address?.number || '');
+    const [houseNumber, setHouseNumber] = useState(initial.address?.houseNumber || '');
     const [city, setCity] = useState(initial.address?.city || '');
     const [postalCode, setPostalCode] = useState(initial.address?.postalCode || '');
     const [country, setCountry] = useState(initial.address?.country || '');
@@ -78,7 +78,7 @@ export const CustomerAddEditScreen = () => {
         if (!firstName) newErrors.firstName = 'Imię jest wymagane';
         if (!lastName) newErrors.lastName = 'Nazwisko jest wymagane';
         if (!street) newErrors.street = 'Ulica jest wymagana';
-        if (!number) newErrors.number = 'Numer jest wymagany';
+        if (!houseNumber) newErrors.houseNumber = 'Numer jest wymagany';
         if (!city) newErrors.city = 'Miasto jest wymagane';
         if (!postalCode) newErrors.postalCode = 'Kod pocztowy jest wymagany';
         if (!country) newErrors.country = 'Kraj jest wymagany';
@@ -95,7 +95,7 @@ export const CustomerAddEditScreen = () => {
             lastName,
             email: email?.trim() || '',
             phoneNumber: phone?.trim() || null,
-            address: { street, number, city, postalCode, country },
+            address: { street, houseNumber, city, postalCode, country },
         };
 
         if (isEdit && customerToEdit) {
@@ -245,10 +245,10 @@ export const CustomerAddEditScreen = () => {
                             Numer *
                         </AppText>
                         <AppTextInput
-                            value={number}
-                            onChangeText={setNumber}
+                            value={houseNumber}
+                            onChangeText={setHouseNumber}
                             fullWidth
-                            errorMessage={errors.number}
+                            errorMessage={errors.houseNumber}
                             editable={!isLoading}
                         />
                     </View>

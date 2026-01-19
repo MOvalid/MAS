@@ -1,14 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
-
 import { AppText, AppCard, AppButton, IconName } from '@/components/common';
 import { AppModal } from '@/components/common/AppModal';
 import { AppTable, TableColumn } from '@/components/common/table';
 import { metrics } from '@/theme/metrics';
 import { formatAddressMultiline, formatPolishDate } from '@/utils/formatters';
-
 import { PaymentDto, DeliveryDto } from '@/types/dto';
 import {
     ORDER_STATUS_LABELS,

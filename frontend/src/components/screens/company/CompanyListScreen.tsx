@@ -9,7 +9,6 @@ import { AppTable } from '@/components/common/table';
 import { CompanySort } from '@/types/common';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
-import { LoadingScreen } from '../LoadingScreen';
 
 export const CompanyListScreen = () => {
     const navigation = useNavigation();
@@ -74,8 +73,6 @@ export const CompanyListScreen = () => {
         },
     });
 
-    if (loading) <LoadingScreen />
-
     if (error) {
         return <ErrorMessage error={error} onRetry={refetch} onBack={() => navigation.goBack()} />;
     }
@@ -104,36 +101,38 @@ export const CompanyListScreen = () => {
                     <ActivityIndicator size="large" />
                 </View>
             ) : (
-                <AppTable
-                    columns={[
-                        { key: 'lp', title: 'Lp.', flex: 0.3 },
-                        { key: 'name', title: 'Nazwa firmy', flex: 1.5 },
-                        { key: 'taxId', title: 'NIP', flex: 1 },
-                        { key: 'email', title: 'Email', flex: 1.2 },
-                        { key: 'address', title: 'Siedziba', flex: 1.5 },
-                    ]}
-                    data={tableData}
-                    actions={(row) => [
-                        {
-                            icon: IconName.edit,
-                            onPress: () => navigation.navigate('CompanyEdit', { id: row.id }),
-                        },
-                        {
-                            icon: IconName.delete,
-                            onPress: () => console.log('Usuwanie firmy'),
-                        },
-                    ]}
-                />
-            )}
-            {tableData.length > 0 && !loading && (
-                <View style={styles.paginationRow}>
-                    <AppPaginationControls
-                        page={page}
-                        totalPages={Math.max(1, Math.ceil(total / limit))}
-                        onPrevious={onPrevious}
-                        onNext={onNext}
+                <>
+                    <AppTable
+                        columns={[
+                            { key: 'lp', title: 'Lp.', flex: 0.3 },
+                            { key: 'name', title: 'Nazwa firmy', flex: 1.5 },
+                            { key: 'taxId', title: 'NIP', flex: 1 },
+                            { key: 'email', title: 'Email', flex: 1.2 },
+                            { key: 'address', title: 'Siedziba', flex: 1.5 },
+                        ]}
+                        data={tableData}
+                        actions={(row) => [
+                            {
+                                icon: IconName.edit,
+                                onPress: () => navigation.navigate('CompanyEdit', { id: row.id }),
+                            },
+                            {
+                                icon: IconName.delete,
+                                onPress: () => console.log('Usuwanie firmy'),
+                            },
+                        ]}
                     />
-                </View>
+                    {companies.length > 0 && (
+                        <View style={styles.paginationRow}>
+                            <AppPaginationControls
+                                page={page}
+                                totalPages={Math.max(1, Math.ceil(total / limit))}
+                                onPrevious={onPrevious}
+                                onNext={onNext}
+                            />
+                        </View>
+                    )}
+                </>
             )}
         </ScrollView>
     );

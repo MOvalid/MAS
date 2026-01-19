@@ -39,8 +39,6 @@ export const OrderAddEditScreen = () => {
 
     const { id } = route.params ?? {};
     const isEdit = Boolean(id);
-    const [isInitialized, setIsInitialized] = useState(false);
-
     const { data: fetchedOrder, error: fetchOrderError, loading, refresh } = useOrder(id);
 
     const { create, loading: createLoading } = useCreateOrder(() => navigation.goBack());

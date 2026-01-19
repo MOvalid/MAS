@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Image, LayoutChangeEvent, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
-
 import { AppText, AppCard, AppButton, AppTextInput } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { Company } from '@/types/domain/company';
@@ -21,7 +20,7 @@ const EMPTY_COMPANY: Company = {
     id: '',
     name: '',
     taxId: '',
-    address: { street: '', number: '', city: '', postalCode: '', country: '' },
+    address: { street: '', houseNumber: '', city: '', postalCode: '', country: '' },
     email: '',
     phoneNumber: '',
 };
@@ -38,7 +37,7 @@ export const CompanyAddEditScreen = () => {
     const [name, setName] = useState(initial.name);
     const [taxId, setTaxId] = useState(initial.taxId);
     const [street, setStreet] = useState(initial.address.street);
-    const [number, setNumber] = useState(initial.address.number);
+    const [houseNumber, setHouseNumber] = useState(initial.address.houseNumber);
     const [city, setCity] = useState(initial.address.city);
     const [postalCode, setPostalCode] = useState(initial.address.postalCode);
     const [country, setCountry] = useState(initial.address.country);
@@ -71,7 +70,7 @@ export const CompanyAddEditScreen = () => {
         if (!name) newErrors.name = 'Nazwa firmy jest wymagana';
         if (!taxId || !/^\d{10}$/.test(taxId)) newErrors.taxId = 'NIP musi składać się z 10 cyfr';
         if (!street) newErrors.street = 'Ulica jest wymagana';
-        if (!number) newErrors.number = 'Numer jest wymagany';
+        if (!houseNumber) newErrors.houseNumber = 'Numer jest wymagany';
         if (!city) newErrors.city = 'Miasto jest wymagane';
         if (!postalCode) newErrors.postalCode = 'Kod pocztowy jest wymagany';
         if (!country) newErrors.country = 'Kraj jest wymagany';
@@ -85,7 +84,7 @@ export const CompanyAddEditScreen = () => {
         const payload = {
             name,
             taxId,
-            address: { street, number, city, postalCode, country },
+            address: { street, houseNumber, city, postalCode, country },
             email: email?.trim() || undefined,
             phone: phone?.trim() || undefined,
         };
@@ -212,10 +211,10 @@ export const CompanyAddEditScreen = () => {
                             Numer *
                         </AppText>
                         <AppTextInput
-                            value={number}
-                            onChangeText={setNumber}
+                            value={houseNumber}
+                            onChangeText={setHouseNumber}
                             fullWidth
-                            errorMessage={errors.number}
+                            errorMessage={errors.houseNumber}
                             editable={!isLoading}
                         />
                     </View>

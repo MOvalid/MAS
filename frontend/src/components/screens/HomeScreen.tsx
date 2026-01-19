@@ -9,8 +9,10 @@ import { useDailySummary } from '@/composables/useDailySummary';
 import { LoadingScreen } from './LoadingScreen';
 import { ErrorScreen } from './ErrorScreen';
 import { getFriendlyErrorMessage } from '@/utils/error-utils';
+import { useNavigation } from '@react-navigation/native';
 
 export const HomeScreen = () => {
+    const navigation = useNavigation();
     const { data, loading, error, refresh } = useDailySummary();
 
     if (loading) {
@@ -36,11 +38,21 @@ export const HomeScreen = () => {
             </AppText>
 
             <View style={styles.buttonRow}>
-                <AppButton style={styles.button}>Nowe zamówienie</AppButton>
-                <AppButton style={styles.button}>Wystaw fakturę</AppButton>
-                <AppButton style={styles.button}>Nowy klient</AppButton>
-                <AppButton style={styles.button}>Dodaj produkt</AppButton>
-                <AppButton style={styles.button}>Sprawdź stan</AppButton>
+                <AppButton style={styles.button} onPress={() => navigation.navigate('OrderAdd')}>
+                    Nowe zamówienie
+                </AppButton>
+                <AppButton style={styles.button} onPress={() => navigation.navigate('Invoice')}>
+                    Sprawdź faktury
+                </AppButton>
+                <AppButton style={styles.button} onPress={() => navigation.navigate('ClientAdd')}>
+                    Nowy klient
+                </AppButton>
+                <AppButton style={styles.button} onPress={() => navigation.navigate('ProductAdd')}>
+                    Dodaj produkt
+                </AppButton>
+                <AppButton style={styles.button} onPress={() => navigation.navigate('Stock')}>
+                    Sprawdź stan
+                </AppButton>
             </View>
 
             <AppText variant="headlineMedium" style={styles.sectionTitle}>

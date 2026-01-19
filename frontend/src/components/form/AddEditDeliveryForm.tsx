@@ -20,7 +20,7 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
     onClose,
 }) => {
     const [street, setStreet] = useState(initialAddress?.street ?? '');
-    const [number, setNumber] = useState(initialAddress?.number ?? '');
+    const [number, setNumber] = useState(initialAddress?.houseNumber ?? '');
     const [city, setCity] = useState(initialAddress?.city ?? '');
     const [postalCode, setPostalCode] = useState(initialAddress?.postalCode ?? '');
     const [country, setCountry] = useState(initialAddress?.country ?? '');
@@ -28,7 +28,7 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
     const [trackingNumber, setTrackingNumber] = useState(initialTracking);
 
     const handleSave = () => {
-        const addr: Address = { street, number, city, postalCode, country };
+        const addr: Address = { street, houseNumber: number, city, postalCode, country };
         onSave(addr, carrier, trackingNumber);
         onClose();
     };

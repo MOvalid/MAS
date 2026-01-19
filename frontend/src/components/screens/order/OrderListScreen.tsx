@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { metrics } from '@/theme/metrics';
 import { AppButton, AppText, IconName } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
-import { getMockOrders } from '@/utils/data-generator';
 import { OrderListFilters } from './OrderListFilters';
-import { OrderSortOption, OrderTableData } from '@/types/domain/order';
+import { OrderTableData } from '@/types/domain/order';
 import { OrderSort, OrderStatus } from '@/types/common';
 import { useSellers } from '@/composables/seller';
 import { useNavigation } from '@react-navigation/native';
@@ -14,6 +13,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useOrders2, useOrderTableData } from '@/composables/orders/useOrders';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/types/dto/auth';
+import { ErrorScreen } from '../ErrorScreen';
 
 export const OrderListScreen = () => {
     const [search, setSearch] = useState('');
@@ -29,10 +29,12 @@ export const OrderListScreen = () => {
     const {
         data: orders,
         page,
+        error,
+        refetch,
         setPage,
         total,
         limit,
-        loading,
+        loading: orderLoading,
         setFilters,
     } = useOrders2(true, { search, sorting: sort });
 
@@ -66,6 +68,7 @@ export const OrderListScreen = () => {
         navigation.navigate('Order', { id: item.id });
     };
 
+    const loading = orderLoading || sellersLoading || false;
     const onPrevious = () => setPage((o) => Math.max(1, o - 1));
     const onNext = () => setPage((o) => Math.min(Math.ceil(total / limit), o + 1));
 
@@ -82,6 +85,9 @@ export const OrderListScreen = () => {
         { key: 'status', title: 'Status', flex: 1 },
         { key: 'invoiceNumber', title: 'Faktura', flex: 1 },
     ];
+
+    if (error)
+        return <ErrorScreen title="Błąd ładowania danych" message={error} onRetry={refetch} />;
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -126,26 +132,44 @@ export const OrderListScreen = () => {
                 }}
             />
 
-            <AppTable
-                columns={columns}
-                data={tableData}
-                onRowPress={handleRowPress}
-                actions={(row) => [
-                    { icon: IconName.document, onPress: () => {}, tooltip: 'Faktura' },
-                    { icon: IconName.edit, onPress: () => {}, tooltip: 'Edytuj' },
-                    { icon: IconName.delete, onPress: () => {}, iconColor: 'red', tooltip: 'Usuń' },
-                ]}
-            />
-
-            {orders.length > 0 && !loading && (
-                <View style={styles.paginationRow}>
-                    <AppPaginationControls
-                        page={page}
-                        totalPages={Math.max(1, Math.ceil(total / limit))}
-                        onPrevious={onPrevious}
-                        onNext={onNext}
-                    />
+            {loading ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" />
                 </View>
+            ) : (
+                <>
+                    <AppTable
+                        actions={(item) => [
+                            { icon: IconName.document, onPress: () => {}, tooltip: 'Faktura' },
+                            {
+                                icon: IconName.edit,
+                                onPress: () => {
+                                    navigation.navigate('Order', { id: item.id });
+                                },
+                                tooltip: 'Edytuj',
+                            },
+                            {
+                                icon: IconName.delete,
+                                onPress: () => {},
+                                iconColor: 'red',
+                                tooltip: 'Usuń',
+                            },
+                        ]}
+                        columns={columns}
+                        data={tableData}
+                        onRowPress={handleRowPress}
+                    />
+                    {orders.length > 0 && (
+                        <View style={styles.paginationRow}>
+                            <AppPaginationControls
+                                page={page}
+                                totalPages={Math.max(1, Math.ceil(total / limit))}
+                                onPrevious={onPrevious}
+                                onNext={onNext}
+                            />
+                        </View>
+                    )}
+                </>
             )}
         </ScrollView>
     );
@@ -153,6 +177,11 @@ export const OrderListScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     contentContainer: { paddingBottom: metrics.spacing.xl },
     headerRow: {
         flexDirection: 'row',

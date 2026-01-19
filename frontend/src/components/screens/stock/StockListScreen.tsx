@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table/AppTable';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
@@ -7,7 +7,6 @@ import { metrics } from '@/theme/metrics';
 import { AppStockBar } from '@/components/common/AppStockBar';
 import { StockListFilters } from './StockListFilters';
 import { ErrorScreen } from '../ErrorScreen';
-import { LoadingScreen } from '../LoadingScreen';
 import { useProducts, useStockProductTableData } from '@/composables/product/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 import { StockProductTableData } from '@/types/domain';
@@ -101,6 +100,11 @@ export const StockListScreen = () => {
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
 
     const styles = StyleSheet.create({
+        center: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
         container: { flex: 1 },
         pageTitle: { flexShrink: 1, marginVertical: 20 },
         paginationRow: { marginTop: metrics.spacing.sm, width: '100%', alignItems: 'center' },
@@ -131,19 +135,23 @@ export const StockListScreen = () => {
             />
 
             {loading ? (
-                <LoadingScreen />
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" />
+                </View>
             ) : (
                 <>
                     <AppTable columns={columns} data={tableData} onRowPress={handleRowPress} />
 
-                    <View style={styles.paginationRow}>
-                        <AppPaginationControls
-                            page={page}
-                            totalPages={Math.max(1, Math.ceil(total / limit))}
-                            onPrevious={onPrevious}
-                            onNext={onNext}
-                        />
-                    </View>
+                    {products.length > 0 && (
+                        <View style={styles.paginationRow}>
+                            <AppPaginationControls
+                                page={page}
+                                totalPages={Math.max(1, Math.ceil(total / limit))}
+                                onPrevious={onPrevious}
+                                onNext={onNext}
+                            />
+                        </View>
+                    )}
                 </>
             )}
         </ScrollView>

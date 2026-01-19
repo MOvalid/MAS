@@ -2,9 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
-
 import { AppText, AppCard, AppButton, AppTextInput } from '@/components/common';
-
 import { metrics } from '@/theme/metrics';
 import { AppImageUpload } from '@/components/common/AppImageUpload';
 import { AppDropdown, DropdownOption } from '@/components/common/AppDropdown';
@@ -288,7 +286,7 @@ export const ProductAddEditScreen = () => {
                         />
                     </View>
 
-                    {/* <View style={styles.inputRow}>
+                    <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             SKU *
                         </AppText>
@@ -299,7 +297,7 @@ export const ProductAddEditScreen = () => {
                             placeholder="Wprowadź SKU"
                             errorMessage={errors.sku}
                         />
-                    </View> */}
+                    </View>
 
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>

@@ -66,7 +66,7 @@ export const mapCustomerToTableRow = (
     limit: number = 10
 ): CustomerTableRow => {
     const rowNumber = (page - 1) * limit + index + 1;
-    const { city, street, number } = customer.address;
+    const { city, street, houseNumber: number } = customer.address;
     const formattedAddress = `${city}, ${street} ${number}`;
 
     return {
