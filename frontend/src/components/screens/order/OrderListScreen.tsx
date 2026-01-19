@@ -26,30 +26,29 @@ export const OrderListScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const { data: sellers, loading: sellersLoading } = useSellers();
-    const {
-        data: orders,
-        page,
-        error,
-        refetch,
-        setPage,
-        total,
-        limit,
-        loading: orderLoading,
-        setFilters,
-    } = useOrders2(true, { search, sorting: sort });
 
-    const debouncedSearch = useDebounce(search, 500);
-
-    useEffect(() => {
-        setFilters({
-            search: debouncedSearch.trim() || undefined,
+    const filters = useMemo(
+        () => ({
+            search: search.trim() || undefined,
             sorting: sort,
             status: status !== OrderStatus.ALL ? status : undefined,
             sellerId: seller !== 'ALL' ? seller : undefined,
             dateFrom: startDate || undefined,
             dateTo: endDate || undefined,
-        });
-    }, [debouncedSearch, sort, seller, status, startDate, endDate]);
+        }),
+        [search, sort, status, seller, startDate, endDate]
+    );
+
+    const {
+        data: orders,
+        page,
+        total,
+        limit,
+        loading: orderLoading,
+        setPage,
+        refetch,
+        error,
+    } = useOrders2(true, filters);
 
     const tableData = useOrderTableData(orders, page, limit);
 
