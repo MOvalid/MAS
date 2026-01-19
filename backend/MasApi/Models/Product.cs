@@ -44,6 +44,15 @@ namespace MasApi.Models
             }
         }
 
+        [NotMapped]
+        public decimal GrossPrice
+        {
+            get
+            {
+                return Math.Ceiling(NetPrice * (1 + VatRate) * 100) / 100;
+            }
+        }
+
         public Guid? CategoryId { get; set; }
         public Category? Category { get; set; }
     }

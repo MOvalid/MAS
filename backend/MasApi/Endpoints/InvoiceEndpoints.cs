@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using MasApi.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using System.Linq.Expressions;
 
 namespace MasApi.Endpoints;
 
@@ -49,7 +50,7 @@ public static class InvoiceEndpoints
             company = await dbContext.Companies.FindAsync(invoiceRequest.CompanyId.Value);
             if (company == null) return TypedResults.BadRequest("Company does not exist.");
         }
-        
+
         int todayInvoiceCount = await dbContext.Invoices
             .CountAsync(i => i.IssuedAt.Date == DateTime.UtcNow.Date) + 1;
 
@@ -92,15 +93,67 @@ public static class InvoiceEndpoints
         return TypedResults.Ok(invoiceDto);
     }
 
-    private static async Task<Results<Ok<List<InvoiceListDto>>, NotFound>> GetInvoices(Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<PagedResults<InvoiceListDto>>, NotFound>> GetInvoices(string? search, string? sorting, int? page, int? limit, string? status, string? startDate, string? endDate, string? paymentStartDate, string? paymentEndDate, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var invoices = await dbContext.Invoices
+        IQueryable<Invoice> invoicesQuery = dbContext.Invoices;
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            invoicesQuery = invoicesQuery.Where(i => i.InvoiceNumber.ToLower().Contains(search.ToLower()));
+        }
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            invoicesQuery = invoicesQuery.Where(i => i.Status.ToString().ToLower().Equals(status.ToLower()));
+        }
+
+        if (DateTime.TryParse(startDate, out var parsedStartDate))
+        {
+            invoicesQuery = invoicesQuery.Where(i => i.IssuedAt.Date >= parsedStartDate.Date);
+        }
+        if (DateTime.TryParse(endDate, out var parsedEndDate))
+        {
+            invoicesQuery = invoicesQuery.Where(i => i.IssuedAt.Date <= parsedEndDate.Date);
+        }
+
+        if (DateTime.TryParse(paymentStartDate, out var parsedPaymentStartDate))
+        {
+            invoicesQuery = invoicesQuery.Where(i => i.PaymentDueDate.Date >= parsedPaymentStartDate.Date);
+        }
+        if (DateTime.TryParse(paymentEndDate, out var parsedPaymentEndDate))
+        {
+            invoicesQuery = invoicesQuery.Where(i => i.PaymentDueDate.Date <= parsedPaymentEndDate.Date);
+        }
+
+        var sortingTokens = sorting?.Split('_');
+        var sortingField = sortingTokens?.Length > 0 ? sortingTokens[0] : string.Empty;
+        var sortingOrder = sortingTokens?.Length > 1 ? sortingTokens[1] : null;
+
+        if (sortingOrder != null && sortingOrder.Contains("desc", StringComparison.CurrentCultureIgnoreCase))
+        {
+            invoicesQuery = invoicesQuery.OrderByDescending(GetSortingFieldSelector(sortingField));
+        }
+        else if (sortingField != null)
+        {
+            invoicesQuery = invoicesQuery.OrderBy(GetSortingFieldSelector(sortingField));
+        }
+
+        limit ??= 10;
+        int totalCount = await invoicesQuery.CountAsync();
+        var invoices = await invoicesQuery
+            .Skip(((page ?? 1) - 1) * limit.Value)
             .Include(i => i.Order)
                 .ThenInclude(o => o!.OrderProducts)
             .Select(invoice => mapper.Map<InvoiceListDto>(invoice))
             .ToListAsync();
 
-        return TypedResults.Ok(invoices);
+        return TypedResults.Ok(new PagedResults<InvoiceListDto>
+        {
+            Items = invoices,
+            TotalCount = totalCount,
+            Page = page ?? 1,
+            Limit = limit.Value
+        });
     }
 
     private static async Task<Results<Ok<InvoiceDetailsDto>, NotFound, BadRequest<string>>> UpdateInvoice(Guid id, InvoiceUpdateDto invoiceRequest, Data.MasDbContext dbContext, IMapper mapper)
@@ -138,5 +191,25 @@ public static class InvoiceEndpoints
         await dbContext.SaveChangesAsync();
 
         return TypedResults.NoContent();
+    }
+
+    private static Expression<Func<Invoice, object>> GetSortingFieldSelector(string sortingField)
+    {
+        Enum.TryParse<InvoiceSortingField>(sortingField, true, out var parsedField);
+
+        return parsedField switch
+        {
+            InvoiceSortingField.Issued => invoice => invoice.IssuedAt,
+            InvoiceSortingField.Payment => invoice => invoice.PaymentDueDate,
+            InvoiceSortingField.Amount => invoice => invoice.Order!.OrderProducts!.Sum(op => op.Quantity * op.UnitNetPrice * (1 + op.VatRate)),
+            _ => invoice => invoice.IssuedAt
+        };
+    }
+
+    private enum InvoiceSortingField
+    {
+        Issued,
+        Payment,
+        Amount
     }
 }

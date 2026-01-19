@@ -1,9 +1,9 @@
 using MasApi.Models;
 using MasApi.Models.Dtos;
 using Microsoft.AspNetCore.Http.HttpResults;
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using System.Linq.Expressions;
 
 namespace MasApi.Endpoints;
 
@@ -119,9 +119,55 @@ public static class OrderEndpoints
         return TypedResults.Ok(orderDto);
     }
 
-    private static async Task<Results<Ok<List<OrderListDto>>, NotFound>> GetOrders(Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<PagedResults<OrderListDto>>, NotFound>> GetOrders(string? search, string? sorting, int? page, int? limit, string? status, Guid? sellerId, string? dateFrom, string? dateTo, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var orders = await dbContext.Orders
+        IQueryable<Order> ordersQuery = dbContext.Orders;
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            ordersQuery = ordersQuery
+            .Where(
+                o => o.Customer!.LastName.ToLower().Contains(search.ToLower())
+                || o.Invoice!.InvoiceNumber.ToLower().Contains(search.ToLower())
+            );
+        }
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            ordersQuery = ordersQuery.Where(o => o.Status.ToString().ToLower().Equals(status.ToLower()));
+        }
+
+        if (DateTime.TryParse(dateFrom, out var parsedDateFrom))
+        {
+            ordersQuery = ordersQuery.Where(o => o.CreatedAt.Date >= parsedDateFrom.Date);
+        }
+        if (DateTime.TryParse(dateTo, out var parsedDateTo))
+        {
+            ordersQuery = ordersQuery.Where(o => o.CreatedAt.Date <= parsedDateTo.Date);
+        }
+
+        if (sellerId != null)
+        {
+            ordersQuery = ordersQuery.Where(o => o.SellerId == sellerId);
+        }
+
+        var sortingTokens = sorting?.Split('_');
+        var sortingField = sortingTokens?.Length > 0 ? sortingTokens[0] : string.Empty;
+        var sortingOrder = sortingTokens?.Length > 1 ? sortingTokens[1] : null;
+
+        if (sortingOrder != null && sortingOrder.Contains("desc", StringComparison.CurrentCultureIgnoreCase))
+        {
+            ordersQuery = ordersQuery.OrderByDescending(GetSortingFieldSelector(sortingField));
+        }
+        else if (sortingField != null)
+        {
+            ordersQuery = ordersQuery.OrderBy(GetSortingFieldSelector(sortingField));
+        }
+
+        limit ??= 10;
+        int totalCount = await ordersQuery.CountAsync();
+        var orders = await ordersQuery
+            .Skip(((page ?? 1) - 1) * limit.Value)
             .Include(o => o.OrderProducts)
             .Include(o => o.Customer)
             .Include(o => o.Seller)
@@ -131,7 +177,13 @@ public static class OrderEndpoints
             .Select(order => mapper.Map<OrderListDto>(order))
             .ToListAsync();
 
-        return TypedResults.Ok(orders);
+        return TypedResults.Ok(new PagedResults<OrderListDto>
+        {
+            Items = orders,
+            TotalCount = totalCount,
+            Page = page ?? 1,
+            Limit = limit.Value
+        });
     }
 
     private static async Task<Results<Ok<OrderDetailsDto>, NotFound, BadRequest<string>>> UpdateOrder(Guid id, OrderUpdateDto orderRequest, Data.MasDbContext dbContext, IMapper mapper)
@@ -173,5 +225,23 @@ public static class OrderEndpoints
         await dbContext.SaveChangesAsync();
 
         return TypedResults.NoContent();
+    }
+
+    private static Expression<Func<Order, object>> GetSortingFieldSelector(string sortingField)
+    {
+        Enum.TryParse<OrderSortingField>(sortingField, true, out var parsedField);
+
+        return parsedField switch
+        {
+            OrderSortingField.Client => order => order.Customer!.LastName,
+            OrderSortingField.Created => order => order.CreatedAt,
+            _ => order => order.CreatedAt
+        };
+    }
+
+    private enum OrderSortingField
+    {
+        Client,
+        Created
     }
 }

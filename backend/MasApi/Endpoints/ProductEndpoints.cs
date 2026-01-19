@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace MasApi.Endpoints;
 
@@ -44,6 +43,8 @@ public static class ProductEndpoints
 
         var product = mapper.Map<Product>(productRequest);
 
+        product.LastRestockedAt = DateTime.UtcNow;
+
         var (isValid, validationResults) = product.Validate();
         if (!isValid)
         {
@@ -72,29 +73,38 @@ public static class ProductEndpoints
         return TypedResults.Ok(productDto);
     }
 
-    private static async Task<Results<Ok<PagedResults<ProductListDto>>, NotFound>> GetProducts(string? search, string? sortingField, string? sortingOrder, int? pageNumber, int? itemsPerPage, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<PagedResults<ProductListDto>>, NotFound>> GetProducts(string? search, string? sorting, int? page, int? limit, Guid? categoryId, Data.MasDbContext dbContext, IMapper mapper)
     {
         IQueryable<Product> productsQuery = dbContext.Products;
 
         if (!string.IsNullOrEmpty(search))
         {
-            productsQuery = productsQuery.Where(p => p.Name.ToLower().Contains(search.ToLower()) || p.Sku.ToLower().Contains(search.ToLower()));
+            productsQuery = productsQuery.Where(p => p.Name.ToLower().Contains(search.ToLower()));
         }
+
+        if (categoryId != null)
+        {
+            productsQuery = productsQuery.Where(p => p.CategoryId == categoryId);
+        }
+
+        var parts = sorting?.Split('_');
+        var sortingField = parts?.Length > 0 ? parts[0] : string.Empty;
+        var sortingOrder = parts?.Length > 1 ? parts[1] : null;
 
         if (sortingOrder != null && sortingOrder.Contains("desc", StringComparison.CurrentCultureIgnoreCase))
         {
             productsQuery = productsQuery.OrderByDescending(GetSortingFieldSelector(sortingField));
         }
-        else
+        else if (sortingField != null)
         {
             productsQuery = productsQuery.OrderBy(GetSortingFieldSelector(sortingField));
         }
 
-        itemsPerPage ??= 10;
+        limit ??= 10;
         int totalCount = await productsQuery.CountAsync();
         var products = await productsQuery
-            .Skip(((pageNumber ?? 1) - 1) * itemsPerPage.Value)
-            .Take(itemsPerPage.Value)
+            .Skip(((page ?? 1) - 1) * limit.Value)
+            .Take(limit.Value)
             .Include(p => p.Manufacturer)
             .Include(p => p.Category)
             .Select(p => mapper.Map<ProductListDto>(p))
@@ -104,8 +114,8 @@ public static class ProductEndpoints
         {
             Items = products,
             TotalCount = totalCount,
-            PageNumber = pageNumber ?? 1,
-            ItemsPerPage = itemsPerPage.Value
+            Page = page ?? 1,
+            Limit = limit.Value
         });
     }
 
@@ -164,13 +174,25 @@ public static class ProductEndpoints
         return TypedResults.NoContent();
     }
 
-    private static Expression<Func<Product, object>> GetSortingFieldSelector(string? sortingField)
+    private static Expression<Func<Product, object>> GetSortingFieldSelector(string sortingField)
     {
-        return sortingField?.ToLower() switch
+        Enum.TryParse<ProductSortingField>(sortingField, true, out var parsedField);
+
+        return parsedField switch
         {
-            "name" => product => product.Name,
-            "stock" => product => product.StockQuantity,
+            ProductSortingField.Name => product => product.Name,
+            ProductSortingField.Stock => product => product.StockQuantity,
+            ProductSortingField.Price => product => product.NetPrice * (1 + product.VatRate),
+            ProductSortingField.Manufacturer => product => product.Manufacturer!.Name,
             _ => product => product.Name
         };
+    }
+
+    private enum ProductSortingField
+    {
+        Name,
+        Manufacturer,
+        Price,
+        Stock
     }
 }

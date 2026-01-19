@@ -64,13 +64,42 @@ public static class CustomerEndpoints
         return TypedResults.Ok(customerDetailsDto);
     }
 
-    private static async Task<Results<Ok<List<CustomerListDto>>, NotFound>> GetCustomers(Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<PagedResults<CustomerListDto>>, NotFound>> GetCustomers(string? search, string? sorting, int? page, int? limit,Data.MasDbContext dbContext, IMapper mapper)
     {
-        var customers = await dbContext.Customers
-            .Select(s => mapper.Map<CustomerListDto>(s))
+        IQueryable<Customer> customersQuery = dbContext.Customers;
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            customersQuery = customersQuery.Where(c => (c.FirstName + " " + c.LastName).ToLower().Contains(search.ToLower()));
+        }
+
+        var sortingTokens = sorting?.Split('_');
+        var sortingOrder = sortingTokens?.Length == 2 ? sortingTokens[1].ToLower() : null;
+
+        if (sortingOrder != null && sortingOrder.Contains("desc", StringComparison.CurrentCultureIgnoreCase))
+        {
+            customersQuery = customersQuery.OrderByDescending(c => c.LastName + " " + c.FirstName);
+        }
+        else if (sortingTokens != null && sortingTokens.Length > 0)
+        {
+            customersQuery = customersQuery.OrderBy(c => c.LastName + " " + c.FirstName);
+        }
+
+        limit ??= 10;
+        int totalCount = await customersQuery.CountAsync();
+        var customers = await customersQuery
+            .Skip(((page ?? 1) - 1) * limit.Value)
+            .Take(limit.Value)
+            .Select(c => mapper.Map<CustomerListDto>(c))
             .ToListAsync();
 
-        return TypedResults.Ok(customers);
+        return TypedResults.Ok(new PagedResults<CustomerListDto>
+        {
+            Items = customers,
+            TotalCount = totalCount,
+            Page = page ?? 1,
+            Limit = limit.Value
+        });
     }
 
     private static async Task<Results<Ok<CustomerDetailsDto>, NotFound, BadRequest<string>>> UpdateCustomer(Guid id, CustomerCreateDto customerRequest, Data.MasDbContext dbContext, IMapper mapper)
