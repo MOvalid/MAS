@@ -7,6 +7,7 @@ public class ProductCreateDto
     public required string Sku { get; set; }
     public required Guid ManufacturerId { get; set; }
     public required decimal NetPrice { get; set; }
+    public required decimal GrossPrice { get; set; }
     public required int VatRate { get; set; }
     public required int StockQuantity { get; set; }
     public required DimensionsDto Dimensions { get; set; }
@@ -21,6 +22,7 @@ public class ProductDetailsDto
     public required string Sku { get; set; }
     public required CompanyListDto Manufacturer { get; set; }
     public required decimal NetPrice { get; set; }
+    public required decimal GrossPrice { get; set; }
     public required int VatRate { get; set; }
     public required int StockQuantity { get; set; }
     public required string StockLevel { get; set; }
@@ -37,6 +39,7 @@ public class ProductListDto
     public required string Sku { get; set; }
     public required CompanyListDto Manufacturer { get; set; }
     public required decimal NetPrice { get; set; }
+    public required decimal GrossPrice { get; set; }
     public required int VatRate { get; set; }
     public required int StockQuantity { get; set; }
     public required string StockLevel { get; set; }
