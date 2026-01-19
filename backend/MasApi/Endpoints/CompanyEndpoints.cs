@@ -61,13 +61,42 @@ public static class CompanyEndpoints
         return TypedResults.Ok(companyDto);
     }
 
-    private static async Task<Results<Ok<List<CompanyListDto>>, NotFound>> GetCompanies(Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<PagedResults<CompanyListDto>>, NotFound>> GetCompanies(string? search, string? sorting, int? page, int? limit, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var companyDtos = await dbContext.Companies
-        .Select(company => mapper.Map<CompanyListDto>(company))
-        .ToListAsync();
+        IQueryable<Company> companiesQuery = dbContext.Companies;
 
-        return TypedResults.Ok(companyDtos);
+        if (!string.IsNullOrEmpty(search))
+        {
+            companiesQuery = companiesQuery.Where(c => c.Name.ToLower().Contains(search.ToLower()));
+        }
+
+        var sortingTokens = sorting?.Split('_');
+        var sortingOrder = sortingTokens?.Length == 2 ? sortingTokens[1].ToLower() : null;
+
+        if (sortingOrder != null && sortingOrder.Contains("desc", StringComparison.CurrentCultureIgnoreCase))
+        {
+            companiesQuery = companiesQuery.OrderByDescending(c => c.Name);
+        }
+        else if (sortingTokens != null && sortingTokens.Length > 0)
+        {
+            companiesQuery = companiesQuery.OrderBy(c => c.Name);
+        }
+
+        limit ??= 10;
+        int totalCount = await companiesQuery.CountAsync();
+        var companies = await companiesQuery
+            .Skip(((page ?? 1) - 1) * limit.Value)
+            .Take(limit.Value)
+            .Select(c => mapper.Map<CompanyListDto>(c))
+            .ToListAsync();
+
+        return TypedResults.Ok(new PagedResults<CompanyListDto>
+        {
+            Items = companies,
+            TotalCount = totalCount,
+            Page = page ?? 1,
+            Limit = limit.Value
+        });
     }
 
     private static async Task<Results<Ok<CompanyDetailsDto>, NotFound, BadRequest<string>>> UpdateCompany(Guid id, CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
