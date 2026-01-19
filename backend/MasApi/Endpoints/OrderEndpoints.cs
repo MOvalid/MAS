@@ -139,11 +139,11 @@ public static class OrderEndpoints
 
         if (DateTime.TryParse(dateFrom, out var parsedDateFrom))
         {
-            ordersQuery = ordersQuery.Where(o => o.CreatedAt >= parsedDateFrom);
+            ordersQuery = ordersQuery.Where(o => o.CreatedAt.Date >= parsedDateFrom.Date);
         }
         if (DateTime.TryParse(dateTo, out var parsedDateTo))
         {
-            ordersQuery = ordersQuery.Where(o => o.CreatedAt <= parsedDateTo);
+            ordersQuery = ordersQuery.Where(o => o.CreatedAt.Date <= parsedDateTo.Date);
         }
 
         if (sellerId != null)
