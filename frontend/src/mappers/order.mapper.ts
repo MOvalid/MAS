@@ -8,7 +8,6 @@ import {
     OrderTableData,
 } from '@/types/domain';
 import { OrderDto1, OrderDto2, OrderItemDto, OrderSummaryDto } from '@/types/dto';
-import { formatPrice } from '@/utils/price-utils';
 import { mapPaymentDtoToDomain } from './payment.mapper';
 import { mapCustomerDtoToDomain } from './customer.mapper';
 import { mapSellerDtoToDomain } from './seller.mapper';
@@ -28,22 +27,6 @@ export const mapOrderItemDtoToDomain = (dto: OrderItemDto): OrderItem => {
         totalNetPrice: dto.totalNetPrice,
         totalVatAmount: dto.totalVatAmount,
         totalGrossPrice: dto.totalGrossPrice,
-    };
-};
-
-export const mapOrderItemToTableData = (item: OrderItem, lp: string = ''): OrderItemTableData => {
-    const formatVatRate = (rate: number) => `${Math.round(rate * 100)}%`;
-    return {
-        lp,
-        product: item.product.name,
-        quantity: item.quantity,
-        unit: 'szt.',
-        unitPrice: formatPrice(item.unitNetPrice),
-        netPrice: formatPrice(item.totalNetPrice),
-        vat: formatPrice(item.totalVatAmount),
-        vatRate: formatVatRate(item.vatRate),
-        grossPrice: formatPrice(item.totalGrossPrice),
-        currency: item.currency,
     };
 };
 
@@ -125,15 +108,27 @@ export const mapOrderSummaryDtoToDomain = (dto: OrderSummaryDto): OrderSummary =
         totalNetPrice: dto.totalNetPrice,
         totalVatAmount: dto.totalVatAmount,
         totalGrossPrice: dto.totalGrossPrice,
-
         customer: mapCustomerDtoToDomain(dto.customer),
         seller: mapSellerDtoToDomain(dto.seller),
-
         delivery: dto.delivery ? mapDeliveryDtoToDomain(dto.delivery) : null,
         invoice: dto.invoice ? mapInvoiceDtoToDomain(dto.invoice) : null,
-
         orderProducts: dto.orderProducts ? dto.orderProducts.map(mapOrderItemDtoToDomain) : null,
-
         payments: dto.payments ? dto.payments.map(mapPaymentDtoToDomain) : null,
+    };
+};
+
+export const mapOrderItemToTableData = (item: OrderItem, index: number = 0): OrderItemTableData => {
+    return {
+        lp: (index + 1).toString(),
+        _index: index,
+        product: item.product.name,
+        quantity: item.quantity,
+        unit: 'szt.',
+        unitPrice: item.unitNetPrice.toFixed(2),
+        netPrice: item.totalNetPrice.toFixed(2),
+        vatAmount: item.totalVatAmount.toFixed(2),
+        grossPrice: item.totalGrossPrice.toFixed(2),
+        vatRate: `${item.vatRate}%`,
+        currency: item.currency,
     };
 };

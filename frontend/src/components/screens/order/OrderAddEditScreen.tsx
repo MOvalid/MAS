@@ -4,7 +4,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { AppText, AppCard, AppButton, IconName } from '@/components/common';
 import { AppAutocomplete } from '@/components/common/AppAutocomplete';
-import { OrderProductInputCard } from '@/components/common/order/OrderProductInputCard';
+import {
+    OrderProductInputCard,
+    ProductOption,
+} from '@/components/common/order/OrderProductInputCard';
 import { OrderProductList } from '@/components/common/order/OrderProductList';
 import { AppModal } from '@/components/common/AppModal';
 import { metrics } from '@/theme/metrics';
@@ -125,8 +128,8 @@ export const OrderAddEditScreen = () => {
         [sellersData]
     );
 
-    const productOptions = useMemo(
-        () => productsData.map((s) => ({ label: s.name, value: s.id })),
+    const productOptions: ProductOption[] = useMemo(
+        () => productsData.map((s) => ({ label: s.name, value: s.id, unitPrice: s.netPrice })),
         [productsData]
     );
 
@@ -187,8 +190,12 @@ export const OrderAddEditScreen = () => {
             setOrderProducts((prev) => [...prev, newItem]);
         }
     };
-    const handleRemoveProduct = (index: number) =>
-        setOrderProducts((prev) => prev.filter((_, i) => i !== index));
+    const handleRemoveProduct = (index: number) => {
+        setOrderProducts((prev) => {
+            const newProducts = prev.filter((_, i) => i !== index);
+            return newProducts;
+        });
+    };
 
     const styles = StyleSheet.create({
         container: { flex: 1, padding: metrics.spacing.lg, gap: metrics.spacing.lg },
@@ -264,7 +271,12 @@ export const OrderAddEditScreen = () => {
 
                         <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
                             <View style={styles.buttonWrapper}>
-                                <AppButton icon={IconName.client} onPress={() => {}}>
+                                <AppButton
+                                    icon={IconName.client}
+                                    onPress={() => {
+                                        navigation.navigate('Customer');
+                                    }}
+                                >
                                     Przejdź do klientów
                                 </AppButton>
                             </View>
@@ -292,7 +304,12 @@ export const OrderAddEditScreen = () => {
 
                         <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
                             <View style={styles.buttonWrapper}>
-                                <AppButton icon={IconName.seller} onPress={() => {}}>
+                                <AppButton
+                                    icon={IconName.seller}
+                                    onPress={() => {
+                                        navigation.navigate('Seller');
+                                    }}
+                                >
                                     Przejdź do sprzedawców
                                 </AppButton>
                             </View>
@@ -310,7 +327,6 @@ export const OrderAddEditScreen = () => {
             />
             <OrderProductList products={orderProducts} onRemove={handleRemoveProduct} />
 
-            {/* Dostawa */}
             <AppCard style={styles.card}>
                 <AppText variant="titleLarge" style={styles.cardTitle}>
                     Dostawa
@@ -326,7 +342,6 @@ export const OrderAddEditScreen = () => {
                 )}
             </AppCard>
 
-            {/* Płatności */}
             <AppCard style={styles.card}>
                 <AppText variant="titleLarge" style={styles.cardTitle}>
                     Płatności
@@ -342,7 +357,6 @@ export const OrderAddEditScreen = () => {
                 )}
             </AppCard>
 
-            {/* Akcje */}
             <View style={styles.actionRow}>
                 <AppButton
                     mode="outlined"
@@ -361,7 +375,6 @@ export const OrderAddEditScreen = () => {
                 </AppButton>
             </View>
 
-            {/* Modale */}
             <AppModal visible={paymentModalVisible} onClose={() => setPaymentModalVisible(false)}>
                 <AddPaymentForm onClose={() => setPaymentModalVisible(false)} />
             </AppModal>

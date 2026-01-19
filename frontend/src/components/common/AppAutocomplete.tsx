@@ -48,6 +48,9 @@ export function AppAutocomplete<T>({
     }, [value]);
 
     const getFilteredOptions = (opts: T[], input: string, active: boolean) => {
+        if (onInputChange) {
+            return opts;
+        }
         if (!active || !input) return opts;
         return opts.filter((o) => getOptionLabel(o).toLowerCase().includes(input.toLowerCase()));
     };
@@ -109,7 +112,9 @@ export function AppAutocomplete<T>({
                             setFilterActive(true);
                             debouncedSearch(text);
                         },
-                        onFocus: () => setFilterActive(false),
+                        onFocus: () => {
+                            setFilterActive(true);
+                        },
                         style: styles.input,
                         outlineColor: 'transparent',
                         activeOutlineColor: 'transparent',

@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { AppCard, AppText, IconName } from '@/components/common';
 import { AppTable } from '@/components/common/table/AppTable';
-import { OrderItem, OrderItemDetails } from '@/types/domain/order-item';
+import { OrderItem, OrderItemTableData } from '@/types/domain/order-item';
 import { TableColumn } from '../table';
-import { calculateVat, formatPrice } from '@/utils/price-utils';
-import { Currency } from '@/types/common';
 import { metrics } from '@/theme/metrics';
+import { mapOrderItemToTableData } from '@/mappers/order.mapper';
 
 type Props = {
     products: OrderItem[];
@@ -14,28 +13,6 @@ type Props = {
 };
 
 export const OrderProductList: React.FC<Props> = ({ products, onChange, onRemove }) => {
-    const [items, setItems] = useState<OrderItem[]>(products);
-
-    useEffect(() => {
-        setItems(products);
-    }, [products]);
-
-    const getDetails = (item: OrderItem): OrderItemDetails => {
-        const netPrice = item.quantity * item.unitPrice;
-        const vatRate = 23;
-        const vatAmount = calculateVat(netPrice, vatRate);
-        const grossPrice = netPrice + vatAmount;
-
-        return {
-            ...item,
-            netPrice,
-            vatAmount,
-            vatRate,
-            grossPrice,
-            currency: Currency.PLN,
-        };
-    };
-
     const styles = {
         noData: {
             textAlign: 'center',
@@ -43,7 +20,7 @@ export const OrderProductList: React.FC<Props> = ({ products, onChange, onRemove
         },
     } as const;
 
-    if (items.length === 0) {
+    if (products.length === 0) {
         return (
             <AppCard>
                 <AppText variant="bodyLarge" style={styles.noData}>
@@ -53,7 +30,7 @@ export const OrderProductList: React.FC<Props> = ({ products, onChange, onRemove
         );
     }
 
-    const columns: TableColumn[] = [
+    const columns: TableColumn<OrderItemTableData>[] = [
         { key: 'product', title: 'Produkt', flex: 2, align: 'left' },
         { key: 'quantity', title: 'Ilość', flex: 1, align: 'center' },
         { key: 'unitPrice', title: 'Cena jedn.', flex: 1, align: 'center' },
@@ -64,25 +41,14 @@ export const OrderProductList: React.FC<Props> = ({ products, onChange, onRemove
         { key: 'currency', title: 'Waluta', flex: 1, align: 'center' },
     ];
 
-    const tableData = items.map((item, index) => {
-        const details = getDetails(item);
-        return {
-            product: details.productName,
-            quantity: details.quantity,
-            unitPrice: formatPrice(details.unitPrice),
-            netPrice: formatPrice(details.netPrice),
-            vatRate: details.vatRate,
-            vatAmount: formatPrice(details.vatAmount),
-            grossPrice: formatPrice(details.grossPrice),
-            currency: details.currency,
-            _index: index,
-        };
-    });
+    const tableData = products.map((item, index) => mapOrderItemToTableData(item, index));
 
     const actions = (row: (typeof tableData)[0]) => [
         {
             icon: IconName.delete,
-            onPress: () => onRemove?.(row._index),
+            onPress: () => {
+                onRemove?.(row._index);
+            },
         },
     ];
 

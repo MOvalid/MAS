@@ -5,8 +5,13 @@ import {
     mapProductToStockTableData,
     mapProductToTableData,
 } from '@/mappers/product.mapper';
-import { API_PRODUCTS, API_STOCK } from '@/constants/Endpoints';
-import { Product, ProductDetails, ProductTableData, StockProductTableData } from '@/types/domain/product';
+import { API_PRODUCTS } from '@/constants/Endpoints';
+import {
+    Product,
+    ProductDetails,
+    ProductTableData,
+    StockProductTableData,
+} from '@/types/domain/product';
 import {
     CreateProductPayload,
     ProductDetailsDto,
@@ -20,7 +25,6 @@ import { useGet } from '../common/useGet';
 import { usePaginated } from '../pagination/usePagination';
 import { ProductSort } from '@/types/common';
 import { useGetList } from '../common/useGetList';
-import { useDebounce } from '@/hooks/useDebounce';
 
 export const useCreateProduct = (
     onSuccess?: (productDetails: ProductDetails) => void,
@@ -110,7 +114,6 @@ export const useProductTableData = (
         return products.map((dto, index) => mapProductToTableData(dto, index, page, limit));
     }, [products, page, limit]);
 };
-
 
 export const useStockProductTableData = (
     products: Product[],

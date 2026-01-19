@@ -9,10 +9,10 @@ import { useTheme } from 'react-native-paper';
 import { AppAutocomplete } from '../AppAutocomplete';
 import { CreateOrderItem } from '@/types/dto';
 
-type ProductOption = {
+export type ProductOption = {
     label: string;
     value: string;
-    unitPrice?: number;
+    unitPrice: number;
 };
 
 type Props = {
@@ -39,7 +39,7 @@ export const OrderProductInputCard: React.FC<Props> = ({
 
     useEffect(() => {
         if (selectedProduct) {
-            setUnitPrice(selectedProduct.unitPrice ?? 0);
+            setUnitPrice(selectedProduct.unitPrice);
         }
     }, [selectedProduct]);
 
