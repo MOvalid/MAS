@@ -64,7 +64,7 @@ public static class CustomerEndpoints
         return TypedResults.Ok(customerDetailsDto);
     }
 
-    private static async Task<Results<Ok<PagedResults<CustomerListDto>>, NotFound>> GetCustomers(string? search, string? sorting, int? page, int? limit,Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<PagedResults<CustomerListDto>>, NotFound>> GetCustomers(string? search, string? sorting, int? page, int? limit, Data.MasDbContext dbContext, IMapper mapper)
     {
         IQueryable<Customer> customersQuery = dbContext.Customers;
 
@@ -80,7 +80,7 @@ public static class CustomerEndpoints
         {
             customersQuery = customersQuery.OrderByDescending(c => c.LastName + " " + c.FirstName);
         }
-        else if (sortingTokens != null && sortingTokens.Length > 0)
+        else
         {
             customersQuery = customersQuery.OrderBy(c => c.LastName + " " + c.FirstName);
         }

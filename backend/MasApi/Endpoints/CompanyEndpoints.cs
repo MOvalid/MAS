@@ -77,7 +77,7 @@ public static class CompanyEndpoints
         {
             companiesQuery = companiesQuery.OrderByDescending(c => c.Name);
         }
-        else if (sortingTokens != null && sortingTokens.Length > 0)
+        else
         {
             companiesQuery = companiesQuery.OrderBy(c => c.Name);
         }
@@ -128,7 +128,7 @@ public static class CompanyEndpoints
         var company = await dbContext.Companies
             .Include(c => c.Invoices)
             .FirstOrDefaultAsync(c => c.Id == id);
-        
+
         var productsCount = await dbContext.Products
             .Where(p => p.ManufacturerId == id)
             .CountAsync();

@@ -159,7 +159,7 @@ public static class OrderEndpoints
         {
             ordersQuery = ordersQuery.OrderByDescending(GetSortingFieldSelector(sortingField));
         }
-        else if (sortingField != null)
+        else
         {
             ordersQuery = ordersQuery.OrderBy(GetSortingFieldSelector(sortingField));
         }
@@ -168,6 +168,7 @@ public static class OrderEndpoints
         int totalCount = await ordersQuery.CountAsync();
         var orders = await ordersQuery
             .Skip(((page ?? 1) - 1) * limit.Value)
+            .Take(limit.Value)
             .Include(o => o.OrderProducts)
             .Include(o => o.Customer)
             .Include(o => o.Seller)
@@ -227,9 +228,12 @@ public static class OrderEndpoints
         return TypedResults.NoContent();
     }
 
-    private static Expression<Func<Order, object>> GetSortingFieldSelector(string sortingField)
+    private static Expression<Func<Order, object>> GetSortingFieldSelector(string? sortingField)
     {
-        Enum.TryParse<OrderSortingField>(sortingField, true, out var parsedField);
+        if (!Enum.TryParse<OrderSortingField>(sortingField, true, out var parsedField))
+        {
+            return order => order.CreatedAt;
+        }
 
         return parsedField switch
         {
