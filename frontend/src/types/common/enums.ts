@@ -6,33 +6,33 @@ export enum Currency {
 }
 
 export enum InvoiceStatus {
-    ALL = 'ALL',
-    DRAFT = 'DRAFT',
-    SENT = 'SENT',
-    PAID = 'PAID',
-    OVERDUE = 'OVERDUE',
-    CANCELLED = 'CANCELLED',
+    ALL = 'All',
+    DRAFT = 'Draft',
+    SENT = 'Sent',
+    PAID = 'Paid',
+    OVERDUE = 'Overdue',
+    CANCELLED = 'Cancelled',
 }
 
 export enum OrderStatus {
-    ALL = 'ALL',
-    DRAFT = 'DRAFT',
-    PAYMENT_PENDING = 'PAYMENT_PENDING',
-    PAID = 'PAID',
-    PROCESSING = 'PROCESSING',
-    SHIPPED = 'SHIPPED',
-    DELIVERED = 'DELIVERED',
-    CANCELLED = 'CANCELLED',
-    RETURNED = 'RETURNED',
+    ALL = 'All',
+    DRAFT = 'Draft',
+    PAYMENT_PENDING = 'PendingPayment',
+    PAID = 'Paid',
+    PROCESSING = 'Processing',
+    SHIPPED = 'Shipped',
+    DELIVERED = 'Delivered',
+    CANCELLED = 'Cancelled',
+    RETURNED = 'Returned',
 }
 
 export enum PaymentStatus {
-    PENDING = 'PENDING',
-    PROCESSING = 'PROCESSING',
-    COMPLETED = 'COMPLETED',
-    FAILED = 'FAILED',
-    REFUNDED = 'REFUNDED',
-    CANCELLED = 'CANCELLED',
+    PENDING = 'Pending',
+    PROCESSING = 'Processing',
+    COMPLETED = 'Completed',
+    FAILED = 'Failed',
+    REFUNDED = 'Refunded',
+    CANCELLED = 'Cancelled',
 }
 
 export enum PaymentMethod {

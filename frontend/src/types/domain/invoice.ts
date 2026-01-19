@@ -7,7 +7,7 @@ export type InvoiceTableData = {
     orderId: string;
     paymentDueDate: string;
     invoiceNumber: string;
-    totalGrossPrice: number;
+    totalGrossPrice: string;
     currency: string;
     status: string;
 };
@@ -20,6 +20,9 @@ export interface Invoice {
     issuedAt: string; // ISO datetime
     status: string;
     paymentDueDate: string; // ISO datetime
+    totalNetPrice: number;
+    totalVatAmount: number;
+    totalGrossPrice: number;
 }
 
 export interface InvoiceDetails {

@@ -38,19 +38,34 @@ export const HomeScreen = () => {
             </AppText>
 
             <View style={styles.buttonRow}>
-                <AppButton style={styles.button} onPress={() => navigation.navigate('OrderAdd')}>
+                <AppButton
+                    style={styles.button}
+                    onPress={() => navigation.navigate('Order', { screen: 'OrderAdd' })}
+                >
                     Nowe zamówienie
                 </AppButton>
-                <AppButton style={styles.button} onPress={() => navigation.navigate('Invoice')}>
+                <AppButton
+                    style={styles.button}
+                    onPress={() => navigation.navigate('Invoice', { screen: 'Invoice' })}
+                >
                     Sprawdź faktury
                 </AppButton>
-                <AppButton style={styles.button} onPress={() => navigation.navigate('ClientAdd')}>
+                <AppButton
+                    style={styles.button}
+                    onPress={() => navigation.navigate('Customer', { screen: 'CustomerAdd' })}
+                >
                     Nowy klient
                 </AppButton>
-                <AppButton style={styles.button} onPress={() => navigation.navigate('ProductAdd')}>
+                <AppButton
+                    style={styles.button}
+                    onPress={() => navigation.navigate('Product', { screen: 'ProductAdd' })}
+                >
                     Dodaj produkt
                 </AppButton>
-                <AppButton style={styles.button} onPress={() => navigation.navigate('Stock')}>
+                <AppButton
+                    style={styles.button}
+                    onPress={() => navigation.navigate('Stock', { screen: 'Stock' })}
+                >
                     Sprawdź stan
                 </AppButton>
             </View>

@@ -38,8 +38,8 @@ export const mapCompanyToTableRow = (
     limit: number = 10
 ): CompanyTableRow => {
     const rowNumber = (page - 1) * limit + index + 1;
-    const { city, street, houseNumber: number } = company.address;
-    const formattedAddress = `${city}, ${street} ${number}`;
+    const { city, street, houseNumber } = company.address;
+    const formattedAddress = `${city}, ${street} ${houseNumber}`;
 
     return {
         id: company.id,

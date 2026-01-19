@@ -13,7 +13,7 @@ import { mapCustomerDtoToDomain } from './customer.mapper';
 import { mapSellerDtoToDomain } from './seller.mapper';
 import { mapInvoiceDtoToDomain } from './invoice.mapper';
 import { mapProductDtoToDomain } from './product.mapper';
-import { Currency } from '@/types/common';
+import { Currency, ORDER_STATUS_LABELS, OrderStatus } from '@/types/common';
 import { mapDeliveryDtoToDomain } from './delivery.mapper';
 
 export const mapOrderItemDtoToDomain = (dto: OrderItemDto): OrderItem => {
@@ -46,7 +46,7 @@ export const mapOrder1ToTableData = (
         createdAt: new Date(order.createdAt).toLocaleDateString('pl-PL'),
         customer: customerMap[order.customerId] || 'Nieznany',
         company: '',
-        status: order.status,
+        status: ORDER_STATUS_LABELS[order.status as OrderStatus],
         seller: sellerMap[order.sellerId] || 'Nieznany',
         invoiceNumber: '—',
     };
@@ -66,7 +66,7 @@ export const mapOrder2ToTableData = (
         createdAt: order.createdAt.slice(0, 10),
         customer: order.customer,
         company: order.company,
-        status: order.status,
+        status: ORDER_STATUS_LABELS[order.status as OrderStatus],
         seller: order.seller,
         invoiceNumber: order.invoiceNUmber || 'Brak',
     };

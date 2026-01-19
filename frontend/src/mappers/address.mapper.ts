@@ -4,7 +4,7 @@ import { Address } from '../types/domain/address';
 export const mapAddressDtoToDomain = (dto: AddressDto): Address => {
     return {
         street: dto.street,
-        houseNumber: dto.number,
+        houseNumber: dto.houseNumber,
         city: dto.city,
         postalCode: dto.postalCode,
         country: dto.country,
@@ -14,7 +14,7 @@ export const mapAddressDtoToDomain = (dto: AddressDto): Address => {
 export const mapAddressToDto = (address: Address): AddressDto => {
     return {
         street: address.street,
-        number: address.houseNumber,
+        houseNumber: address.houseNumber,
         city: address.city,
         postalCode: address.postalCode,
         country: address.country,

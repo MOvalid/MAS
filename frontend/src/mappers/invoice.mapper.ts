@@ -5,6 +5,8 @@ import { Invoice, InvoiceDetails, InvoiceTableData } from '@/types/domain';
 import { mapOrderDto2ToDomain } from './order.mapper';
 import { mapCompanyDtoToDomain } from './company.mapper';
 import { INVOICE_STATUS_LABELS, InvoiceStatus } from '@/types/common';
+import { formatPolishDate } from '@/utils/formatters';
+import { formatPrice } from '@/utils/price-utils';
 
 export const mapInvoiceDtoToDomain = (dto: InvoiceDto): Invoice => {
     return {
@@ -15,6 +17,9 @@ export const mapInvoiceDtoToDomain = (dto: InvoiceDto): Invoice => {
         issuedAt: dto.issuedAt,
         status: dto.status,
         paymentDueDate: dto.paymentDueDate,
+        totalNetPrice: dto.totalNetPrice,
+        totalVatAmount: dto.totalVatAmount,
+        totalGrossPrice: dto.totalGrossPrice,
     };
 };
 
@@ -43,10 +48,10 @@ export const mapInvoiceToTableData = (
         lp: lp.toString(),
         invoiceNumber: domain.invoiceNumber,
         orderId: domain.orderId,
-        issuedAt: domain.issuedAt,
-        paymentDueDate: domain.paymentDueDate,
+        issuedAt: formatPolishDate(domain.issuedAt, false),
+        paymentDueDate: formatPolishDate(domain.paymentDueDate, false),
         status: INVOICE_STATUS_LABELS[domain.status as InvoiceStatus],
-        totalGrossPrice: 0, 
+        totalGrossPrice: formatPrice(domain.totalGrossPrice), 
         currency: 'PLN',
     };
 };

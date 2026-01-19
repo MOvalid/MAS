@@ -69,9 +69,9 @@ export const InvoiceListScreen = () => {
 
     const columns: TableColumn<InvoiceTableData>[] = [
         { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
+        { key: 'invoiceNumber', title: 'Numer faktury', align: 'center', flex: 1 },
         { key: 'issuedAt', title: 'Data wystawienia', align: 'center', flex: 1 },
         { key: 'paymentDueDate', title: 'Data opłacenia', align: 'center', flex: 1 },
-        { key: 'invoiceNumber', title: 'Numer faktury', align: 'center', flex: 1 },
         { key: 'totalGrossPrice', title: 'Kwota', align: 'center', flex: 1 },
         { key: 'currency', title: 'Waluta', align: 'center', flex: 1 },
         { key: 'status', title: 'Status', align: 'center', flex: 1 },
