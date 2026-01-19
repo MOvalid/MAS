@@ -44,6 +44,8 @@ public static class ProductEndpoints
 
         var product = mapper.Map<Product>(productRequest);
 
+        product.LastRestockedAt = DateTime.UtcNow;
+
         var (isValid, validationResults) = product.Validate();
         if (!isValid)
         {
