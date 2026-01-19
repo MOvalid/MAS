@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { AppDropdown, AppTextInput, AppText } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { useTheme } from 'react-native-paper';
-import { ProductSortOption } from '@/types/common';
+import { ProductSort } from '@/types/common';
 
 interface CategoryOption {
     id: string;
@@ -22,8 +22,8 @@ interface Props {
     manufacturer: string;
     onManufacturerChange: (v: string) => void;
 
-    sort: ProductSortOption;
-    onSortChange: (v: ProductSortOption) => void;
+    sort: ProductSort;
+    onSortChange: (v: ProductSort) => void;
 }
 
 export const ProductListFilters: React.FC<Props> = ({
@@ -33,8 +33,6 @@ export const ProductListFilters: React.FC<Props> = ({
     categories,
     categoriesLoading,
     onCategoryChange,
-    manufacturer,
-    onManufacturerChange,
     sort,
     onSortChange,
 }) => {
@@ -86,14 +84,14 @@ export const ProductListFilters: React.FC<Props> = ({
                         Kategoria
                     </AppText>
                     <AppDropdown
+                        label="Kategoria"
                         value={category}
-                        onChange={(v: string) => onCategoryChange(v)}
+                        onChange={onCategoryChange}
+                        options={[
+                            { label: 'Wszystkie', value: 'ALL' },
+                            ...categories.map((c) => ({ label: c.name, value: c.id })),
+                        ]}
                         fullWidth
-                        // loading={categoriesLoading}
-                        options={categories.map((c) => ({
-                            label: c.name,
-                            value: c.id,
-                        }))}
                     />
                 </View>
 
@@ -103,7 +101,7 @@ export const ProductListFilters: React.FC<Props> = ({
                     </AppText>
                     <AppDropdown
                         value={sort}
-                        onChange={(v: string) => onSortChange(v as ProductSortOption)}
+                        onChange={(v: string) => onSortChange(v as ProductSort)}
                         fullWidth
                         options={[
                             { label: 'Nazwa A → Z', value: 'NAME_ASC' },

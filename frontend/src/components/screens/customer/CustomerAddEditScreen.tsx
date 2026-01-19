@@ -1,36 +1,29 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image, LayoutChangeEvent } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, LayoutChangeEvent, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 
 import { AppText, AppCard, AppButton, AppTextInput } from '@/components/common';
 import { metrics } from '@/theme/metrics';
+import { Customer } from '@/types/domain/customer';
+import {
+    useCreateCustomer,
+    useUpdateCustomer,
+    CreateCustomerPayload,
+} from '@/composables/customer/useCustomers';
+import { CustomerDto } from '@/types/dto';
 
 const CustomerImage =
     'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764539847/charlesdeluvio-rRWiVQzLm7k-unsplash_lpwbuq.jpg';
 
-const EMPTY_CUSTOMER = {
+const EMPTY_CUSTOMER: Customer = {
     id: '',
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     address: { street: '', number: '', city: '', postalCode: '', country: '' },
-};
-
-const mockCustomer = {
-    id: '987',
-    firstName: 'Jan',
-    lastName: 'Kowalski',
-    email: 'jan.kowalski@example.com',
-    phone: '+48 500 600 700',
-    address: {
-        street: 'Lipowa',
-        number: '22A',
-        city: 'Kraków',
-        postalCode: '30-001',
-        country: 'Polska',
-    },
+    orders: [],
 };
 
 export const CustomerAddEditScreen = () => {
@@ -38,25 +31,43 @@ export const CustomerAddEditScreen = () => {
     const navigation = useNavigation();
     const theme = useTheme();
 
-    const { id } = route.params ?? {};
-    const isEdit = Boolean(id);
+    const { customer: customerToEdit } = (route.params as { customer?: Customer }) ?? {};
+    const isEdit = Boolean(customerToEdit?.id);
+    const initial = isEdit ? customerToEdit! : EMPTY_CUSTOMER;
 
-    const initial = isEdit ? mockCustomer : EMPTY_CUSTOMER;
-
+    // Form State
     const [firstName, setFirstName] = useState(initial.firstName);
     const [lastName, setLastName] = useState(initial.lastName);
     const [email, setEmail] = useState(initial.email || '');
-    const [phone, setPhone] = useState(initial.phone || '');
+    const [phone, setPhone] = useState(initial.phoneNumber || '');
 
-    const [street, setStreet] = useState(initial.address.street);
-    const [number, setNumber] = useState(initial.address.number);
-    const [city, setCity] = useState(initial.address.city);
-    const [postalCode, setPostalCode] = useState(initial.address.postalCode);
-    const [country, setCountry] = useState(initial.address.country);
+    const [street, setStreet] = useState(initial.address?.street || '');
+    const [number, setNumber] = useState(initial.address?.number || '');
+    const [city, setCity] = useState(initial.address?.city || '');
+    const [postalCode, setPostalCode] = useState(initial.address?.postalCode || '');
+    const [country, setCountry] = useState(initial.address?.country || '');
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [cardHeight, setCardHeight] = useState<number>(0);
 
+    // Hooks
+    const { create, loading: isCreating } = useCreateCustomer(
+        () => {
+            console.log('Sukces: Klient dodany');
+            navigation.goBack();
+        },
+        (err) => Alert.alert('Błąd', err)
+    );
+
+    const { update, loading: isUpdating } = useUpdateCustomer(
+        () => {
+            console.log('Sukces: Dane klienta zaktualizowane');
+            navigation.goBack();
+        },
+        (err) => Alert.alert('Błąd', err)
+    );
+
+    const isLoading = isCreating || isUpdating;
     const pageTitle = isEdit
         ? `Edycja klienta ${firstName || ''} ${lastName || ''}`
         : 'Dodaj nowego klienta';
@@ -66,7 +77,6 @@ export const CustomerAddEditScreen = () => {
 
         if (!firstName) newErrors.firstName = 'Imię jest wymagane';
         if (!lastName) newErrors.lastName = 'Nazwisko jest wymagane';
-
         if (!street) newErrors.street = 'Ulica jest wymagana';
         if (!number) newErrors.number = 'Numer jest wymagany';
         if (!city) newErrors.city = 'Miasto jest wymagane';
@@ -77,20 +87,22 @@ export const CustomerAddEditScreen = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!validate()) return;
 
         const payload = {
-            id: initial.id,
             firstName,
             lastName,
-            email: email || null,
-            phone: phone || null,
+            email: email?.trim() || '',
+            phoneNumber: phone?.trim() || null,
             address: { street, number, city, postalCode, country },
         };
 
-        console.log(isEdit ? '➡️ Aktualizacja klienta:' : '🆕 Tworzenie klienta:', payload);
-        navigation.goBack();
+        if (isEdit && customerToEdit) {
+            await update(customerToEdit.id, { ...payload, id: customerToEdit.id } as CustomerDto);
+        } else {
+            await create(payload as CreateCustomerPayload);
+        }
     };
 
     const handleCancel = () => navigation.goBack();
@@ -123,10 +135,21 @@ export const CustomerAddEditScreen = () => {
 
     const ActionButtons = () => (
         <View style={styles.actionRow}>
-            <AppButton onPress={handleCancel} style={styles.button} mode="outlined">
+            <AppButton
+                onPress={handleCancel}
+                style={styles.button}
+                mode="outlined"
+                disabled={isLoading}
+            >
                 Anuluj
             </AppButton>
-            <AppButton onPress={handleSave} style={styles.button} mode="contained">
+            <AppButton
+                onPress={handleSave}
+                style={styles.button}
+                mode="contained"
+                loading={isLoading}
+                disabled={isLoading}
+            >
                 {isEdit ? 'Zapisz zmiany' : 'Dodaj klienta'}
             </AppButton>
         </View>
@@ -152,7 +175,6 @@ export const CustomerAddEditScreen = () => {
                         setCardHeight(event.nativeEvent.layout.height)
                     }
                 >
-                    {/* IMIĘ */}
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             Imię *
@@ -162,10 +184,10 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setFirstName}
                             fullWidth
                             errorMessage={errors.firstName}
+                            editable={!isLoading}
                         />
                     </View>
 
-                    {/* NAZWISKO */}
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             Nazwisko *
@@ -175,10 +197,10 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setLastName}
                             fullWidth
                             errorMessage={errors.lastName}
+                            editable={!isLoading}
                         />
                     </View>
 
-                    {/* EMAIL */}
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             E-mail
@@ -188,10 +210,10 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setEmail}
                             fullWidth
                             keyboardType="email-address"
+                            editable={!isLoading}
                         />
                     </View>
 
-                    {/* TELEFON */}
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             Telefon
@@ -201,10 +223,10 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setPhone}
                             fullWidth
                             keyboardType="phone-pad"
+                            editable={!isLoading}
                         />
                     </View>
 
-                    {/* ADRES */}
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             Ulica *
@@ -214,6 +236,7 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setStreet}
                             fullWidth
                             errorMessage={errors.street}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -226,6 +249,7 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setNumber}
                             fullWidth
                             errorMessage={errors.number}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -238,6 +262,7 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setCity}
                             fullWidth
                             errorMessage={errors.city}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -250,6 +275,7 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setPostalCode}
                             fullWidth
                             errorMessage={errors.postalCode}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -262,6 +288,7 @@ export const CustomerAddEditScreen = () => {
                             onChangeText={setCountry}
                             fullWidth
                             errorMessage={errors.country}
+                            editable={!isLoading}
                         />
                     </View>
 

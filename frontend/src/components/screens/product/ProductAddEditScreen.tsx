@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
@@ -6,75 +6,17 @@ import { useTheme } from 'react-native-paper';
 import { AppText, AppCard, AppButton, AppTextInput } from '@/components/common';
 
 import { metrics } from '@/theme/metrics';
-import { ProductDetails } from '@/types/domain/product';
 import { AppImageUpload } from '@/components/common/AppImageUpload';
-import { AppDropdown } from '@/components/common/AppDropdown';
+import { AppDropdown, DropdownOption } from '@/components/common/AppDropdown';
 import { AppNumberInput } from '@/components/common/AppNumberInput';
-import { validateProduct, ProductValidationErrors } from '@/validators/productValidator';
-
-const mockCategories = [
-    { label: 'Zwierzęta domowe', value: 'cat-animals' },
-    { label: 'Narzędzia', value: 'cat-tools' },
-    { label: 'Elektronika', value: 'cat-electronics' },
-];
-
-const EMPTY_PRODUCT: ProductDetails = {
-    id: '',
-    name: '',
-    sku: '',
-    description: '',
-    stockQuantity: 0,
-    categoryId: '',
-    category: undefined,
-    netPrice: 0,
-    vatRate: 0,
-    grossPrice: 0,
-    vatAmount: 0,
-    currency: 'PLN',
-    imageUrl: null,
-    specification: {
-        productId: '',
-        weight: null,
-        dimensions: { length: 0, width: 0, height: 0 },
-        material: '',
-        color: '',
-        manufacturer: '',
-        countryOfOrigin: '',
-        warranty: null,
-    },
-    createdAt: '',
-    updatedAt: '',
-    lastRestockedAt: '',
-};
-
-const mockProduct: ProductDetails = {
-    id: '123',
-    name: 'Rudy kotek',
-    sku: 'RUDY-2025-001',
-    stockQuantity: 1,
-    description: 'Mały, rudy kotek o puszystym futerku i dużych zielonych oczach',
-    categoryId: 'cat-animals',
-    category: { id: 'cat-animals', name: 'Zwierzęta domowe', description: '', products: [] },
-    netPrice: 0,
-    vatRate: 0,
-    grossPrice: 0,
-    vatAmount: 0,
-    currency: 'PLN',
-    imageUrl: 'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764505258/rudy_c7ebby.png',
-    specification: {
-        productId: '123',
-        weight: 3.2,
-        dimensions: { length: 40, width: 15, height: 25 },
-        material: 'Futro + kości + mięśnie',
-        color: 'Rudy',
-        manufacturer: 'Mother Nature',
-        countryOfOrigin: 'Polska',
-        warranty: 0,
-    },
-    createdAt: '2025-01-01T08:00:00Z',
-    updatedAt: '2025-11-30T10:00:00Z',
-    lastRestockedAt: '2025-11-25T09:00:00Z',
-};
+import { validateProduct } from '@/validators/productValidator';
+import { useCreateProduct, useProduct, useUpdateProduct } from '@/composables/product/useProducts';
+import { CreateProductPayload, UpdateProductPayload } from '@/types/dto';
+import { useCategories } from '@/composables/category';
+import { useCompanies } from '@/composables/company/useCompanies';
+import { AppAutocomplete } from '@/components/common/AppAutocomplete';
+import { LoadingScreen } from '..';
+import { ErrorMessage } from '@/components/common/AppStageMessage';
 
 const DIMENSION_INPUT_WIDTH = 150;
 const DESCRIPTION_NUMBER_OF_LINES = 6;
@@ -86,40 +28,80 @@ export const ProductAddEditScreen = () => {
 
     const { id } = route.params ?? {};
     const isEdit = Boolean(id);
-    const initial = isEdit ? mockProduct : EMPTY_PRODUCT;
 
-    const [name, setName] = useState(initial.name);
-    const [sku, setSku] = useState(initial.sku);
-    const [categoryId, setCategoryId] = useState(initial.categoryId || '');
+    const {
+        data: fetchedProduct,
+        error: fetchProductError,
+        loading: fetchProductLoading,
+        refresh,
+    } = useProduct(id);
+    const { data: categoriesData, loading: categoriesLoading } = useCategories();
 
-    const pageTitle = isEdit ? `Edycja produktu ${name || ''}` : 'Dodaj nowy produkt';
+    const [searchManufacturer, setSearchManufacturer] = useState('')
+    const { data: manufacturersData, loading: manufacturersLoading } = useCompanies(true, {
+        name: searchManufacturer,
+    });
+    const { create, loading: createLoading } = useCreateProduct(() => navigation.goBack());
+    const { update, loading: updateLoading } = useUpdateProduct(() => navigation.goBack());
 
-    const [netPrice, setNetPrice] = useState(initial.netPrice.toString());
-    const [vatRate, setVatRate] = useState(initial.vatRate.toString());
-    const [stockQuantity, setStockQuantity] = useState(initial.stockQuantity.toString());
+    const categoryOptions = useMemo(() => {
+        return categoriesData.map((cat) => ({
+            label: cat.name,
+            value: cat.id,
+        }));
+    }, [categoriesData]);
 
-    const [imageUrl, setImageUrl] = useState(initial.imageUrl);
+    const manufacturerOptions = useMemo(() => {
+        return manufacturersData.map((man) => ({
+            label: man.name,
+            value: man.id,
+        }));
+    }, [manufacturersData]);
 
-    const [description, setDescription] = useState(initial.description || '');
-    const [manufacturer, setManufacturer] = useState(initial.specification?.manufacturer || '');
-    const [countryOfOrigin, setCountryOfOrigin] = useState(
-        initial.specification?.countryOfOrigin || ''
-    );
-
-    const [weight, setWeight] = useState(initial.specification?.weight?.toString() || '');
-    const [length, setLength] = useState(
-        initial.specification?.dimensions?.length?.toString() || ''
-    );
-    const [width, setWidth] = useState(initial.specification?.dimensions?.width?.toString() || '');
-    const [height, setHeight] = useState(
-        initial.specification?.dimensions?.height?.toString() || ''
-    );
-
-    const [material, setMaterial] = useState(initial.specification?.material || '');
-    const [color, setColor] = useState(initial.specification?.color || '');
-    const [warranty, setWarranty] = useState(initial.specification?.warranty?.toString() || '');
+    const [name, setName] = useState('');
+    const [sku, setSku] = useState('');
+    const [categoryId, setCategoryId] = useState('');
+    const [netPrice, setNetPrice] = useState('0');
+    const [vatRate, setVatRate] = useState('23');
+    const [stockQuantity, setStockQuantity] = useState('0');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [description, setDescription] = useState('');
+    const [manufacturerId, setManufacturerId] = useState('');
+    // const [countryOfOrigin, setCountryOfOrigin] = useState('');
+    // const [weight, setWeight] = useState('');
+    const [length, setLength] = useState('');
+    const [width, setWidth] = useState('');
+    const [height, setHeight] = useState('');
+    // const [material, setMaterial] = useState('');
+    // const [color, setColor] = useState('');
+    // const [warranty, setWarranty] = useState('');
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        if (isEdit && fetchedProduct) {
+            setName(fetchedProduct.name);
+            setSku(fetchedProduct.sku);
+            setCategoryId(fetchedProduct.categoryId || '');
+            setNetPrice(String(fetchedProduct.netPrice));
+            setVatRate(String(fetchedProduct.vatRate));
+            setStockQuantity(String(fetchedProduct.stockQuantity));
+            setImageUrl(fetchedProduct.imageUrl);
+            setDescription(fetchedProduct.description || '');
+            setManufacturerId(fetchedProduct.manufacturer.id || '');
+            // setCountryOfOrigin(fetchedProduct.specification?.countryOfOrigin || '');
+            // setWeight(fetchedProduct.specification?.weight?.toString() || '');
+            setLength(fetchedProduct.dimensions?.length?.toString() || '');
+            setWidth(fetchedProduct.dimensions?.width?.toString() || '');
+            setHeight(fetchedProduct.dimensions?.height?.toString() || '');
+            // setMaterial(fetchedProduct.specification?.material || '');
+            // setColor(fetchedProduct.specification?.color || '');
+            // setWarranty(fetchedProduct.specification?.warranty?.toString() || '');
+        }
+    }, [fetchedProduct, isEdit]);
+
+    const pageTitle = isEdit ? `Edycja produktu ${name || ''}` : 'Dodaj nowy produkt';
+    const loading = createLoading || updateLoading || fetchProductLoading || categoriesLoading;
 
     const validate = (): boolean => {
         const input = {
@@ -129,55 +111,49 @@ export const ProductAddEditScreen = () => {
             netPrice,
             vatRate,
             stockQuantity,
-            manufacturer,
-            countryOfOrigin,
-            weight,
+            manufacturerId,
+            // countryOfOrigin,
+            // weight,
             length,
             width,
             height,
-            warranty,
+            // warranty,
             description,
         };
-
-        const newErrors: ProductValidationErrors = validateProduct(input);
+        const newErrors = validateProduct(input);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!validate()) return;
 
-        const payload = {
+        const payload: CreateProductPayload = {
             name,
             sku,
-            categoryId,
+            manufacturerId: manufacturerId,
             netPrice: Number(netPrice),
             vatRate: Number(vatRate),
             stockQuantity: Number(stockQuantity),
-            imageUrl,
-            description,
-            specification: {
-                manufacturer,
-                countryOfOrigin,
-                weight: Number(weight),
-                dimensions: {
-                    length: Number(length),
-                    width: Number(width),
-                    height: Number(height),
-                },
-                material,
-                color,
-                warranty: Number(warranty),
+            description: description,
+            categoryId: categoryId,
+            dimensions: {
+                length: Number(length),
+                width: Number(width),
+                height: Number(height),
             },
         };
 
-        if (isEdit) {
-            console.log('➡️ Aktualizacja produktu:', { id, ...payload });
-        } else {
-            console.log('🆕 Tworzenie nowego produktu:', payload);
+        try {
+            if (isEdit && id) {
+                await update(id, payload as UpdateProductPayload);
+            } else {
+                // CreateProductPayload
+                await create(payload);
+            }
+        } catch (err) {
+            console.error('Błąd podczas zapisu:', err);
         }
-
-        navigation.goBack();
     };
 
     const handleCancel = () => navigation.goBack();
@@ -229,8 +205,10 @@ export const ProductAddEditScreen = () => {
         },
         flexInputRow: {
             flexDirection: 'row',
+            justifyContent: 'space-between',
             gap: metrics.spacing.md,
             marginBottom: metrics.spacing.md,
+            width: '100%',
         },
         flexInputWrapper: { flex: 1 },
         button: { minWidth: 160 },
@@ -265,6 +243,20 @@ export const ProductAddEditScreen = () => {
         </View>
     );
 
+    if (loading) {
+        return <LoadingScreen text="Ładowanie danych..." />;
+    }
+
+    if (fetchProductError) {
+        return (
+            <ErrorMessage
+                error={fetchProductError}
+                onRetry={refresh}
+                onBack={() => navigation.goBack()}
+            />
+        );
+    }
+
     return (
         <ScrollView style={styles.container}>
             <HeaderRow />
@@ -296,7 +288,7 @@ export const ProductAddEditScreen = () => {
                         />
                     </View>
 
-                    <View style={styles.inputRow}>
+                    {/* <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             SKU *
                         </AppText>
@@ -307,7 +299,7 @@ export const ProductAddEditScreen = () => {
                             placeholder="Wprowadź SKU"
                             errorMessage={errors.sku}
                         />
-                    </View>
+                    </View> */}
 
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
@@ -318,7 +310,8 @@ export const ProductAddEditScreen = () => {
                             fullWidth
                             value={categoryId}
                             onChange={setCategoryId}
-                            options={mockCategories}
+                            options={categoryOptions}
+                            disabled={categoriesLoading}
                             errorMessage={errors.categoryId}
                         />
                     </View>
@@ -331,6 +324,7 @@ export const ProductAddEditScreen = () => {
                             <AppTextInput
                                 value={netPrice}
                                 onChangeText={setNetPrice}
+                                fullWidth
                                 placeholder="0.00"
                                 keyboardType="decimal-pad"
                                 errorMessage={errors.netPrice}
@@ -344,6 +338,7 @@ export const ProductAddEditScreen = () => {
                             <AppTextInput
                                 value={vatRate}
                                 onChangeText={setVatRate}
+                                fullWidth
                                 placeholder="23"
                                 keyboardType="decimal-pad"
                                 errorMessage={errors.vatRate}
@@ -382,7 +377,7 @@ export const ProductAddEditScreen = () => {
 
                 <View style={styles.specRow}>
                     <View style={styles.specColumn}>
-                        <View style={styles.inputRow}>
+                        {/* <View style={styles.inputRow}>
                             <AppText variant="bodyMedium" style={styles.inputLabel}>
                                 Producent
                             </AppText>
@@ -393,9 +388,38 @@ export const ProductAddEditScreen = () => {
                                 placeholder="Wprowadź producenta"
                                 errorMessage={errors.manufacturer}
                             />
-                        </View>
+                        </View> */}
+{/* 
+                        <AppText variant="bodyMedium" style={styles.inputLabel}>
+                            Producent *
+                        </AppText> */}
+                        {/* <AppDropdown
+                            label=""
+                            fullWidth
+                            value={manufacturerId}
+                            onChange={setManufacturerId}
+                            options={manufacturerOptions}
+                            disabled={manufacturersLoading}
+                            errorMessage={errors.manufacturerId}
+                        /> */}
 
-                        <View style={styles.inputRow}>
+                        <AppAutocomplete<DropdownOption>
+                            label="Producent"
+                            placeholder="Szukaj producenta..."
+                            value={manufacturerOptions.find((opt) => opt.value === manufacturerId)}
+                            options={manufacturerOptions}
+                            getOptionLabel={(option) => option.label}
+                            onInputChange={(text) => setSearchManufacturer(text)} 
+                            onChange={(selectedOption) => {
+                                setManufacturerId(selectedOption?.value || '');
+                            }}
+                            errorMessage={errors.manufacturerId}
+                            // inputProps={{
+                            //     right: manufacturersLoading ? <TextInput.Icon icon="loading" /> : null
+                            // }}
+                        />
+
+                        {/* <View style={styles.inputRow}>
                             <AppText variant="bodyMedium" style={styles.inputLabel}>
                                 Kraj pochodzenia
                             </AppText>
@@ -406,9 +430,9 @@ export const ProductAddEditScreen = () => {
                                 placeholder="Wprowadź kraj pochodzenia"
                                 errorMessage={errors.countryOfOrigin}
                             />
-                        </View>
+                        </View> */}
 
-                        <View style={styles.inputRow}>
+                        {/* <View style={styles.inputRow}>
                             <AppText variant="bodyMedium" style={styles.inputLabel}>
                                 Waga (kg)
                             </AppText>
@@ -419,32 +443,37 @@ export const ProductAddEditScreen = () => {
                                 placeholder="0.0"
                                 errorMessage={errors.weight}
                             />
-                        </View>
+                        </View> */}
 
-                        <View style={styles.inputRow}>
-                            <AppText variant="bodyMedium" style={styles.inputLabel}>
-                                Wymiary (cm)
-                            </AppText>
+                        <AppText variant="bodyMedium" style={styles.inputLabel}>
+                            Wymiary (cm)
+                        </AppText>
 
-                            <View style={{ flexDirection: 'row', gap: metrics.spacing.md }}>
+                        <View style={styles.flexInputRow}>
+                            <View style={styles.flexInputWrapper}>
                                 <AppNumberInput
                                     value={length}
+                                    fullWidth
                                     onChangeValue={setLength}
                                     placeholder="Długość"
                                     width={DIMENSION_INPUT_WIDTH}
                                     errorMessage={errors.length}
                                 />
-
+                            </View>
+                            <View style={styles.flexInputWrapper}>
                                 <AppNumberInput
                                     value={width}
+                                    fullWidth
                                     onChangeValue={setWidth}
                                     placeholder="Szerokość"
                                     width={DIMENSION_INPUT_WIDTH}
                                     errorMessage={errors.width}
                                 />
-
+                            </View>
+                            <View style={styles.flexInputWrapper}>
                                 <AppNumberInput
                                     value={height}
+                                    fullWidth
                                     onChangeValue={setHeight}
                                     placeholder="Wysokość"
                                     width={DIMENSION_INPUT_WIDTH}
@@ -454,9 +483,9 @@ export const ProductAddEditScreen = () => {
                         </View>
                     </View>
 
-                    <View style={styles.verticalDivider} />
+                    {/* <View style={styles.verticalDivider} /> */}
 
-                    <View style={styles.specColumn}>
+                    {/* <View style={styles.specColumn}>
                         <View style={styles.inputRow}>
                             <AppText variant="bodyMedium" style={styles.inputLabel}>
                                 Materiał
@@ -494,10 +523,10 @@ export const ProductAddEditScreen = () => {
                                 errorMessage={errors.warranty}
                             />
                         </View>
-                    </View>
+                    </View> */}
                 </View>
 
-                <View style={styles.divider} />
+                {/* <View style={styles.divider} /> */}
 
                 <View style={styles.inputRow}>
                     <AppText variant="titleLarge" style={styles.inputLabel}>

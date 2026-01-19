@@ -13,7 +13,7 @@ import { API_SELLERS } from '@/constants/Endpoints';
 export const useSellers = (enabled: boolean = true) => {
     const { api } = useAuth();
 
-    const [items, setItems] = useState<Seller[]>([]);
+    const [data, setData] = useState<Seller[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -33,12 +33,12 @@ export const useSellers = (enabled: boolean = true) => {
             const mapped = (response.data ?? []).map(mapSellerDtoToDomain);
             console.log('[useSellers] Mapped sellers:', mapped);
 
-            setItems(mapped);
+            setData(mapped);
         } catch (err: unknown) {
             console.error('[useSellers] Error fetching sellers:', err);
             const friendlyMessage = getFriendlyErrorMessage(err);
             setError(friendlyMessage.message ?? 'Nieznany błąd');
-            setItems([]);
+            setData([]);
         } finally {
             setLoading(false);
             console.log('[useSellers] Fetch finished. Loading set to false.');
@@ -52,7 +52,7 @@ export const useSellers = (enabled: boolean = true) => {
     }, [fetchSellers, enabled]);
 
     return {
-        items,
+        data,
         loading,
         error,
         refetch: fetchSellers,

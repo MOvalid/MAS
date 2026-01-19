@@ -6,5 +6,5 @@ export interface PaymentDto {
     currency: string;
     paymentMethod: string;
     status: string;
-    paidAt: string | null; // ISO datetime
+    paymentDate: string | null; // ISO datetime
 }

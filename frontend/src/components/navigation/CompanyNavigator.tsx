@@ -4,7 +4,7 @@ import React from 'react';
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreenWrapper } from '../common';
 import { CompanyStackParamList } from '@/types/navigation';
-import { CompanyAddEditScreen, CompanyDetailsScreen } from '../screens/company';
+import { CompanyAddEditScreen, CompanyDetailsScreen, CompanyListScreen } from '../screens/company';
 
 const Stack = createNativeStackNavigator<CompanyStackParamList>();
 
@@ -19,6 +19,7 @@ const withScreenWrapper = <RouteName extends keyof CompanyStackParamList>(
 };
 
 const screens = [
+    { name: 'CompanyList' as const, component: CompanyListScreen },
     { name: 'CompanyAdd' as const, component: CompanyAddEditScreen },
     { name: 'CompanyEdit' as const, component: CompanyAddEditScreen },
     { name: 'CompanyDetails' as const, component: CompanyDetailsScreen },

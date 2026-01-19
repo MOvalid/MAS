@@ -80,6 +80,15 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
     [PaymentMethod.OTHER]: 'Inna',
 };
 
+export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
+    [InvoiceStatus.ALL]: 'Wszystkie',
+    [InvoiceStatus.DRAFT]: 'Szkic',
+    [InvoiceStatus.SENT]: 'Wysłana',
+    [InvoiceStatus.PAID]: 'Opłacona',
+    [InvoiceStatus.OVERDUE]: 'Przeterminowana',
+    [InvoiceStatus.CANCELLED]: 'Anulowana',
+};
+
 export const PAYMENT_METHODS = PAYMENT_METHOD_VALUES.map((m) => ({
     label: PAYMENT_METHOD_LABELS[m],
     value: m,
@@ -93,17 +102,33 @@ export const PAYMENT_SUMMARY_LABELS = {
 } as const;
 
 export const ORDER_SORT_OPTIONS = [
-    { label: 'Lp. ↑', value: 'LP_ASC' },
-    { label: 'Lp. ↓', value: 'LP_DESC' },
-    { label: 'Klient A → Z', value: 'CUSTOMER_ASC' },
-    { label: 'Klient Z → A', value: 'CUSTOMER_DESC' },
-    { label: 'Firma A → Z', value: 'COMPANY_ASC' },
-    { label: 'Firma Z → A', value: 'COMPANY_DESC' },
+    { label: 'Zamawiający A → Z', value: 'CLIENT_ASC' },
+    { label: 'Zamawiający Z → A', value: 'CLIENT_DESC' },
     { label: 'Data zamówienia ↑', value: 'CREATED_ASC' },
     { label: 'Data zamówienia ↓', value: 'CREATED_DESC' },
 ];
 
-export type ProductSortOption = 'NAME_ASC' | 'NAME_DESC' | 'MANUFACTURER_ASC' | 'PRICE_ASC';
-
-export type ClientTypeFilter = 'ALL' | 'CUSTOMER' | 'COMPANY';
-export type ClientSort = 'ALPHA_ASC' | 'ALPHA_DESC';
+export type ProductSort =
+    | 'NAME_ASC'
+    | 'NAME_DESC'
+    | 'MANUFACTURER_ASC'
+    | 'MANUFACTURER_ASC'
+    | 'PRICE_ASC'
+    | 'PRICE_DESC';
+export type StockProductSortOption =
+    | 'NAME_ASC'
+    | 'NAME_DESC'
+    | 'MANUFACTURER_ASC'
+    | 'MANUFACTURER_ASC'
+    | 'PRICE_ASC'
+    | 'PRICE_DESC';
+export type OrderSort = 'CLIENT_ASC' | 'CLIENT_DESC' | 'CREATED_ASC' | 'CREATED_DESC';
+export type CustomerSort = 'ALPHA_ASC' | 'ALPHA_DESC';
+export type CompanySort = 'ALPHA_ASC' | 'ALPHA_DESC';
+export type InvoiceSort =
+    | 'ISSUED_ASC'
+    | 'ISSUED_DESC'
+    | 'PAYMENT_ASC'
+    | 'PAYMENT_DESC'
+    | 'AMOUNT_ASC'
+    | 'AMOUNT_DESC';

@@ -10,7 +10,6 @@ import { createDrawerNavigator, DrawerScreenProps } from '@react-navigation/draw
 import { useColorScheme, View, ActivityIndicator } from 'react-native';
 import AuthScreen from './src/components/screens/AuthScreen';
 import {
-    ClientNavigator,
     CompanyNavigator,
     CustomerNavigator,
     OrderNavigator,
@@ -20,7 +19,13 @@ import {
 import { DrawerParamList } from './src/types/navigation';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
-import { FaqScreen, HomeScreen, InvoiceScreen, SettingsScreen, SignUpScreen } from './src/components/screens';
+import {
+    FaqScreen,
+    HomeScreen,
+    InvoiceScreen,
+    SettingsScreen,
+    SignUpScreen,
+} from './src/components/screens';
 import { AppDrawerContent, AppLoadingOverlay, AppScreenWrapper } from './src/components/common';
 
 const Stack = createNativeStackNavigator();
@@ -36,18 +41,10 @@ const linking = {
                 path: '',
                 screens: {
                     Home: 'home',
-                    Client: {
-                        path: 'client',
-                        screens: {
-                            ClientList: '',
-                            ClientAdd: 'add',
-                            ClientEdit: 'edit/:id',
-                            ClientDetails: ':id',
-                        },
-                    },
                     Company: {
                         path: 'company',
                         screens: {
+                            CompanyList: '',
                             CompanyAdd: 'add',
                             CompanyEdit: 'edit/:id',
                             CompanyDetails: ':id',
@@ -56,6 +53,7 @@ const linking = {
                     Customer: {
                         path: 'customer',
                         screens: {
+                            CustomerList: '',
                             CustomerAdd: 'add',
                             CustomerEdit: 'edit/:id',
                             CustomerDetails: ':id',
@@ -136,14 +134,6 @@ function DrawerNavigator() {
                 options={{
                     drawerLabel: 'Settings',
                     title: 'Settings',
-                }}
-            />
-            <Drawer.Screen
-                name="Client"
-                component={ClientNavigator}
-                options={{
-                    drawerLabel: 'Klienci',
-                    title: 'Klienci',
                 }}
             />
             <Drawer.Screen
@@ -246,6 +236,9 @@ export default function App() {
     const isDark = colorScheme === 'dark';
     const paperTheme = isDark ? DarkTheme : LightTheme;
     const navigationTheme = isDark ? CombinedDarkTheme : CombinedLightTheme;
+
+    const { isLoading: isAuthLoading } = useAuth();
+
     const [fontsLoaded, setFontsLoaded] = React.useState(false);
 
     React.useEffect(() => {
@@ -278,7 +271,7 @@ export default function App() {
                         >
                             <AppNavigator />
                             <AppLoadingOverlay
-                                visible={useAuth().isLoading}
+                                visible={isAuthLoading}
                                 text="Trwa przetwarzanie..."
                             />
                         </NavigationContainer>

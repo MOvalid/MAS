@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
@@ -8,36 +8,16 @@ import { OrderProductInputCard } from '@/components/common/order/OrderProductInp
 import { OrderProductList } from '@/components/common/order/OrderProductList';
 import { AppModal } from '@/components/common/AppModal';
 import { metrics } from '@/theme/metrics';
-import { Order } from '@/types/domain/order';
-import { Option } from '@/types/common';
-import { OrderItem, ProductOption } from '@/types/domain';
+import { Currency, Option, PersonBase } from '@/types/common';
+import { OrderItem } from '@/types/domain';
+import { useCreateOrder, useOrder, useUpdateOrder } from '@/composables/orders/useOrders';
+import { useCustomerOptions } from '@/composables/customer/useCustomers';
+import { CreateOrderItem, CreateOrderPayload } from '@/types/dto';
+import { LoadingScreen } from '../LoadingScreen';
+import { ErrorMessage } from '@/components/common/AppStageMessage';
+import { useSellerOptions } from '@/composables/seller/useSellers';
+import { useProductOptions } from '@/composables/product/useProducts';
 
-// --- Mock data ---
-const customers: Option[] = [
-    { label: 'Firma Alfa Sp. z o.o.', value: 'c1' },
-    { label: 'Jan Kowalski', value: 'c2' },
-];
-const sellers: Option[] = [
-    { label: 'Sprzedawca 1', value: 's1' },
-    { label: 'Sprzedawca 2', value: 's2' },
-];
-const mockProducts: ProductOption[] = [
-    { label: 'Produkt A', value: 'p1', unitPrice: 100 },
-    { label: 'Produkt B', value: 'p2', unitPrice: 250 },
-];
-
-const EMPTY_ORDER: Order = {
-    id: '',
-    createdAt: new Date().toISOString(),
-    customerId: '',
-    sellerId: '',
-    deliveryId: null,
-    invoiceId: null,
-    orderProducts: null,
-    payments: null,
-};
-
-// --- Placeholder forms ---
 const AddPaymentForm = ({ onClose }: { onClose: () => void }) => (
     <View>
         <AppText variant="titleLarge">Dodaj płatność</AppText>
@@ -52,23 +32,105 @@ const AddDeliveryForm = ({ onClose }: { onClose: () => void }) => (
     </View>
 );
 
-// --- Screen ---
 export const OrderAddEditScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const theme = useTheme();
+
     const { id } = route.params ?? {};
     const isEdit = Boolean(id);
+    const [isInitialized, setIsInitialized] = useState(false);
 
-    const initial = isEdit ? { ...EMPTY_ORDER, id } : EMPTY_ORDER;
+    const { data: fetchedOrder, error: fetchOrderError, loading, refresh } = useOrder(id);
 
-    const [customerValue, setCustomerValue] = useState<Option | undefined>();
-    const [sellerValue, setSellerValue] = useState<Option | undefined>();
+    const { create, loading: createLoading } = useCreateOrder(() => navigation.goBack());
+    const { update, loading: updateLoading } = useUpdateOrder(() => navigation.goBack());
+
+    const [searchCustomer, setSearchCustomer] = useState('');
+    const [searchSeller, setSearchSeller] = useState('');
+    const [searchProduct, setSearchProduct] = useState('');
+
+    const {
+        data: customersData,
+        loading: customersLoading,
+        setFilters: setCustomerFilters,
+    } = useCustomerOptions(true, { name: '' });
+
+    const {
+        data: sellersData,
+        loading: sellersLoading,
+        setFilters: setSellerFilters,
+    } = useSellerOptions(true, { name: '' });
+
+    const {
+        data: productsData,
+        loading: productsLoading,
+        setFilters: setProductFilters,
+    } = useProductOptions(true, { name: '', limit: 10 });
+
+    const handleCustomerSearchChange = (search: string) => {
+        setSearchCustomer(search);
+        setCustomerFilters({ name: search });
+    };
+
+    const handleSellerSearchChange = (search: string) => {
+        setSearchSeller(search);
+        setSellerFilters({ name: search });
+    };
+
+    const handleProductSearchChange = (search: string) => {
+        setSearchProduct(search);
+        setProductFilters({ name: search, limit: 10 });
+    };
+
+    const [customerValue, setCustomerValue] = useState<Option | undefined>(undefined);
+    const [sellerValue, setSellerValue] = useState<Option | undefined>(undefined);
     const [orderProducts, setOrderProducts] = useState<OrderItem[]>([]);
     const [errors, setErrors] = useState<{ customer?: string; seller?: string }>({});
 
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+
+    const formatPersonLabel = (
+        person: PersonBase | undefined | null,
+        fallback: string
+    ): Option | undefined => {
+        if (!person) return undefined;
+
+        const fullName = [person.firstName, person.lastName].filter(Boolean).join(' ');
+
+        return {
+            label: fullName || fallback,
+            value: person.id,
+        };
+    };
+
+    useEffect(() => {
+        if (!isEdit || !fetchedOrder) return;
+
+        setOrderProducts(fetchedOrder.orderProducts || []);
+
+        const customerOpt = formatPersonLabel(fetchedOrder.customer, 'Klient');
+        if (customerOpt) setCustomerValue(customerOpt);
+
+        const sellerOpt = formatPersonLabel(fetchedOrder.seller, 'Sprzedawca');
+        if (sellerOpt) setSellerValue(sellerOpt);
+    }, [fetchedOrder, isEdit]);
+
+    const customerOptions = useMemo(
+        () => customersData.map((s) => ({ label: `${s.firstName} ${s.lastName}`, value: s.id })),
+        [customersData]
+    );
+
+    const sellerOptions = useMemo(
+        () => sellersData.map((s) => ({ label: `${s.firstName} ${s.lastName}`, value: s.id })),
+        [sellersData]
+    );
+
+    const productOptions = useMemo(
+        () => productsData.map((s) => ({ label: s.name, value: s.id })),
+        [productsData]
+    );
 
     const pageTitle = isEdit ? `Edycja zamówienia #${id}` : 'Dodaj nowe zamówienie';
 
@@ -80,19 +142,53 @@ export const OrderAddEditScreen = () => {
         return Object.keys(e).length === 0;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!validate()) return;
-        const payload: Order = {
-            ...initial,
+
+        const payload: CreateOrderPayload = {
             customerId: customerValue!.value,
             sellerId: sellerValue!.value,
-            orderProducts,
+            currency: Currency.PLN,
+            orderProducts: orderProducts.map((p) => ({
+                productId: p.productId,
+                quantity: p.quantity,
+            })),
         };
-        console.log(isEdit ? '➡️ Aktualizacja zamówienia:' : '🆕 Nowe zamówienie:', payload);
-        navigation.goBack();
+
+        if (isEdit) {
+            // await update(fetchedOrder?.id, payload);
+        } else {
+            await create(payload);
+        }
     };
 
-    const handleAddProduct = (item: OrderItem) => setOrderProducts((prev) => [...prev, item]);
+    const handleAddProduct = (item: CreateOrderItem) => {
+        const productInfo = productsData.find((p) => p.id === item.productId);
+
+        if (productInfo) {
+            const qty = item.quantity;
+            const netPrice = productInfo.netPrice || 0;
+            const vatRate = productInfo.vatRate || 23;
+
+            const totalNet = netPrice * qty;
+            const totalVat = totalNet * (vatRate / 100);
+            const totalGross = totalNet + totalVat;
+
+            const newItem: OrderItem = {
+                productId: item.productId,
+                product: productInfo,
+                quantity: qty,
+                unitNetPrice: netPrice,
+                vatRate: vatRate,
+                currency: Currency.PLN,
+                totalNetPrice: totalNet,
+                totalVatAmount: totalVat,
+                totalGrossPrice: totalGross,
+            };
+
+            setOrderProducts((prev) => [...prev, newItem]);
+        }
+    };
     const handleRemoveProduct = (index: number) =>
         setOrderProducts((prev) => prev.filter((_, i) => i !== index));
 
@@ -125,13 +221,26 @@ export const OrderAddEditScreen = () => {
         hint: { color: theme.colors.onSurfaceVariant, marginTop: metrics.spacing.xs },
     });
 
+    if (loading) {
+        return <LoadingScreen text="Ładowanie danych..." />;
+    }
+
+    if (fetchOrderError) {
+        return (
+            <ErrorMessage
+                error={fetchOrderError}
+                onRetry={refresh}
+                onBack={() => navigation.goBack()}
+            />
+        );
+    }
+
     return (
         <ScrollView style={styles.container}>
             <AppText variant="headlineMedium" style={{ marginBottom: metrics.spacing.lg }}>
                 {pageTitle}
             </AppText>
 
-            {/* Informacje podstawowe */}
             <AppCard style={styles.card}>
                 <AppText variant="titleLarge" style={styles.cardTitle}>
                     Informacje podstawowe
@@ -142,9 +251,10 @@ export const OrderAddEditScreen = () => {
                             <AppAutocomplete<Option>
                                 label="Klient *"
                                 value={customerValue}
-                                options={customers}
+                                options={customerOptions}
                                 getOptionLabel={(o) => o.label}
                                 onChange={setCustomerValue}
+                                onInputChange={handleCustomerSearchChange}
                                 placeholder="Wybierz klienta"
                             />
                             {errors.customer && (
@@ -156,7 +266,7 @@ export const OrderAddEditScreen = () => {
 
                         <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
                             <View style={styles.buttonWrapper}>
-                                <AppButton icon={IconName.client} onPress={() => { }}>
+                                <AppButton icon={IconName.client} onPress={() => {}}>
                                     Przejdź do klientów
                                 </AppButton>
                             </View>
@@ -169,9 +279,10 @@ export const OrderAddEditScreen = () => {
                             <AppAutocomplete<Option>
                                 label="Sprzedawca *"
                                 value={sellerValue}
-                                options={sellers}
+                                options={sellerOptions}
                                 getOptionLabel={(o) => o.label}
                                 onChange={setSellerValue}
+                                onInputChange={handleSellerSearchChange}
                                 placeholder="Wybierz sprzedawcę"
                             />
                             {errors.seller && (
@@ -183,7 +294,7 @@ export const OrderAddEditScreen = () => {
 
                         <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
                             <View style={styles.buttonWrapper}>
-                                <AppButton icon={IconName.seller} onPress={() => { }}>
+                                <AppButton icon={IconName.seller} onPress={() => {}}>
                                     Przejdź do sprzedawców
                                 </AppButton>
                             </View>
@@ -192,11 +303,12 @@ export const OrderAddEditScreen = () => {
                 </View>
             </AppCard>
 
-            {/* Pozycje zamówienia */}
             <OrderProductInputCard
-                orderId={initial.id}
-                productsOptions={mockProducts}
+                orderId={id}
+                productsOptions={productOptions}
+                isLoading={productsLoading}
                 onAddProduct={handleAddProduct}
+                onSearchProduct={handleProductSearchChange}
             />
             <OrderProductList products={orderProducts} onRemove={handleRemoveProduct} />
 
@@ -241,7 +353,12 @@ export const OrderAddEditScreen = () => {
                 >
                     Anuluj
                 </AppButton>
-                <AppButton mode="contained" onPress={handleSave} style={styles.button}>
+                <AppButton
+                    mode="contained"
+                    onPress={handleSave}
+                    style={styles.button}
+                    loading={createLoading || updateLoading}
+                >
                     {isEdit ? 'Zapisz zmiany' : 'Dodaj zamówienie'}
                 </AppButton>
             </View>

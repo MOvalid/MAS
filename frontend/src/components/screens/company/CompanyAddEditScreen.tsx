@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image, LayoutChangeEvent } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, LayoutChangeEvent, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 
@@ -7,6 +7,12 @@ import { AppText, AppCard, AppButton, AppTextInput } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { Company } from '@/types/domain/company';
 import { formatNip } from '@/utils/formatters';
+import {
+    CreateCompanyPayload,
+    useCreateCompany,
+    useUpdateCompany,
+} from '@/composables/company/useCompanies';
+import { CompanyDto } from '@/types/dto';
 
 const CompanyImage =
     'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764533804/modern-urban-buildings-view_vhmzbe.jpg';
@@ -17,22 +23,7 @@ const EMPTY_COMPANY: Company = {
     taxId: '',
     address: { street: '', number: '', city: '', postalCode: '', country: '' },
     email: '',
-    phone: '',
-};
-
-const mockCompany: Company = {
-    id: '123',
-    name: 'Firma Przykładowa Sp. z o.o.',
-    taxId: '1234567890',
-    address: {
-        street: 'Przykładowa',
-        number: '1',
-        city: 'Warszawa',
-        postalCode: '00-001',
-        country: 'Polska',
-    },
-    email: 'kontakt@firma.pl',
-    phone: '+48 123 456 789',
+    phoneNumber: '',
 };
 
 export const CompanyAddEditScreen = () => {
@@ -40,9 +31,9 @@ export const CompanyAddEditScreen = () => {
     const navigation = useNavigation();
     const theme = useTheme();
 
-    const { id } = route.params ?? {};
-    const isEdit = Boolean(id);
-    const initial = isEdit ? mockCompany : EMPTY_COMPANY;
+    const { company: companyToEdit } = (route.params as { company?: Company }) ?? {};
+    const isEdit = Boolean(companyToEdit?.id);
+    const initial = isEdit ? companyToEdit! : EMPTY_COMPANY;
 
     const [name, setName] = useState(initial.name);
     const [taxId, setTaxId] = useState(initial.taxId);
@@ -52,11 +43,27 @@ export const CompanyAddEditScreen = () => {
     const [postalCode, setPostalCode] = useState(initial.address.postalCode);
     const [country, setCountry] = useState(initial.address.country);
     const [email, setEmail] = useState(initial.email || '');
-    const [phone, setPhone] = useState(initial.phone || '');
+    const [phone, setPhone] = useState(initial.phoneNumber || '');
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [cardHeight, setCardHeight] = useState<number>(0);
 
+    const { create, loading: isCreating } = useCreateCompany(
+        () => {
+            console.log('Sukces: Firma dodana');
+            navigation.goBack();
+        },
+        (err) => Alert.alert('Błąd', err)
+    );
+
+    const { update, loading: isUpdating } = useUpdateCompany(
+        () => {
+            console.log('Sukces: Firma zaktualizowana');
+            navigation.goBack();
+        },
+        (err) => Alert.alert('Błąd', err)
+    );
+    const isLoading = isCreating || isUpdating;
     const pageTitle = isEdit ? `Edycja firmy ${name || ''}` : 'Dodaj nową firmę';
 
     const validate = (): boolean => {
@@ -72,18 +79,22 @@ export const CompanyAddEditScreen = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!validate()) return;
-        const payload: Company = {
-            id: initial.id,
+
+        const payload = {
             name,
             taxId,
             address: { street, number, city, postalCode, country },
-            email: email || null,
-            phone: phone || null,
+            email: email?.trim() || undefined,
+            phone: phone?.trim() || undefined,
         };
-        console.log(isEdit ? '➡️ Aktualizacja firmy:' : '🆕 Tworzenie nowej firmy:', payload);
-        navigation.goBack();
+
+        if (isEdit && companyToEdit) {
+            await update(companyToEdit.id, { ...payload, id: companyToEdit.id } as CompanyDto);
+        } else {
+            await create(payload as CreateCompanyPayload);
+        }
     };
 
     const handleCancel = () => navigation.goBack();
@@ -116,10 +127,21 @@ export const CompanyAddEditScreen = () => {
 
     const ActionButtons = () => (
         <View style={styles.actionRow}>
-            <AppButton onPress={handleCancel} style={styles.button} mode="outlined">
+            <AppButton
+                onPress={handleCancel}
+                style={styles.button}
+                mode="outlined"
+                disabled={isLoading}
+            >
                 Anuluj
             </AppButton>
-            <AppButton onPress={handleSave} style={styles.button} mode="contained">
+            <AppButton
+                onPress={handleSave}
+                style={styles.button}
+                mode="contained"
+                loading={isLoading}
+                disabled={isLoading}
+            >
                 {isEdit ? 'Zapisz zmiany' : 'Dodaj firmę'}
             </AppButton>
         </View>
@@ -154,6 +176,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setName}
                             fullWidth
                             errorMessage={errors.name}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -167,6 +190,7 @@ export const CompanyAddEditScreen = () => {
                             fullWidth
                             keyboardType="number-pad"
                             errorMessage={errors.taxId}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -179,6 +203,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setStreet}
                             fullWidth
                             errorMessage={errors.street}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -191,6 +216,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setNumber}
                             fullWidth
                             errorMessage={errors.number}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -203,6 +229,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setCity}
                             fullWidth
                             errorMessage={errors.city}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -215,6 +242,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setPostalCode}
                             fullWidth
                             errorMessage={errors.postalCode}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -227,6 +255,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setCountry}
                             fullWidth
                             errorMessage={errors.country}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -234,14 +263,24 @@ export const CompanyAddEditScreen = () => {
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             E-mail
                         </AppText>
-                        <AppTextInput value={email} onChangeText={setEmail} fullWidth />
+                        <AppTextInput
+                            value={email}
+                            onChangeText={setEmail}
+                            fullWidth
+                            editable={!isLoading}
+                        />
                     </View>
 
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             Telefon
                         </AppText>
-                        <AppTextInput value={phone} onChangeText={setPhone} fullWidth />
+                        <AppTextInput
+                            value={phone}
+                            onChangeText={setPhone}
+                            fullWidth
+                            editable={!isLoading}
+                        />
                     </View>
 
                     <ActionButtons />

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 
 import { AppText, AppCard, AppButton, IconName } from '@/components/common';
@@ -17,20 +17,23 @@ import {
     PaymentMethod,
     PaymentSummaryStatus,
 } from '@/types/common';
-import { OrderItemTableRow, PaymentTableRow } from '@/types/domain';
+import { OrderItemTableData, PaymentTableData } from '@/types/domain';
 import { formatPrice } from '@/utils/price-utils';
 import { AddEditDeliveryForm, AddEditPaymentForm } from '@/components/form';
 import { useOrderPaymentSummary } from '@/hooks/useOrderPaymentSummary';
 import { getPaymentStatusColor } from '@/utils/color-utils';
 import { useSnackbar } from '@/context/SnackbarContext';
-import { mapPaymentListToTableRows } from '@/mappers/payment.mapper';
-import { getMockOrderSummary } from '@/utils/data-generator';
-import { mapOrderItemDtoListToTableRows } from '@/mappers/order.mapper';
-
-const mockOrder = getMockOrderSummary();
+import { useOrder } from '@/composables/orders/useOrders';
+import { ErrorScreen } from '../ErrorScreen';
+import { usePaymentTableData } from '@/composables/payment/usePayments';
+import { useOrderItemTableData } from '@/composables/orders/useOrderItems';
+import { LoadingScreen } from '../LoadingScreen';
 
 export const OrderDetailsScreen = () => {
+    const route = useRoute();
     const navigation = useNavigation();
+    const { id } = route.params as { id: string };
+
     const { showSnackbar } = useSnackbar();
     const theme = useTheme();
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -39,18 +42,9 @@ export const OrderDetailsScreen = () => {
     const [selectedPayment, setSelectedPayment] = useState<PaymentDto | null>(null);
     const [selectedDelivery, setSelectedDelivery] = useState<DeliveryDto | null>(null);
 
-    const order = mockOrder;
+    const { data: order, loading, error, refresh } = useOrder(id);
 
-    const orderItemsData: OrderItemTableRow[] = useMemo(
-        () => mapOrderItemDtoListToTableRows(order.orderItems ?? []),
-        [order.orderItems]
-    );
-    const paymentsData: PaymentTableRow[] = useMemo(
-        () => mapPaymentListToTableRows(order.payments ?? []),
-        [order.payments]
-    );
-
-    const orderItemsColumns: TableColumn<OrderItemTableRow>[] = [
+    const orderItemsColumns: TableColumn<OrderItemTableData>[] = [
         { key: 'product', title: 'Produkt', flex: 2 },
         { key: 'quantity', title: 'Ilość', align: 'center', flex: 0.5 },
         { key: 'unit', title: 'Jdn.', align: 'right', flex: 0.5 },
@@ -62,12 +56,12 @@ export const OrderDetailsScreen = () => {
         { key: 'currency', title: 'Waluta', align: 'center', flex: 0.5 },
     ];
 
-    const paymentColumns: TableColumn<PaymentTableRow>[] = [
+    const paymentColumns: TableColumn<PaymentTableData>[] = [
         { key: 'method', title: 'Metoda płatności', flex: 1.5 },
         { key: 'amount', title: 'Kwota', align: 'right', flex: 1 },
         { key: 'currency', title: 'Waluta', align: 'center', flex: 0.5 },
         { key: 'status', title: 'Status', align: 'center', flex: 0.5 },
-        { key: 'paidAt', title: 'Data płatności', align: 'center', flex: 0.75 },
+        { key: 'paymentDate', title: 'Data płatności', align: 'center', flex: 0.75 },
     ];
 
     const addPayment = () => {
@@ -75,17 +69,17 @@ export const OrderDetailsScreen = () => {
         setPaymentModalVisible(true);
     };
 
-    const editPayment = (row: PaymentTableRow) => {
-        const selectedPayment = order.payments?.find((p) => p.id === row.id);
+    const editPayment = (row: PaymentTableData) => {
+        const selectedPayment = order?.payments?.find((p) => p.id === row.id);
         if (!selectedPayment) return;
         setSelectedPayment(selectedPayment);
         setPaymentModalVisible(true);
     };
 
-    const cancelPayment = (row: PaymentTableRow) => showSnackbar('CANCEL PAYMENT', 'warning');
+    const cancelPayment = (row: PaymentTableData) => showSnackbar('CANCEL PAYMENT', 'warning');
 
     const editDelivery = () => {
-        if (!order.delivery) return;
+        if (!order?.delivery) return;
         setSelectedDelivery(order.delivery);
         setDeliveryModalVisible(true);
     };
@@ -105,8 +99,23 @@ export const OrderDetailsScreen = () => {
         navigation.goBack();
     };
 
+    if (loading) return <LoadingScreen />;
+
+    if (error || !order) {
+        return (
+            <ErrorScreen
+                title="Nie udało się pobrać danych"
+                message={error || 'Zamówienie nie zostało znalezione'}
+                onRetry={refresh}
+            />
+        );
+    }
+
     const { orderTotal, paymentsTotal, remainingAmount, status, isOverpaid } =
-        useOrderPaymentSummary(order.orderItems, order.payments);
+        useOrderPaymentSummary(order?.orderProducts, order.payments);
+
+    const orderItemsData = useOrderItemTableData(order.orderProducts || []);
+    const paymentsData = usePaymentTableData(order.payments || []);
 
     return (
         <ScrollView style={styles.container}>
@@ -134,7 +143,7 @@ export const OrderDetailsScreen = () => {
                     </View>
 
                     <View style={styles.buttonWrapper}>
-                        <AppButton icon={IconName.edit} onPress={() => { }}>
+                        <AppButton icon={IconName.edit} onPress={() => {}}>
                             Edytuj zamówienie
                         </AppButton>
                     </View>
@@ -344,7 +353,7 @@ export const OrderDetailsScreen = () => {
                         Przewoźnik:{' '}
                     </AppText>
                     <AppText variant="bodyLarge" style={styles.value}>
-                        {order.delivery?.carrier}
+                        {order.delivery?.carrierId}
                     </AppText>
                 </View>
             </AppCard>
@@ -386,7 +395,7 @@ export const OrderDetailsScreen = () => {
             <AppModal visible={deliveryModalVisible} onClose={onCloseDeliveryModal}>
                 <AddEditDeliveryForm
                     initialAddress={selectedDelivery?.address}
-                    initialCarrier={selectedDelivery?.carrier ?? ''}
+                    initialCarrier={selectedDelivery?.carrierId ?? ''}
                     initialTracking={selectedDelivery?.trackingNumber ?? ''}
                     onClose={onCloseDeliveryModal}
                     onSave={(addr, carrier, tracking) => {

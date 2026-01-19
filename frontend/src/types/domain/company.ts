@@ -6,7 +6,7 @@ export interface Company {
     taxId: string;
     address: Address;
     email?: string;
-    phone?: string;
+    phoneNumber?: string;
 }
 
 export interface CompanyTableRow {
@@ -16,4 +16,5 @@ export interface CompanyTableRow {
     taxId: string;
     email: string;
     phone: string;
+    address: string;
 }

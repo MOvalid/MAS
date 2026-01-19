@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInputProps as PaperTextInputProps } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, StyleSheet, TextInputProps as PaperTextInputProps, Text } from 'react-native';
 import { Autocomplete } from 'react-native-paper-autocomplete';
 import { AppText } from '@/components/common';
 import { useTheme } from 'react-native-paper';
@@ -12,7 +12,9 @@ type AppAutocompleteProps<T> = {
     options: T[];
     getOptionLabel: (option: T) => string;
     onChange: (option?: T) => void;
+    onInputChange?: (text: string) => void;
     placeholder?: string;
+    errorMessage?: string;
     inputProps?: Partial<PaperTextInputProps>;
 };
 
@@ -22,12 +24,24 @@ export function AppAutocomplete<T>({
     options,
     getOptionLabel,
     onChange,
+    onInputChange,
     placeholder = 'Wybierz...',
+    errorMessage,
 }: AppAutocompleteProps<T>) {
     const theme = useTheme();
     const { colors } = useAppTheme();
     const [inputValue, setInputValue] = useState(value ? getOptionLabel(value) : '');
     const [filterActive, setFilterActive] = useState(false);
+
+    const debouncedSearch = useMemo(() => {
+        let timeout: NodeJS.Timeout;
+        return (text: string) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                onInputChange?.(text);
+            }, 500);
+        };
+    }, [onInputChange]);
 
     useEffect(() => {
         setInputValue(value ? getOptionLabel(value) : '');
@@ -37,6 +51,12 @@ export function AppAutocomplete<T>({
         if (!active || !input) return opts;
         return opts.filter((o) => getOptionLabel(o).toLowerCase().includes(input.toLowerCase()));
     };
+
+    const errorMessageStyle = {
+        color: colors.error,
+        fontSize: metrics.text.small,
+        marginLeft: metrics.spacing.md,
+    } as const;
 
     const styles = StyleSheet.create({
         wrapper: { flex: 1 },
@@ -55,6 +75,15 @@ export function AppAutocomplete<T>({
             backgroundColor: colors.secondaryContainer,
         },
         labelText: { color: theme.colors.onSurfaceVariant },
+
+        errorContainerStyle: {
+            position: 'absolute' as const,
+            bottom: -metrics.spacing.lg,
+            left: 0,
+            right: 0,
+            height: metrics.spacing.lg,
+            justifyContent: 'center' as const,
+        },
     });
 
     return (
@@ -78,6 +107,7 @@ export function AppAutocomplete<T>({
                         onChangeText: (text) => {
                             setInputValue(text);
                             setFilterActive(true);
+                            debouncedSearch(text);
                         },
                         onFocus: () => setFilterActive(false),
                         style: styles.input,
@@ -87,6 +117,9 @@ export function AppAutocomplete<T>({
                         selectionColor: colors.primary,
                     }}
                 />
+            </View>
+            <View style={styles.errorContainerStyle}>
+                {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
             </View>
         </View>
     );

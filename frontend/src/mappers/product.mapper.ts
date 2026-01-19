@@ -1,220 +1,130 @@
-// // types/mappers/product.mapper.ts
-import { ProductDetails, ProductSpecification, StockProduct } from '@/types/domain';
+import { calculateVat, formatPrice } from '@/utils/price-utils';
 import {
-    ProductDto,
-    ProductSpecificationDto,
-    StockProductDto,
-    StockProductResponseDto,
-} from '@/types/dto';
-import { ProductViewModel, StockProductViewModel } from '@/types/view-model/product';
-import { formatPolishDate } from '@/utils/formatters';
-import { formatPrice } from '@/utils/price-utils';
-import { mapCompanyDtoToCompany } from './company.mapper';
+    Product,
+    ProductDetails,
+    ProductTableData,
+    ProductDimensions,
+} from '../types/domain/product';
+import { ProductDto, ProductDetailsDto, UpdateProductPayload } from '../types/dto/product';
+import { mapCompanyDtoToDomain, mapCompanyToDto } from './company.mapper';
+import { ProductCategory } from '@/types/domain';
 
-/**
- * Maps a {@link StockProductDto} received from the API
- * into a presentation-ready {@link StockProductViewModel}.
- *
- *
- * @example
- * const vm = mapStockProductToViewModel(dto)
- * // → { grossPrice: "199,99 zł", lastRestocked: "12.02.2025", ... }
- *
- * @param dto - Raw {@link StockProductDto} returned from the backend.
- * @returns The formatted {@link StockProductViewModel} for UI rendering.
- */
-export const mapStockProductDtoToViewModel = (dto: StockProductDto): StockProductViewModel => {
+export const mapProductDtoToDomain = (dto: ProductDto): Product => {
+    const vatAmount = calculateVat(dto.netPrice, dto.vatRate);
     return {
         id: dto.id,
         name: dto.name,
-        manufacturerName: dto.manufacturer?.name ?? '—',
-        stockQuantity: dto.stockQuantity,
-        unit: dto.unit,
-        netPrice: formatPrice(dto.netPrice),
-        grossPrice: formatPrice(dto.grossPrice),
-        currency: dto.currency,
-        lastRestocked: dto.lastRestockedAt ? formatPolishDate(dto.lastRestockedAt, false) : '—',
-    };
-};
-
-/**
- * Maps an array of {@link StockProductDto} items into an array of
- * presentation-layer {@link StockProductViewModel} objects.
- *
- * @example
- * mapStockList(dtoArray)
- * // → [{ id: "1", name: "Produkt 1", grossPrice: "10,00 zł" }, ...]
- *
- * @param list - Array of DTO objects from API.
- * @returns Array of mapped view models for UI usage.
- */
-export const mapStockProductDtoListToViewModel = (
-    list: StockProductDto[]
-): StockProductViewModel[] => list.map(mapStockProductDtoToViewModel);
-
-/**
- * Maps a {@link ProductDto} returned from the backend
- * into a presentation-ready {@link ProductViewModel}.
- *
- * @example
- * const vm = mapProductToViewModel(dto);
- * // → { name: "Laptop X", grossPrice: "3 999,00 zł", lastRestocked: "02.01.2025", ... }
- *
- * @param dto - Raw {@link ProductDto} received from API.
- * @returns A formatted {@link ProductViewModel} used by the UI layer.
- */
-export const mapProductDtoToViewModel = (dto: ProductDto, lp?: number): ProductViewModel => {
-    return {
-        lp: lp ?? 0,
-        id: dto.id,
-        name: dto.name,
-        manufacturer: dto.manufacturer || '—',
         sku: dto.sku,
-        description: dto.description ?? '—',
-        netPrice: formatPrice(dto.netPrice),
-        grossPrice: formatPrice(dto.grossPrice),
-        vatAmount: formatPrice(dto.vatAmount),
-        vatRate: `${dto.vatRate}%`,
-        currency: dto.currency,
+        stockQuantity: dto.stockQuantity,
+        description: null,
+        manufacturer: mapCompanyDtoToDomain(dto.manufacturer),
         categoryId: dto.categoryId,
-        imageUrl: dto.imageUrl,
-        lastRestocked: dto.lastRestockedAt ? formatPolishDate(dto.lastRestockedAt, false) : '—',
+        categoryName: null,
+        netPrice: dto.netPrice,
+        vatRate: dto.vatRate,
+        vatAmount: vatAmount,
+        grossPrice: dto.netPrice + vatAmount,
+        currency: 'PLN',
+        lastRestockedAt: null,
     };
 };
 
-/**
- * Maps an array of {@link ProductDto} objects into an array of
- * UI-ready {@link ProductViewModel} models.
- *
- *
- * @example
- * const list = mapProductList(dtoArray);
- * // → [{ id: "1", name: "Produkt A", grossPrice: "19,99 zł" }, ...]
- *
- * @param list - List of DTOs from backend.
- * @returns An array of mapped view models.
- */
-export const mapProductListToViewModel = (list: ProductDto[]): ProductViewModel[] =>
-    list.map((dto, index) => ({
-        ...mapProductDtoToViewModel(dto),
-        lp: index + 1,
-    }));
-
-export const mapProductStockResponseDto = (
-    response: StockProductResponseDto
-): { items: StockProduct[]; total: number } => {
-    const items: StockProduct[] = response.data.map(
-        (p: StockProductDto): StockProduct => ({
-            id: p.id,
-            name: p.name,
-            manufacturer: mapCompanyDtoToCompany(p.manufacturer), // ✅ CAŁY OBIEKT
-            stockQuantity: p.stockQuantity,
-            unit: p.unit,
-            netPrice: p.netPrice,
-            grossPrice: p.grossPrice,
-            currency: p.currency,
-            lastRestockedAt: p.lastRestockedAt,
-        })
-    );
-
-    return {
-        items,
-        total: response.total,
-    };
-};
-
-export const mapStockProductDtoToDomain = (dto: StockProductDto): StockProduct => {
+/** ProductDetailsDto -> ProductDetails */
+export const mapProductDetailsDtoToDomain = (dto: ProductDetailsDto): ProductDetails => {
+    const vatAmount = calculateVat(dto.netPrice, dto.vatRate);
     return {
         id: dto.id,
         name: dto.name,
-        manufacturer: mapCompanyDtoToCompany(dto.manufacturer),
+        sku: dto.sku,
         stockQuantity: dto.stockQuantity,
-        unit: dto.unit,
+        description: dto.description,
+        categoryId: dto.category.id,
+        category: dto.category as ProductCategory,
         netPrice: dto.netPrice,
-        grossPrice: dto.grossPrice,
-        currency: dto.currency,
+        vatRate: dto.vatRate,
+        vatAmount: vatAmount,
+        grossPrice: dto.netPrice + vatAmount,
+        currency: 'PLN',
+        imageUrl: null,
+        manufacturer: mapCompanyDtoToDomain(dto.manufacturer),
+        dimensions: dto.dimensions,
         lastRestockedAt: dto.lastRestockedAt,
     };
 };
 
-export const mapStockProductListDtoToDomain = (dtos: StockProductDto[]): StockProduct[] => {
-    return dtos.map(mapStockProductDtoToDomain);
-};
-
-export const mapStockProductToViewModel = (product: StockProduct): StockProductViewModel => ({
+export const mapProductToDto = (product: Product): ProductDto => ({
     id: product.id,
     name: product.name,
-    manufacturerName: product.manufacturer.name,
+    sku: product.sku,
+    manufacturer: mapCompanyToDto(product.manufacturer),
+    netPrice: product.netPrice,
+    vatRate: product.vatRate,
     stockQuantity: product.stockQuantity,
-    unit: product.unit,
-    netPrice: formatPrice(product.netPrice),
-    grossPrice: formatPrice(product.grossPrice),
-    currency: product.currency,
-    lastRestocked: product.lastRestockedAt ? formatPolishDate(product.lastRestockedAt) : '-',
+    categoryId: product.categoryId ?? '',
 });
 
-export const mapStockProductListToViewModel = (list: StockProduct[]): StockProductViewModel[] =>
-    list.map(mapStockProductToViewModel);
+export const mapProductToUpdatePayload = (
+    product: Product,
+    dimensions: ProductDimensions
+): UpdateProductPayload => ({
+    name: product.name,
+    sku: product.sku,
+    manufacturerId: product.manufacturer.id,
+    netPrice: product.netPrice,
+    vatRate: product.vatRate,
+    stockQuantity: product.stockQuantity,
+    description: product.description ?? '',
+    categoryId: product.categoryId ?? '',
+    dimensions: dimensions,
+});
 
-/**
- * Maps ProductSpecificationDto to ProductSpecification domain model
- */
-const mapProductSpecificationDtoToDomain = (dto: ProductSpecificationDto): ProductSpecification => {
+export const mapProductDetailsToUpdatePayload = (product: ProductDetails): UpdateProductPayload => {
     return {
-        productId: dto.productId,
-        weight: dto.weight,
-        dimensions: dto.dimensions
-            ? {
-                  length: dto.dimensions.length || 0,
-                  width: dto.dimensions.width || 0,
-                  height: dto.dimensions.height || 0,
-              }
-            : undefined,
-        material: dto.material,
-        color: dto.color,
-        manufacturer: dto.manufacturer,
-        countryOfOrigin: dto.countryOfOrigin,
-        warranty: dto.warranty,
+        name: product.name,
+        sku: product.sku,
+        manufacturerId: product.manufacturer.id,
+        netPrice: product.netPrice,
+        vatRate: product.vatRate,
+        stockQuantity: product.stockQuantity,
+        dimensions: product.dimensions ?? {
+            length: 0,
+            width: 0,
+            height: 0,
+        },
+        description: product.description ?? '',
+        categoryId: product.categoryId ?? product.category.id,
     };
 };
 
-/**
- * Maps ProductDto and ProductSpecificationDto to ProductDetails domain model
- * @param productDto - Main product data
- * @param specificationDto - Optional product specification data
- */
-export const mapProductDetailsDtoToDomain = (
-    productDto: ProductDto,
-    specificationDto: ProductSpecificationDto | null
-): ProductDetails => {
+// export const mapProductToTableRow = (product: Product, index: number): ProductTableRow => ({
+//     lp: index + 1,
+//     id: product.id,
+//     name: product.name,
+//     categoryName: product.categoryName ?? 'Brak kategorii',
+//     price: formatPrice(product.grossPrice),
+//     currency: product.currency,
+//     available: product.stockQuantity > 0,
+//     stockQuantity: product.stockQuantity,
+// });
+
+export const mapProductToTableRow = (
+    product: Product,
+    index: number,
+    page: number = 1,
+    limit: number = 10
+): ProductTableData => {
+    const rowNumber = (page - 1) * limit + index + 1;
+
     return {
-        // Basic product info
-        id: productDto.id,
-        name: productDto.name,
-        sku: productDto.sku,
-        stockQuantity: productDto.stockQuantity,
-        description: productDto.description,
-        categoryId: productDto.categoryId,
-
-        // Category object is not included in DTO
-        // If you need it, fetch it separately or include in ProductDto response
-        category: undefined,
-
-        // Pricing
-        netPrice: productDto.netPrice,
-        vatRate: productDto.vatRate,
-        grossPrice: productDto.grossPrice,
-        vatAmount: productDto.vatAmount,
-        currency: productDto.currency,
-
-        // Image
-        imageUrl: productDto.imageUrl,
-
-        // Specification (map if exists, otherwise null)
-        specification: specificationDto
-            ? mapProductSpecificationDtoToDomain(specificationDto)
-            : null,
-
-        lastRestockedAt: productDto.lastRestockedAt,
+        id: product.id,
+        lp: rowNumber.toString(),
+        name: product.name,
+        manufacturer: product.manufacturer.name,
+        categoryId: product.categoryId || '',
+        netPrice: product.netPrice.toFixed(2),
+        grossPrice: product.grossPrice.toFixed(2),
+        currency: 'PLN',
+        available: product.stockQuantity > 0,
+        stockQuantity: product.stockQuantity,
     };
 };
