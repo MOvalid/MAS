@@ -25,37 +25,51 @@ export const InvoiceListScreen = () => {
     const [dateError, setDateError] = useState('');
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+    const {
+        data: invoices,
+        page,
+        setPage,
+        error,
+        refetch,
+        total,
+        limit,
+        loading,
+        setFilters,
+    } = useInvoices(true, { search, sorting: sort });
+
     const debouncedSearch = useDebounce(search, 500);
 
-    const { data: invoices, page, setPage, total, limit, loading, setFilters } = useInvoices(true);
-
-    const activeFilters = useMemo(
-        () => ({
+    useEffect(() => {
+        setFilters({
             search: debouncedSearch,
             status: status === InvoiceStatus.ALL ? undefined : status,
             sorting: sort,
-            startDate: issuedStart,
-            endDate: issuedEnd,
-            paymentStartDate: paymentStart,
-            paymentEndDate: paymentEnd,
-        }),
-        [debouncedSearch, status, sort, issuedStart, issuedEnd, paymentStart, paymentEnd]
-    );
+            startDate: issuedStart  || undefined,
+            endDate: issuedEnd || undefined,
+            paymentStartDate: paymentStart || undefined,
+            paymentEndDate: paymentEnd || undefined,
+        });
+    }, [debouncedSearch, status, sort, issuedStart, issuedEnd, paymentStart, paymentEnd]);
 
-    useEffect(() => {
-        setFilters(activeFilters);
-        setPage(1);
-    }, [activeFilters]);
 
     const tableData = useInvoiceTableData(invoices, page, limit);
 
     useEffect(() => {
         if (issuedStart && issuedEnd && new Date(issuedStart) > new Date(issuedEnd)) {
-            setDateError('Błędny zakres dat wystawienia');
+            setDateError('Błędny zakres dat wystawienia faktur');
         } else {
             setDateError('');
         }
     }, [issuedStart, issuedEnd]);
+
+    useEffect(() => {
+        if (paymentStart && paymentEnd && new Date(paymentStart) > new Date(paymentEnd)) {
+            setDateError('Błędny zakres terminów płatności faktur');
+        } else {
+            setDateError('');
+        }
+    }, [paymentStart, paymentEnd]);
 
     const handleRowPress = (item: InvoiceTableData) => {
         navigation.navigate('OrderDetails', { id: item.orderId });

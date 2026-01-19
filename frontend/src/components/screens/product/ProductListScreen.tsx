@@ -12,7 +12,6 @@ import { RootStackParamList } from '@/types/dto/auth';
 import { useCategories } from '@/composables/category';
 import { useProducts, useProductTableData } from '@/composables/product/useProducts';
 import { ProductTableData } from '@/types/domain';
-import { useDebounce } from '@/hooks/useDebounce';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 
 export const ProductListScreen = () => {
@@ -36,15 +35,13 @@ export const ProductListScreen = () => {
         setFilters,
     } = useProducts(true, { search, sorting: sort });
 
-    const debouncedSearch = useDebounce(search, 500);
-
     useEffect(() => {
         setFilters({
-            search: debouncedSearch,
+            search: search.trim(),
             sorting: sort,
             categoryId: category === 'ALL' ? undefined : category,
         });
-    }, [debouncedSearch, sort, category]);
+    }, [search, sort, category]);
 
     const tableData = useProductTableData(products, page, limit);
 

@@ -43,7 +43,7 @@ export const CustomerListScreen = () => {
 
     useEffect(() => {
         setFilters({
-            search: search,
+            search: search.trim(),
             sorting: sort,
         });
     }, [search, sort, setFilters]);

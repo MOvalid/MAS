@@ -27,28 +27,28 @@ export const OrderListScreen = () => {
 
     const { data: sellers, loading: sellersLoading } = useSellers();
 
-    const filters = useMemo(
-        () => ({
-            search: search.trim() || undefined,
+    const {
+        data: orders,
+        page,
+        error,
+        refetch,
+        setPage,
+        total,
+        limit,
+        loading: orderLoading,
+        setFilters,
+    } = useOrders2(true, { search, sorting: sort });
+
+    useEffect(() => {
+        setFilters({
+            search: search.trim(),
             sorting: sort,
             status: status !== OrderStatus.ALL ? status : undefined,
             sellerId: seller !== 'ALL' ? seller : undefined,
             dateFrom: startDate || undefined,
             dateTo: endDate || undefined,
-        }),
-        [search, sort, status, seller, startDate, endDate]
-    );
-
-    const {
-        data: orders,
-        page,
-        total,
-        limit,
-        loading: orderLoading,
-        setPage,
-        refetch,
-        error,
-    } = useOrders2(true, filters);
+        });
+    }, [search, sort, status, seller, startDate, endDate]);
 
     const tableData = useOrderTableData(orders, page, limit);
 

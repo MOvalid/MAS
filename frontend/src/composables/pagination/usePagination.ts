@@ -64,8 +64,8 @@ export function usePaginated<T, TSort>({
         try {
             const response = await api.get<PaginatedResponse<T>>(endpoint, {
                 params: {
-                    pageNumber: page,
-                    itemsPerPage: limit,
+                    page: page,
+                    limit: limit,
                     search: debouncedFilters.search,
                     ...debouncedFilters,
                 },
