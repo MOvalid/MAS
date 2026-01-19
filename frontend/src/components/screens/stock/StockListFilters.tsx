@@ -11,8 +11,8 @@ interface StockListFiltersProps {
     onSearchChange: (v: string) => void;
     stockLevel: StockLevelFilter;
     onStockLevelChange: (v: StockLevelFilter) => void;
-    sortBy: ProductSort;
-    onSortByChange: (v: ProductSort) => void;
+    sort: ProductSort;
+    onSortChange: (v: ProductSort) => void;
 }
 
 export const StockListFilters: React.FC<StockListFiltersProps> = ({
@@ -20,8 +20,8 @@ export const StockListFilters: React.FC<StockListFiltersProps> = ({
     onSearchChange,
     stockLevel,
     onStockLevelChange,
-    sortBy,
-    onSortByChange,
+    sort,
+    onSortChange,
 }) => {
     const theme = useTheme();
 
@@ -99,8 +99,8 @@ export const StockListFilters: React.FC<StockListFiltersProps> = ({
                     <AppDropdown
                         options={sortOptions}
                         width="100%"
-                        value={sortBy}
-                        onChange={(val) => onSortByChange(val as ProductSort)}
+                        value={sort}
+                        onChange={(val) => onSortChange(val as ProductSort)}
                     />
                 </View>
             </View>

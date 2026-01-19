@@ -35,14 +35,14 @@ export const StockListScreen = () => {
         limit,
         loading,
         setFilters,
-    } = useProducts(true, { search, sortBy: sort });
+    } = useProducts(true, { search, sorting: sort });
 
     const debouncedSearch = useDebounce(search, 500);
 
     useEffect(() => {
         setFilters({
             search: debouncedSearch,
-            sortBy: sort,
+            sorting: sort,
             stockLevel: stockLevel === 'ALL' ? undefined : stockLevel,
         });
     }, [debouncedSearch, sort, stockLevel]);
@@ -123,8 +123,8 @@ export const StockListScreen = () => {
                     setStockLevel(val);
                     setPage(1);
                 }}
-                sortBy={sort}
-                onSortByChange={(val) => {
+                sort={sort}
+                onSortChange={(val) => {
                     setSort(val);
                     setPage(1);
                 }}

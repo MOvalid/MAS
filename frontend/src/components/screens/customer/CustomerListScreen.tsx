@@ -25,7 +25,7 @@ export const CustomerListScreen = () => {
         error,
         refetch,
         setFilters,
-    } = useCustomers(true, { search, sortBy: sort });
+    } = useCustomers(true, { search, sorting: sort });
 
     const tableData = useCustomerTableData(customers, page, limit);
 
@@ -43,7 +43,7 @@ export const CustomerListScreen = () => {
     useEffect(() => {
         setFilters({
             search: search,
-            sortBy: sort,
+            sorting: sort,
         });
     }, [search, sort, setFilters]);
 

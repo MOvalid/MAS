@@ -34,14 +34,14 @@ export const OrderListScreen = () => {
         limit,
         loading,
         setFilters,
-    } = useOrders2(true, { search, sortBy: sort });
+    } = useOrders2(true, { search, sorting: sort });
 
     const debouncedSearch = useDebounce(search, 500);
 
     useEffect(() => {
         setFilters({
             search: debouncedSearch.trim() || undefined,
-            sortBy: sort,
+            sorting: sort,
             status: status !== OrderStatus.ALL ? status : undefined,
             sellerId: seller !== 'ALL' ? seller : undefined,
             dateFrom: startDate || undefined,
@@ -63,7 +63,7 @@ export const OrderListScreen = () => {
     );
 
     const handleRowPress = (item: OrderTableData) => {
-        navigation.navigate('OrderDetails', { id: item.id });
+        navigation.navigate('Order', { id: item.id });
     };
 
     const onPrevious = () => setPage((o) => Math.max(1, o - 1));
@@ -72,14 +72,13 @@ export const OrderListScreen = () => {
     const columns: TableColumn<OrderTableData>[] = [
         { key: 'lp', title: 'Lp.', flex: 0.3 },
         { key: 'createdAt', title: 'Data', flex: 1 },
-        { key: 'customer', title: 'Klient', flex: 1.5 },
-        { key: 'seller', title: 'Sprzedawca', flex: 1 },
         {
             key: 'customer',
             title: 'Klient',
             flex: 2,
             render: (item) => item.company || item.customer,
         },
+        { key: 'seller', title: 'Sprzedawca', flex: 1 },
         { key: 'status', title: 'Status', flex: 1 },
         { key: 'invoiceNumber', title: 'Faktura', flex: 1 },
     ];
@@ -110,8 +109,8 @@ export const OrderListScreen = () => {
                     setSeller(v);
                     setPage(1);
                 }}
-                sortBy={sort}
-                onSortByChange={(v) => {
+                sort={sort}
+                onSortChange={(v) => {
                     setSort(v);
                     setPage(1);
                 }}
@@ -130,6 +129,7 @@ export const OrderListScreen = () => {
             <AppTable
                 columns={columns}
                 data={tableData}
+                onRowPress={handleRowPress}
                 actions={(row) => [
                     { icon: IconName.document, onPress: () => {}, tooltip: 'Faktura' },
                     { icon: IconName.edit, onPress: () => {}, tooltip: 'Edytuj' },

@@ -158,7 +158,7 @@ export const ProductDetailsScreen = () => {
                         {product.manufacturer && (
                             <DetailRow
                                 label="Producent:"
-                                value={product.manufacturer}
+                                value={product.manufacturer.name}
                                 styles={styles}
                             />
                         )}

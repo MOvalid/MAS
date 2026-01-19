@@ -10,7 +10,7 @@ export interface PaginatedResponse<T> {
 
 export type BaseFilters<TSort> = {
     search?: string;
-    sortBy?: TSort;
+    sorting?: TSort;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 };
@@ -67,7 +67,6 @@ export function usePaginated<T, TSort>({
                     pageNumber: page,
                     itemsPerPage: limit,
                     search: debouncedFilters.search,
-                    sorting: debouncedFilters.sortBy, // np. NAME_ASC
                     ...debouncedFilters,
                 },
             });

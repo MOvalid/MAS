@@ -26,7 +26,7 @@ export const CompanyListScreen = () => {
         error,
         refetch,
         setFilters,
-    } = useCompanies(true, { search, sortBy: sort });
+    } = useCompanies(true, { search, sorting: sort });
 
     const tableData = useCompanyTableData(companies, page, limit);
     const handleSearchChange = (newSearch: string) => {
@@ -40,7 +40,7 @@ export const CompanyListScreen = () => {
     useEffect(() => {
         setFilters({
             search: search,
-            sortBy: sort,
+            sorting: sort,
         });
     }, [search, sort, setFilters]);
 

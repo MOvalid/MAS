@@ -35,14 +35,14 @@ export const ProductListScreen = () => {
         limit,
         loading,
         setFilters,
-    } = useProducts(true, { search, sortBy: sort });
+    } = useProducts(true, { search, sorting: sort });
 
     const debouncedSearch = useDebounce(search, 500);
 
     useEffect(() => {
         setFilters({
             search: debouncedSearch,
-            sortBy: sort,
+            sorting: sort,
             categoryId: category === 'ALL' ? undefined : category,
         });
     }, [debouncedSearch, sort, category]);

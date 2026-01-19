@@ -33,7 +33,7 @@ export const InvoiceListScreen = () => {
         () => ({
             search: debouncedSearch,
             status: status === InvoiceStatus.ALL ? undefined : status,
-            sortBy: sort,
+            sorting: sort,
             startDate: issuedStart,
             endDate: issuedEnd,
             paymentStartDate: paymentStart,
