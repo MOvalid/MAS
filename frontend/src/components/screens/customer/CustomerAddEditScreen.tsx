@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image, LayoutChangeEvent, Alert } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+    View,
+    StyleSheet,
+    ScrollView,
+    Image,
+    LayoutChangeEvent,
+    Alert,
+    ActivityIndicator,
+    Animated,
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 
@@ -34,6 +43,8 @@ export const CustomerAddEditScreen = () => {
     const { customer: customerToEdit } = (route.params as { customer?: Customer }) ?? {};
     const isEdit = Boolean(customerToEdit?.id);
     const initial = isEdit ? customerToEdit! : EMPTY_CUSTOMER;
+    const imageOpacity = useRef(new Animated.Value(0)).current;
+    const [isImageLoading, setIsImageLoading] = useState(true);
 
     // Form State
     const [firstName, setFirstName] = useState(initial.firstName);
@@ -122,6 +133,18 @@ export const CustomerAddEditScreen = () => {
             marginBottom: metrics.spacing.xl,
         },
         imageContainer: { width: '45%', marginVertical: metrics.spacing.sm },
+        imagePlaceholder: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: theme.colors.surfaceVariant,
+            borderRadius: metrics.radius.lg,
+            zIndex: 1,
+        },
         image: { width: '100%', borderRadius: metrics.radius.lg },
         card: {
             flex: 1,
@@ -155,6 +178,14 @@ export const CustomerAddEditScreen = () => {
         </View>
     );
 
+    const onLoad = () => {
+        Animated.timing(imageOpacity, {
+            toValue: 1,
+            duration: 500, // Pół sekundy płynnego pojawiania się
+            useNativeDriver: true,
+        }).start(() => setIsImageLoading(false));
+    };
+
     return (
         <ScrollView style={styles.container}>
             <AppText variant="headlineMedium" style={{ marginBottom: metrics.spacing.lg }}>
@@ -163,9 +194,23 @@ export const CustomerAddEditScreen = () => {
 
             <View style={styles.contentRow}>
                 <View style={[styles.imageContainer, { height: cardHeight }]}>
-                    <Image
+                    {/* Spinner widoczny tylko gdy zdjęcie nie jest w pełni załadowane */}
+                    {isImageLoading && (
+                        <View style={[styles.imagePlaceholder, { height: cardHeight }]}>
+                            <ActivityIndicator color={theme.colors.primary} />
+                        </View>
+                    )}
+
+                    <Animated.Image
                         source={{ uri: CustomerImage }}
-                        style={[styles.image, { height: cardHeight }]}
+                        onLoad={onLoad}
+                        style={[
+                            styles.image,
+                            { 
+                                height: cardHeight,
+                                opacity: imageOpacity // Podpinamy animację pod opacity
+                            }
+                        ]}
                     />
                 </View>
 

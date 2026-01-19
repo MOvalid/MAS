@@ -1,5 +1,13 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image, LayoutChangeEvent, Alert } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { 
+    View, 
+    StyleSheet, 
+    ScrollView, 
+    LayoutChangeEvent, 
+    Alert, 
+    ActivityIndicator, 
+    Animated 
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { AppText, AppCard, AppButton, AppTextInput } from '@/components/common';
@@ -29,6 +37,9 @@ export const CompanyAddEditScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const theme = useTheme();
+
+    const imageOpacity = useRef(new Animated.Value(0)).current;
+    const [isImageLoading, setIsImageLoading] = useState(true);
 
     const { company: companyToEdit } = (route.params as { company?: Company }) ?? {};
     const isEdit = Boolean(companyToEdit?.id);
@@ -62,8 +73,17 @@ export const CompanyAddEditScreen = () => {
         },
         (err) => Alert.alert('Błąd', err)
     );
+
     const isLoading = isCreating || isUpdating;
     const pageTitle = isEdit ? `Edycja firmy ${name || ''}` : 'Dodaj nową firmę';
+
+    const onLoad = () => {
+        Animated.timing(imageOpacity, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+        }).start(() => setIsImageLoading(false));
+    };
 
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {};
@@ -112,7 +132,20 @@ export const CompanyAddEditScreen = () => {
             alignItems: 'flex-start',
             marginBottom: metrics.spacing.xl,
         },
-        imageContainer: { width: '45%', marginVertical: metrics.spacing.sm },
+        imageContainer: { 
+            width: '45%', 
+            marginVertical: metrics.spacing.sm,
+            position: 'relative', // Konieczne dla absolutnego pozycjonowania spinnera
+            borderRadius: metrics.radius.lg,
+            overflow: 'hidden'
+        },
+        imagePlaceholder: {
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: theme.colors.surfaceVariant,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1,
+        },
         image: { width: '100%', borderRadius: metrics.radius.lg },
         card: {
             flex: 1,
@@ -154,9 +187,21 @@ export const CompanyAddEditScreen = () => {
 
             <View style={styles.contentRow}>
                 <View style={[styles.imageContainer, { height: cardHeight }]}>
-                    <Image
+                    {isImageLoading && (
+                        <View style={[styles.imagePlaceholder, { height: cardHeight }]}>
+                            <ActivityIndicator color={theme.colors.primary} />
+                        </View>
+                    )}
+                    <Animated.Image
                         source={{ uri: CompanyImage }}
-                        style={[styles.image, { height: cardHeight }]}
+                        onLoad={onLoad}
+                        style={[
+                            styles.image, 
+                            { 
+                                height: cardHeight,
+                                opacity: imageOpacity 
+                            }
+                        ]}
                     />
                 </View>
 
