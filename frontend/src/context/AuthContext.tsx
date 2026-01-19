@@ -35,8 +35,10 @@ const AuthContext = createContext<AuthProps>({});
 export const useAuth = () => useContext(AuthContext);
 
 // Helper function to get access token (shared)
-const getIdToken = async (setIsAuthenticated: (val: boolean) => void): Promise<string | null> => {
-    // Return cached token if still valid
+const getIdToken = async (
+    setIsAuthenticated: (val: boolean) => void,
+    setUserEmail: (email: string | null) => void // Dodano setter maila
+): Promise<string | null> => {
     if (cachedIdToken && Date.now() < tokenExpiration - EXPIRATION_BUFFER) {
         return cachedIdToken;
     }
@@ -47,10 +49,14 @@ const getIdToken = async (setIsAuthenticated: (val: boolean) => void): Promise<s
 
         if (token && session.tokens?.idToken) {
             cachedIdToken = token;
-            // Get expiration from the token payload
             const payload = session.tokens.idToken.payload;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const email = payload.email || (payload as any).username;
+            if (email) setUserEmail(email as string);
+
             if (payload.exp) {
-                tokenExpiration = payload.exp * 1000; // Convert to milliseconds
+                tokenExpiration = payload.exp * 1000;
             }
             setIsAuthenticated(true);
             return token;
@@ -58,11 +64,13 @@ const getIdToken = async (setIsAuthenticated: (val: boolean) => void): Promise<s
 
         cachedIdToken = null;
         setIsAuthenticated(false);
+        setUserEmail(null);
         return null;
     } catch (error) {
         console.error('Get id token error:', error);
         cachedIdToken = null;
         setIsAuthenticated(false);
+        setUserEmail(null);
         return null;
     }
 };
@@ -93,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             api.interceptors.request.use(
                 async (config) => {
-                    const token = await getIdToken(setIsAuthenticated);
+                    const token = await getIdToken(setIsAuthenticated, setUserEmail);
                     console.log('🔑 Request interceptor:', {
                         url: config.url,
                         hasToken: !!token,
@@ -205,7 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
 
             // Force refresh token after sign in
-            await getIdToken(setIsAuthenticated);
+            await getIdToken(setIsAuthenticated, setUserEmail);
 
             // Get user email
             const userEmailResult = await getUserEmail();
@@ -228,7 +236,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         username: email,
                         password,
                     });
-                    await getIdToken(setIsAuthenticated);
+                    await getIdToken(setIsAuthenticated, setUserEmail);
 
                     const userEmailResult = await getUserEmail();
                     setUserEmail(userEmailResult);
@@ -282,7 +290,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const currentUser = await getCurrentUser();
                 console.log('Current user found:', currentUser.username);
 
-                const token = await getIdToken(setIsAuthenticated);
+                const token = await getIdToken(setIsAuthenticated, setUserEmail);
                 if (token) {
                     console.log('Token retrieved successfully');
                     setIsAuthenticated(true);

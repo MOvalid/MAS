@@ -1,5 +1,5 @@
 import { CustomerDto } from '../types/dto/customer';
-import { Customer, CustomerTableRow } from '../types/domain/customer';
+import { Customer, CustomerTableData } from '../types/domain/customer';
 import { mapAddressDtoToDomain, mapAddressToDto } from './address.mapper';
 import { mapDtoListToDomain } from './common.mapper';
 
@@ -64,7 +64,7 @@ export const mapCustomerToTableRow = (
     index: number, 
     page: number = 1, 
     limit: number = 10
-): CustomerTableRow => {
+): CustomerTableData => {
     const rowNumber = (page - 1) * limit + index + 1;
     const { city, street, houseNumber: number } = customer.address;
     const formattedAddress = `${city}, ${street} ${number}`;

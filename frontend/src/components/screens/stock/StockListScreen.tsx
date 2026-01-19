@@ -93,7 +93,7 @@ export const StockListScreen = () => {
 
     const handleRowPress = (item: StockProductTableData) => {
         console.log('Row pressed! ID: ' + item.id);
-        navigation.navigate('Product', { id: item.id });
+        navigation.navigate('Product', { screen: 'ProductDetails', params: { id: item.id } })
     };
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));

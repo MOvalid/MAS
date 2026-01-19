@@ -1,6 +1,6 @@
 import { CompanyDto } from '../types/dto/company';
 import { Company } from '../types/domain/company';
-import { CompanyTableRow } from '../types/domain';
+import { CompanyTableData } from '../types/domain';
 import { mapAddressDtoToDomain, mapAddressToDto } from './address.mapper';
 import { mapDtoListToDomain } from './common.mapper';
 import { formatNip } from '@/utils/formatters';
@@ -36,7 +36,7 @@ export const mapCompanyToTableRow = (
     index: number, 
     page: number = 1, 
     limit: number = 10
-): CompanyTableRow => {
+): CompanyTableData => {
     const rowNumber = (page - 1) * limit + index + 1;
     const { city, street, houseNumber } = company.address;
     const formattedAddress = `${city}, ${street} ${houseNumber}`;

@@ -9,7 +9,7 @@ import { AppTable, TableColumn } from '@/components/common/table';
 import { CustomerSort } from '@/types/common';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
-import { CustomerTableRow } from '@/types/domain';
+import { CustomerTableData } from '@/types/domain';
 
 export const CustomerListScreen = () => {
     const navigation = useNavigation();
@@ -40,6 +40,9 @@ export const CustomerListScreen = () => {
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
+    const handleRowPress = (item: CustomerTableData) => {
+        navigation.navigate('CustomerDetails', { id: item.id });
+    };
 
     useEffect(() => {
         setFilters({
@@ -71,7 +74,7 @@ export const CustomerListScreen = () => {
         },
     });
 
-    const columns: TableColumn<CustomerTableRow>[] = [
+    const columns: TableColumn<CustomerTableData>[] = [
         { key: 'lp', title: 'Lp.', flex: 0.3 },
         { key: 'firstName', title: 'Imię', flex: 1 },
         { key: 'lastName', title: 'Nazwisko', flex: 1 },
@@ -79,11 +82,6 @@ export const CustomerListScreen = () => {
         { key: 'phone', title: 'Telefon', flex: 1 },
         { key: 'address', title: 'Adres', flex: 1.5 },
     ];
-
-    const handleRowPress = (item: CustomerTableRow) => {
-        console.log('Row pressed! ID: ' + item.id);
-        navigation.navigate('Customer', { id: item.id });
-    };
 
     if (error) {
         return <ErrorMessage error={error} onRetry={refetch} onBack={() => navigation.goBack()} />;

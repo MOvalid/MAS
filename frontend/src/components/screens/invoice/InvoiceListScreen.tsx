@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { AppText, AppButton, IconName } from '@/components/common';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
@@ -12,6 +12,7 @@ import { RootStackParamList } from '@/types/dto/auth';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useInvoices, useInvoiceTableData } from '@/composables/invoice/useInvoices';
 import { useDebounce } from '@/hooks/useDebounce';
+import { ErrorScreen } from '../ErrorScreen';
 
 export const InvoiceListScreen = () => {
     const [search, setSearch] = useState('');
@@ -90,6 +91,9 @@ export const InvoiceListScreen = () => {
         { key: 'currency', title: 'Waluta', align: 'center', flex: 1 },
         { key: 'status', title: 'Status', align: 'center', flex: 1 },
     ];
+
+    if (error)
+        return <ErrorScreen title="Błąd ładowania danych" message={error} onRetry={refetch} />;
 
     return (
         <ScrollView style={styles.container}>

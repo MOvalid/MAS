@@ -1,4 +1,4 @@
-import { Customer, CustomerTableRow } from '@/types/domain/customer';
+import { Customer, CustomerTableData } from '@/types/domain/customer';
 import { API_CUSTOMERS } from '@/constants/Endpoints';
 import { usePaginated } from '../pagination/usePagination';
 import { useCreate } from '../common/useCreate';
@@ -97,7 +97,7 @@ export const useCustomerTableData = (
     customerDtos: Customer[],
     page: number = 1,
     limit: number = 10
-): CustomerTableRow[] => {
+): CustomerTableData[] => {
     return useMemo(() => {
         return customerDtos.map((dto, index) => mapCustomerToTableRow(dto, index, page, limit));
     }, [customerDtos, page, limit]);

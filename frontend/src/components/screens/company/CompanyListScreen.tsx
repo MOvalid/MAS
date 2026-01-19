@@ -9,6 +9,7 @@ import { AppTable } from '@/components/common/table';
 import { CompanySort } from '@/types/common';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
+import { CompanyTableData } from '@/types/domain';
 
 export const CompanyListScreen = () => {
     const navigation = useNavigation();
@@ -45,6 +46,9 @@ export const CompanyListScreen = () => {
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
+    const handleRowPress = (item: CompanyTableData) => {
+        navigation.navigate('CompanyDetails', { id: item.id });
+    };
 
     const styles = StyleSheet.create({
         container: { flex: 1, gap: metrics.spacing.lg },
@@ -110,6 +114,7 @@ export const CompanyListScreen = () => {
                             { key: 'email', title: 'Email', flex: 1.2 },
                             { key: 'address', title: 'Siedziba', flex: 1.5 },
                         ]}
+                        onRowPress={handleRowPress}
                         data={tableData}
                         actions={(row) => [
                             {

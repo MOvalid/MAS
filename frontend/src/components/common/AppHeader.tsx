@@ -11,10 +11,10 @@ import { useNavigation } from '@react-navigation/native';
 type Language = 'PL' | 'EN' | 'DE';
 
 export const AppHeader = (): React.JSX.Element => {
-    const { signOut } = useAuth();
+    const { signOut, userEmail } = useAuth();
     const [languageMenuVisible, setLanguageMenuVisible] = useState<boolean>(false);
     const [currentLanguage, setCurrentLanguage] = useState<Language>('PL');
-    const currentUser = 'Jan Kowalski';
+    const currentUser = userEmail || 'Użytkownik';
     const theme = useTheme();
     const navigation = useNavigation();
     const { showSnackbar } = useSnackbar();

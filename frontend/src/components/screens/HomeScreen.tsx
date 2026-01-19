@@ -34,7 +34,7 @@ export const HomeScreen = () => {
     return (
         <View style={styles.container}>
             <AppText variant="displayMedium" style={styles.title}>
-                Dzień dobry, Jan!
+                Dzień dobry!
             </AppText>
 
             <View style={styles.buttonRow}>

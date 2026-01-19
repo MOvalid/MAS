@@ -50,7 +50,7 @@ export const ProductListScreen = () => {
     }, [categories]);
 
     const handleRowPress = (item: ProductTableData) => {
-        navigation.navigate('Product', { id: item.id });
+        navigation.navigate('ProductDetails', { id: item.id });
     };
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
