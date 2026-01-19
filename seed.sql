@@ -317,3 +317,62 @@ VALUES
     (NEWID(), '66666666-6666-6666-6666-666666666614', '33333333-3333-3333-3333-333333333330', '2023-10-12T12:00:00', 2, N'FV/23/10/14', '2023-10-26T00:00:00'),
     (NEWID(), '66666666-6666-6666-6666-666666666618', '33333333-3333-3333-3333-333333333330', '2023-10-14T16:00:00', 2, N'FV/23/10/18', '2023-10-28T00:00:00'),
     (NEWID(), '66666666-6666-6666-6666-666666666630', '33333333-3333-3333-3333-333333333330', '2023-10-20T12:00:00', 2, N'FV/23/10/30', '2023-11-03T00:00:00');
+
+-- =============================================================
+-- DODATEK: WIELKIE ZAMÓWIENIE (Wszystkie produkty)
+-- =============================================================
+
+-- Używamy zmiennych dla czytelności i spójności ID w tym bloku
+DECLARE @BigOrderId UNIQUEIDENTIFIER = '77777777-7777-7777-7777-777777777777';
+DECLARE @BigCustomerId UNIQUEIDENTIFIER = '44444444-4444-4444-4444-444444444440'; -- Adam Nowak
+DECLARE @MainCompanyId UNIQUEIDENTIFIER = '33333333-3333-3333-3333-333333333330'; -- PapierPol S.A.
+DECLARE @SellerId UNIQUEIDENTIFIER = '535458f2-60e1-7074-1cca-cbe5abdc0009';
+
+-- 1. Utworzenie Zamówienia
+-- Status: 2 = Paid (wg OrderStatus.cs)
+-- Currency: 0 = PLN (wg Currency.cs)
+INSERT INTO [dbo].[Orders] ([Id], [CreatedAt], [CustomerId], [SellerId], [Currency], [Status])
+VALUES (@BigOrderId, DATEADD(hour, -2, GETDATE()), @BigCustomerId, @SellerId, 0, 2);
+
+-- 2. Dodanie WSZYSTKICH produktów do zamówienia (Dynamiczny INSERT)
+-- Ilość: 10 sztuk każdego produktu
+INSERT INTO [dbo].[OrderItems] ([OrderId], [ProductId], [Quantity], [UnitNetPrice], [VatRate], [Currency])
+SELECT 
+    @BigOrderId,
+    p.Id,
+    10,             -- Ilość: 10 sztuk
+    p.NetPrice,     -- Cena z definicji produktu
+    p.VatRate,      -- VAT z definicji produktu
+    0               -- Currency: 0 (PLN)
+FROM [dbo].[Products] p;
+
+-- 3. Dodanie Płatności (Automatyczne wyliczenie sumy)
+-- PaymentMethod: 2 = BankTransfer (wg PaymentMethod.cs)
+-- PaymentStatus: 2 = Completed (wg PaymentStatus.cs)
+INSERT INTO [dbo].[Payments] ([Id], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [Status], [Currency])
+SELECT 
+    NEWID(),
+    @BigOrderId,
+    GETDATE(),
+    -- Obliczenie sumy brutto: (CenaNetto * Ilość) * (1 + VAT)
+    SUM(Quantity * UnitNetPrice * (1 + VatRate)), 
+    2, -- BankTransfer
+    2, -- Completed
+    0  -- PLN
+FROM [dbo].[OrderItems]
+WHERE OrderId = @BigOrderId;
+
+-- 4. Dodanie Faktury powiązanej z Firmą
+-- Status: 2 = Paid (wg InvoiceStatus.cs)
+INSERT INTO [dbo].[Invoices] 
+([Id], [OrderId], [CompanyId], [IssuedAt], [Status], [InvoiceNumber], [PaymentDueDate]) 
+VALUES 
+(
+    NEWID(), 
+    @BigOrderId, 
+    @MainCompanyId, -- Firma przypisana do faktury
+    GETDATE(), 
+    2,              -- Status: Paid
+    N'FV/MEGA/2023', 
+    DATEADD(day, 14, GETDATE())
+);
