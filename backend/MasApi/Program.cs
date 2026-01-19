@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MasApi.Endpoints;
-using AutoMapper;
+using QuestPDF.Infrastructure;
+using MasApi.Interfaces;
+using MasApi.Services;
+using MasApi.Models;
 
 namespace MasApi;
 
@@ -69,6 +72,11 @@ internal class Program
             };
         });
 
+        builder.Services.Configure<InvoiceSenderSettings>(
+            builder.Configuration.GetSection("InvoiceSender"));
+
+        builder.Services.AddScoped<IInvoicePdfService, InvoicePdfService>();
+
         builder.Services.AddDbContext<Data.MasDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("MasDatabase") ?? throw new InvalidOperationException("Connection string 'MasDatabase' not found.")));
 
@@ -81,6 +89,8 @@ internal class Program
         });
 
         builder.Services.AddAutoMapper(typeof(Program));
+
+        QuestPDF.Settings.License = LicenseType.Community;
 
         var app = builder.Build();
 

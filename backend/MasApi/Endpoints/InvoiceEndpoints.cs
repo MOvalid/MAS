@@ -5,6 +5,7 @@ using MasApi.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using System.Linq.Expressions;
+using MasApi.Interfaces;
 
 namespace MasApi.Endpoints;
 
@@ -32,6 +33,9 @@ public static class InvoiceEndpoints
 
         group.MapDelete("/{id}", DeleteInvoice)
             .WithName("DeleteInvoice");
+
+        group.MapGet("/{id}/file", GetInvoiceFile)
+            .WithName("GetInvoiceFile");
 
         return app;
     }
@@ -69,8 +73,6 @@ public static class InvoiceEndpoints
             var errorMessage = string.Join("; ", validationErrors);
             return TypedResults.BadRequest(errorMessage);
         }
-
-        // TODO: Generate PDF and store it somewhere
 
         dbContext.Invoices.Add(invoice);
         await dbContext.SaveChangesAsync();
@@ -192,6 +194,32 @@ public static class InvoiceEndpoints
         await dbContext.SaveChangesAsync();
 
         return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<FileContentHttpResult, NotFound>> GetInvoiceFile(Guid id, Data.MasDbContext dbContext, IInvoicePdfService invoicePdfService)
+    {
+        var invoice = await dbContext.Invoices
+            .Include(i => i.Order)
+            .Include(i => i.Order!.Customer)
+            .Include(i => i.Order!.Seller)
+            .Include(i => i.Company)
+            .Include(i => i.Order!.OrderProducts!)
+                .ThenInclude(op => op.Product)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (invoice == null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var pdfBytes = invoicePdfService.GenerateInvoicePdf(invoice);
+        var fileName = $"Faktura_{invoice.InvoiceNumber}.pdf";
+
+        return TypedResults.File(
+            fileContents: pdfBytes,
+            contentType: "application/pdf",
+            fileDownloadName: fileName
+        );
     }
 
     private static Expression<Func<Invoice, object>> GetSortingFieldSelector(string? sortingField)
