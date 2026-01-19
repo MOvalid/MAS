@@ -73,5 +73,5 @@ export type OrderStackParamList = {
 };
 
 export type StockStackParamList = {
-    OrderList: undefined;
+    StockList: undefined;
 };

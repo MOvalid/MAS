@@ -13,6 +13,8 @@ import { useCategories } from '@/composables/category';
 import { useProducts, useProductTableData } from '@/composables/product/useProducts';
 import { ProductTableData } from '@/types/domain';
 import { useDebounce } from '@/hooks/useDebounce';
+import { ErrorMessage } from '@/components/common/AppStageMessage';
+import { LoadingScreen } from '../LoadingScreen';
 
 export const ProductListScreen = () => {
     const [search, setSearch] = useState('');
@@ -26,6 +28,8 @@ export const ProductListScreen = () => {
     const {
         data: products,
         page,
+        error,
+        refetch,
         setPage,
         total,
         limit,
@@ -71,6 +75,10 @@ export const ProductListScreen = () => {
         { key: 'currency', title: 'Waluta', flex: 0.5, align: 'center' },
     ];
 
+    if (error) {
+        return <ErrorMessage error={error} onRetry={refetch} onBack={() => navigation.goBack()} />;
+    }
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
@@ -101,32 +109,37 @@ export const ProductListScreen = () => {
                     setPage(1);
                 }}
             />
-
-            <AppTable
-                columns={columns}
-                data={tableData}
-                onRowPress={handleRowPress}
-                actions={(row) => [
-                    {
-                        icon: IconName.edit,
-                        onPress: () => navigation.navigate('ProductEdit', { id: row.id }),
-                    },
-                    {
-                        icon: IconName.delete,
-                        onPress: () => console.log('Usuwanie produktu'),
-                    },
-                ]}
-            />
-
-            {products.length > 0 && !loading && (
-                <View style={styles.paginationRow}>
-                    <AppPaginationControls
-                        page={page}
-                        totalPages={Math.max(1, Math.ceil(total / limit))}
-                        onPrevious={onPrevious}
-                        onNext={onNext}
+            {loading ? (
+                <LoadingScreen />
+            ) : (
+                <>
+                    <AppTable
+                        columns={columns}
+                        data={tableData}
+                        onRowPress={handleRowPress}
+                        actions={(row) => [
+                            {
+                                icon: IconName.edit,
+                                onPress: () => navigation.navigate('ProductEdit', { id: row.id }),
+                            },
+                            {
+                                icon: IconName.delete,
+                                onPress: () => console.log('Usuwanie produktu'),
+                            },
+                        ]}
                     />
-                </View>
+
+                    {products.length > 0 && (
+                        <View style={styles.paginationRow}>
+                            <AppPaginationControls
+                                page={page}
+                                totalPages={Math.max(1, Math.ceil(total / limit))}
+                                onPrevious={onPrevious}
+                                onNext={onNext}
+                            />
+                        </View>
+                    )}
+                </>
             )}
         </ScrollView>
     );

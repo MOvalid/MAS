@@ -1,39 +1,59 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import { AppText } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table/AppTable';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
 import { metrics } from '@/theme/metrics';
-import { StockLevelFilter, StockSortOption } from '@/types/domain/stock-filters';
-import { StockProductViewModel } from '@/types/view-model/product';
 import { AppStockBar } from '@/components/common/AppStockBar';
 import { StockListFilters } from './StockListFilters';
-import { useProductStock } from '@/composables/stock/useProductStock';
 import { ErrorScreen } from '../ErrorScreen';
 import { LoadingScreen } from '../LoadingScreen';
-import { mapStockProductListToViewModel } from '@/mappers/product.mapper';
+import { useProducts, useStockProductTableData } from '@/composables/product/useProducts';
+import { useDebounce } from '@/hooks/useDebounce';
+import { StockProductTableData } from '@/types/domain';
+import { ProductSort } from '@/types/common';
+import { StockLevelFilter } from '@/types/domain/stock-filters';
+import { RootStackParamList } from '@/types/dto/auth';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { formatPolishDate } from '@/utils/formatters';
 
 export const StockListScreen = () => {
-
     const [search, setSearch] = useState('');
     const [stockLevel, setStockLevel] = useState<StockLevelFilter>(StockLevelFilter.All);
-    const [sortBy, setSortBy] = useState<StockSortOption>(StockSortOption.NameAscending);
-    const [page, setPage] = useState(1);
-    const limit = 10;
+    const [sort, setSort] = useState<ProductSort>('NAME_ASC');
 
-    const { items, total, loading, error, refetch } = useProductStock(
-        search,
-        stockLevel,
-        sortBy,
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+    const {
+        data: products,
         page,
-        limit
-    );
+        error,
+        refetch,
+        setPage,
+        total,
+        limit,
+        loading,
+        setFilters,
+    } = useProducts(true, { search, sortBy: sort });
 
-    const columns: TableColumn<StockProductViewModel>[] = [
+    const debouncedSearch = useDebounce(search, 500);
+
+    useEffect(() => {
+        setFilters({
+            search: debouncedSearch,
+            sortBy: sort,
+            stockLevel: stockLevel === 'ALL' ? undefined : stockLevel,
+        });
+    }, [debouncedSearch, sort, stockLevel]);
+
+    const tableData = useStockProductTableData(products, page, limit);
+
+    const columns: TableColumn<StockProductTableData>[] = [
+        { key: 'lp', title: 'Lp.', align: 'left', flex: 0.5 },
         {
             key: 'name',
-            title: 'Nazwa produktu',
+            title: 'Nazwa',
             flex: 2,
             render: (item) => <AppText>{item.name}</AppText>,
         },
@@ -61,16 +81,21 @@ export const StockListScreen = () => {
         {
             key: 'currency',
             title: 'Waluta',
-            flex: 1,
+            flex: 0.5,
             align: 'center',
         },
         {
-            key: 'lastRestocked',
+            key: 'lastRestockedAt',
             title: 'Uzupełniono',
-            flex: 1,
-            render: (item) => <AppText>{item.lastRestocked}</AppText>,
+            flex: 1.5,
+            render: (item) => <AppText>{formatPolishDate(item.lastRestockedAt)}</AppText>,
         },
     ];
+
+    const handleRowPress = (item: StockProductTableData) => {
+        console.log('Row pressed! ID: ' + item.id);
+        navigation.navigate('Product', { id: item.id });
+    };
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
@@ -81,7 +106,6 @@ export const StockListScreen = () => {
         paginationRow: { marginTop: metrics.spacing.sm, width: '100%', alignItems: 'center' },
     });
 
-    if (loading) return <LoadingScreen />;
     if (error)
         return <ErrorScreen title="Błąd ładowania danych" message={error} onRetry={refetch} />;
 
@@ -93,18 +117,15 @@ export const StockListScreen = () => {
 
             <StockListFilters
                 search={search}
-                onSearchChange={(val) => {
-                    setSearch(val);
-                    setPage(1);
-                }}
+                onSearchChange={setSearch}
                 stockLevel={stockLevel}
                 onStockLevelChange={(val) => {
                     setStockLevel(val);
                     setPage(1);
                 }}
-                sortBy={sortBy}
+                sortBy={sort}
                 onSortByChange={(val) => {
-                    setSortBy(val);
+                    setSort(val);
                     setPage(1);
                 }}
             />
@@ -113,7 +134,7 @@ export const StockListScreen = () => {
                 <LoadingScreen />
             ) : (
                 <>
-                    <AppTable columns={columns} data={mapStockProductListToViewModel(items)} />
+                    <AppTable columns={columns} data={tableData} onRowPress={handleRowPress} />
 
                     <View style={styles.paginationRow}>
                         <AppPaginationControls

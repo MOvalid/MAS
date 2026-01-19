@@ -17,6 +17,7 @@ export interface Product {
     name: string;
     sku: string;
     stockQuantity: number;
+    stockLevel: string;
     description: string | null;
     manufacturer: Company;
     categoryId: string | null;
@@ -66,4 +67,19 @@ export interface ProductDetails {
     dimensions: ProductDimensions
 
     lastRestockedAt: string | null;
+}
+
+export interface StockProductTableData {
+    lp: string;
+    id: string;
+    name: string;
+    sku: string;
+    manufacturerName: string;
+    stockQuantity: number;
+    stockLevel: string;
+    unit: string;
+    netPrice: string;
+    grossPrice: string;
+    currency: string;
+    lastRestockedAt: string;
 }

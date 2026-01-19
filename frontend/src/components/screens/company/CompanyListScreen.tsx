@@ -9,6 +9,7 @@ import { AppTable } from '@/components/common/table';
 import { CompanySort } from '@/types/common';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
+import { LoadingScreen } from '../LoadingScreen';
 
 export const CompanyListScreen = () => {
     const navigation = useNavigation();
@@ -72,6 +73,8 @@ export const CompanyListScreen = () => {
             alignItems: 'center',
         },
     });
+
+    if (loading) <LoadingScreen />
 
     if (error) {
         return <ErrorMessage error={error} onRetry={refetch} onBack={() => navigation.goBack()} />;

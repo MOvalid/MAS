@@ -2,10 +2,11 @@ import { useCallback, useMemo } from 'react';
 import {
     mapProductDetailsDtoToDomain,
     mapProductDtoToDomain,
-    mapProductToTableRow,
+    mapProductToStockTableData,
+    mapProductToTableData,
 } from '@/mappers/product.mapper';
-import { API_PRODUCTS } from '@/constants/Endpoints';
-import { Product, ProductDetails, ProductTableData } from '@/types/domain/product';
+import { API_PRODUCTS, API_STOCK } from '@/constants/Endpoints';
+import { Product, ProductDetails, ProductTableData, StockProductTableData } from '@/types/domain/product';
 import {
     CreateProductPayload,
     ProductDetailsDto,
@@ -106,6 +107,17 @@ export const useProductTableData = (
     limit: number = 10
 ): ProductTableData[] => {
     return useMemo(() => {
-        return products.map((dto, index) => mapProductToTableRow(dto, index, page, limit));
+        return products.map((dto, index) => mapProductToTableData(dto, index, page, limit));
+    }, [products, page, limit]);
+};
+
+
+export const useStockProductTableData = (
+    products: Product[],
+    page: number = 1,
+    limit: number = 10
+): StockProductTableData[] => {
+    return useMemo(() => {
+        return products.map((dto, index) => mapProductToStockTableData(dto, index, page, limit));
     }, [products, page, limit]);
 };

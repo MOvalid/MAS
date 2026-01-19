@@ -3,15 +3,16 @@ import { View, StyleSheet } from 'react-native';
 import { AppDropdown, AppTextInput, AppText } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { useTheme } from 'react-native-paper';
-import { StockLevelFilter, StockSortOption } from '@/types/domain/stock-filters';
+import { StockLevelFilter } from '@/types/domain/stock-filters';
+import { ProductSort } from '@/types/common';
 
 interface StockListFiltersProps {
     search: string;
     onSearchChange: (v: string) => void;
     stockLevel: StockLevelFilter;
     onStockLevelChange: (v: StockLevelFilter) => void;
-    sortBy: StockSortOption;
-    onSortByChange: (v: StockSortOption) => void;
+    sortBy: ProductSort;
+    onSortByChange: (v: ProductSort) => void;
 }
 
 export const StockListFilters: React.FC<StockListFiltersProps> = ({
@@ -33,12 +34,12 @@ export const StockListFilters: React.FC<StockListFiltersProps> = ({
     ];
 
     const sortOptions = [
-        { label: 'Nazwa A → Z', value: StockSortOption.NameAscending },
-        { label: 'Nazwa Z → A', value: StockSortOption.NameDescending },
-        { label: 'Producent A → Z', value: StockSortOption.ManufacturerAscending },
-        { label: 'Producent Z → A', value: StockSortOption.ManufacturerDescending },
-        { label: 'Stan rosnąco', value: StockSortOption.StockAscending },
-        { label: 'Stan malejąco', value: StockSortOption.StockDescending },
+        { label: 'Nazwa A → Z', value: 'NAME_ASC' },
+        { label: 'Nazwa Z → A', value: 'NAME_DESC' },
+        { label: 'Producent A → Z', value: 'MANUFACTURER_ASC' },
+        { label: 'Producent Z → A', value: 'MANUFACTURER_DESC' },
+        { label: 'Stan rosnąco', value: 'STOCK_ASC' },
+        { label: 'Stan malejąco', value: 'STOCK_DESC' },
     ];
 
     const styles = StyleSheet.create({
@@ -99,7 +100,7 @@ export const StockListFilters: React.FC<StockListFiltersProps> = ({
                         options={sortOptions}
                         width="100%"
                         value={sortBy}
-                        onChange={(val) => onSortByChange(val as StockSortOption)}
+                        onChange={(val) => onSortByChange(val as ProductSort)}
                     />
                 </View>
             </View>

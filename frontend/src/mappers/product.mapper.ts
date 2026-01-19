@@ -4,6 +4,7 @@ import {
     ProductDetails,
     ProductTableData,
     ProductDimensions,
+    StockProductTableData,
 } from '../types/domain/product';
 import { ProductDto, ProductDetailsDto, UpdateProductPayload } from '../types/dto/product';
 import { mapCompanyDtoToDomain, mapCompanyToDto } from './company.mapper';
@@ -16,6 +17,7 @@ export const mapProductDtoToDomain = (dto: ProductDto): Product => {
         name: dto.name,
         sku: dto.sku,
         stockQuantity: dto.stockQuantity,
+        stockLevel: dto.stockLevel,
         description: null,
         manufacturer: mapCompanyDtoToDomain(dto.manufacturer),
         categoryId: dto.categoryId,
@@ -37,6 +39,7 @@ export const mapProductDetailsDtoToDomain = (dto: ProductDetailsDto): ProductDet
         name: dto.name,
         sku: dto.sku,
         stockQuantity: dto.stockQuantity,
+        // stockLevel: dto.stockLevel,
         description: dto.description,
         categoryId: dto.category.id,
         category: dto.category as ProductCategory,
@@ -60,6 +63,7 @@ export const mapProductToDto = (product: Product): ProductDto => ({
     netPrice: product.netPrice,
     vatRate: product.vatRate,
     stockQuantity: product.stockQuantity,
+    stockLevel: product.stockLevel,
     categoryId: product.categoryId ?? '',
 });
 
@@ -96,18 +100,8 @@ export const mapProductDetailsToUpdatePayload = (product: ProductDetails): Updat
     };
 };
 
-// export const mapProductToTableRow = (product: Product, index: number): ProductTableRow => ({
-//     lp: index + 1,
-//     id: product.id,
-//     name: product.name,
-//     categoryName: product.categoryName ?? 'Brak kategorii',
-//     price: formatPrice(product.grossPrice),
-//     currency: product.currency,
-//     available: product.stockQuantity > 0,
-//     stockQuantity: product.stockQuantity,
-// });
 
-export const mapProductToTableRow = (
+export const mapProductToTableData = (
     product: Product,
     index: number,
     page: number = 1,
@@ -126,5 +120,29 @@ export const mapProductToTableRow = (
         currency: 'PLN',
         available: product.stockQuantity > 0,
         stockQuantity: product.stockQuantity,
+    };
+};
+
+export const mapProductToStockTableData = (
+    product: Product,
+    index: number,
+    page: number = 1,
+    limit: number = 10
+): StockProductTableData => {
+    const rowNumber = (page - 1) * limit + index + 1;
+
+    return {
+        lp: rowNumber.toString(),
+        id: product.id,
+        name: product.name,
+        manufacturerName: product.manufacturer.name,
+        sku: product.sku,
+        stockQuantity: product.stockQuantity,
+        stockLevel: product.stockLevel,
+        unit: 'szt.',
+        netPrice: product.netPrice.toFixed(2),
+        grossPrice: product.grossPrice.toFixed(2),
+        currency: product.currency,
+        lastRestockedAt: product.lastRestockedAt || new Date().toISOString(),
     };
 };
