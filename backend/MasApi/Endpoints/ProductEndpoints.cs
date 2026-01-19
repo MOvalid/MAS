@@ -95,7 +95,7 @@ public static class ProductEndpoints
         {
             productsQuery = productsQuery.OrderByDescending(GetSortingFieldSelector(sortingField));
         }
-        else if (sortingField != null)
+        else
         {
             productsQuery = productsQuery.OrderBy(GetSortingFieldSelector(sortingField));
         }
@@ -174,9 +174,12 @@ public static class ProductEndpoints
         return TypedResults.NoContent();
     }
 
-    private static Expression<Func<Product, object>> GetSortingFieldSelector(string sortingField)
+    private static Expression<Func<Product, object>> GetSortingFieldSelector(string? sortingField)
     {
-        Enum.TryParse<ProductSortingField>(sortingField, true, out var parsedField);
+        if (!Enum.TryParse<ProductSortingField>(sortingField, true, out var parsedField))
+        {
+            return product => product.Name;
+        }
 
         return parsedField switch
         {

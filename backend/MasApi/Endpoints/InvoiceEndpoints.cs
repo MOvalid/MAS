@@ -133,7 +133,7 @@ public static class InvoiceEndpoints
         {
             invoicesQuery = invoicesQuery.OrderByDescending(GetSortingFieldSelector(sortingField));
         }
-        else if (sortingField != null)
+        else
         {
             invoicesQuery = invoicesQuery.OrderBy(GetSortingFieldSelector(sortingField));
         }
@@ -142,6 +142,7 @@ public static class InvoiceEndpoints
         int totalCount = await invoicesQuery.CountAsync();
         var invoices = await invoicesQuery
             .Skip(((page ?? 1) - 1) * limit.Value)
+            .Take(limit.Value)
             .Include(i => i.Order)
                 .ThenInclude(o => o!.OrderProducts)
             .Select(invoice => mapper.Map<InvoiceListDto>(invoice))
@@ -193,9 +194,12 @@ public static class InvoiceEndpoints
         return TypedResults.NoContent();
     }
 
-    private static Expression<Func<Invoice, object>> GetSortingFieldSelector(string sortingField)
+    private static Expression<Func<Invoice, object>> GetSortingFieldSelector(string? sortingField)
     {
-        Enum.TryParse<InvoiceSortingField>(sortingField, true, out var parsedField);
+        if (!Enum.TryParse<InvoiceSortingField>(sortingField, true, out var parsedField))
+        {
+            return invoice => invoice.IssuedAt;
+        }
 
         return parsedField switch
         {
