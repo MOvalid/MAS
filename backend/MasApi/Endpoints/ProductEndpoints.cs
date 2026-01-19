@@ -95,7 +95,7 @@ public static class ProductEndpoints
         {
             productsQuery = productsQuery.OrderByDescending(GetSortingFieldSelector(sortingField));
         }
-        else
+        else if (sortingField != null)
         {
             productsQuery = productsQuery.OrderBy(GetSortingFieldSelector(sortingField));
         }
