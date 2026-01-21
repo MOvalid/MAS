@@ -10,9 +10,14 @@ import { InvoiceListFilters } from './InvoiceListFilters';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '@/types/dto/auth';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useInvoices, useInvoiceTableData } from '@/composables/invoice/useInvoices';
+import {
+    useGenerateInvoicePdf,
+    useInvoices,
+    useInvoiceTableData,
+} from '@/composables/invoice/useInvoices';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ErrorScreen } from '../ErrorScreen';
+import { useSnackbar } from '@/context/SnackbarContext';
 
 export const InvoiceListScreen = () => {
     const [search, setSearch] = useState('');
@@ -26,6 +31,7 @@ export const InvoiceListScreen = () => {
     const [dateError, setDateError] = useState('');
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const { showSnackbar } = useSnackbar();
 
     const {
         data: invoices,
@@ -46,13 +52,17 @@ export const InvoiceListScreen = () => {
             search: debouncedSearch,
             status: status === InvoiceStatus.ALL ? undefined : status,
             sorting: sort,
-            startDate: issuedStart  || undefined,
+            startDate: issuedStart || undefined,
             endDate: issuedEnd || undefined,
             paymentStartDate: paymentStart || undefined,
             paymentEndDate: paymentEnd || undefined,
         });
     }, [debouncedSearch, status, sort, issuedStart, issuedEnd, paymentStart, paymentEnd]);
 
+    const { generatePdf, isGenerating } = useGenerateInvoicePdf(
+        () => showSnackbar('Faktura została pobrana', 'success'),
+        (err) => showSnackbar(err, 'error')
+    );
 
     const tableData = useInvoiceTableData(invoices, page, limit);
 
@@ -79,7 +89,13 @@ export const InvoiceListScreen = () => {
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
 
-    const downloadInvoice = (row: InvoiceTableData) => console.log('Download', row);
+    const downloadInvoice = (row: InvoiceTableData) => {
+        if (!row.id) {
+            showSnackbar('Błąd: Nie znaleziono identyfikatora faktury', 'error');
+            return;
+        }
+        generatePdf(row.id);
+    };
     const deleteInvoice = (row: InvoiceTableData) => console.log('Delete', row);
 
     const columns: TableColumn<InvoiceTableData>[] = [
@@ -103,6 +119,13 @@ export const InvoiceListScreen = () => {
                     Nowa faktura
                 </AppButton>
             </View>
+
+            {isGenerating && (
+                <View style={styles.generatingOverlay}>
+                    <ActivityIndicator size="small" color={metrics.colors.primary} />
+                    <AppText variant="bodySmall">Generowanie PDF...</AppText>
+                </View>
+            )}
 
             <InvoiceListFilters
                 search={search}
@@ -132,11 +155,16 @@ export const InvoiceListScreen = () => {
                         data={tableData}
                         onRowPress={handleRowPress}
                         actions={(row) => [
-                            { icon: IconName.download, onPress: () => downloadInvoice(row) },
+                            {
+                                icon: IconName.download,
+                                onPress: () => downloadInvoice(row),
+                                disabled: isGenerating,
+                            },
                             {
                                 icon: IconName.delete,
                                 onPress: () => deleteInvoice(row),
                                 iconColor: 'red',
+                                disabled: isGenerating,
                             },
                         ]}
                     />

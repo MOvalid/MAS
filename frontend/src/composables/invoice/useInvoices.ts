@@ -10,13 +10,14 @@ import { useCreate } from '../common/useCreate';
 import { useUpdate } from '../common/useUpdate';
 import { Invoice, InvoiceDetails, InvoiceTableData } from '@/types/domain';
 import { useDelete } from '../common/useDelete';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { InvoiceSort } from '@/types/common';
 import {
     mapInvoiceDetailsDtoToDomain,
     mapInvoiceDtoToDomain,
     mapInvoiceToTableData,
 } from '@/mappers/invoice.mapper';
+import { useAuth } from '@/context/AuthContext';
 
 export type InvoiceFilters = {
     search?: string;
@@ -81,4 +82,52 @@ export const useInvoiceTableData = (
     return useMemo(() => {
         return orderDtos.map((dto, index) => mapInvoiceToTableData(dto, index, page, limit));
     }, [orderDtos, page, limit]);
+};
+
+export const useGenerateInvoicePdf = (
+    onSuccess?: () => void,
+    onError?: (error: string) => void
+) => {
+    const [isGenerating, setIsGenerating] = useState(false);
+    const { getAccessToken, api } = useAuth();
+
+    const generatePdf = async (invoiceId: string) => {
+        setIsGenerating(true);
+        try {
+            const token = getAccessToken ? await getAccessToken() : null;
+
+            if (!token) {
+                throw new Error('Brak autoryzacji. Zaloguj się ponownie.');
+            }
+
+            const baseUrl = api?.defaults.baseURL || process.env.EXPO_PUBLIC_API_URL;
+            const fullUrl = `${baseUrl}${API_INVOICES}/${invoiceId}/file`;
+            const response = await fetch(fullUrl, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/pdf',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Serwer odrzucił żądanie pobrania faktury.');
+            }
+
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+
+            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+
+            onSuccess?.();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+            onError?.(err.message || 'Nie udało się wygenerować PDF');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    return { generatePdf, isGenerating };
 };

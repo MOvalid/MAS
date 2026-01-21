@@ -46,6 +46,7 @@ export const mapInvoiceToTableData = (
 
     return {
         lp: lp.toString(),
+        id: domain.id,
         invoiceNumber: domain.invoiceNumber,
         orderId: domain.orderId,
         issuedAt: formatPolishDate(domain.issuedAt, false),

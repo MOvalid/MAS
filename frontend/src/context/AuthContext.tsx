@@ -151,6 +151,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, []);
 
+    const getAccessToken = async () => {
+        return await getIdToken(setIsAuthenticated, setUserEmail);
+    };
+
     const handleSignUp = async (credentials: Credentials) => {
         const { email, password } = credentials;
         try {
@@ -319,6 +323,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isAuthenticated,
         userEmail,
+        getAccessToken,
         signUp: handleSignUp,
         resendSignUp: handleResendSignUp,
         confirmSignUp: handleConfirmSignUp,

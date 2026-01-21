@@ -15,6 +15,7 @@ export interface AuthProps {
     isLoading?: boolean;
     isAuthenticated?: boolean;
     userEmail?: string | null;
+    getAccessToken: () => Promise<string | null>;
     signUp?: (credentials: Credentials) => Promise<any>;
     resendSignUp?: (credentials: Credentials) => Promise<any>;
     confirmSignUp?: (email: string, code: string) => Promise<any>;

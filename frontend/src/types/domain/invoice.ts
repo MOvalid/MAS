@@ -3,6 +3,7 @@ import { Order2 } from './order';
 
 export type InvoiceTableData = {
     lp: string;
+    id: string
     issuedAt: string;
     orderId: string;
     paymentDueDate: string;
