@@ -11,7 +11,14 @@ import {
 import { OrderProductList } from '@/components/common/order/OrderProductList';
 import { AppModal } from '@/components/common/AppModal';
 import { metrics } from '@/theme/metrics';
-import { Currency, Option, OrderStatus, PaymentMethod, PaymentStatus, PersonBase } from '@/types/common';
+import {
+    Currency,
+    Option,
+    OrderStatus,
+    PaymentMethod,
+    PaymentStatus,
+    PersonBase,
+} from '@/types/common';
 import { Address, Delivery, OrderItem, PaymentTableData } from '@/types/domain';
 import { useCreateOrder, useOrder, useUpdateOrder } from '@/composables/orders/useOrders';
 import { useCustomerOptions } from '@/composables/customer/useCustomers';
@@ -29,20 +36,6 @@ import { useCarrierOptions } from '@/composables/carrier/useCarriers';
 import { ErrorScreen } from '../ErrorScreen';
 import { AddEditDeliveryForm, AddEditPaymentForm } from '@/components/form';
 
-const AddPaymentForm = ({ onClose }: { onClose: () => void }) => (
-    <View>
-        <AppText variant="titleLarge">Dodaj płatność</AppText>
-        <AppButton onPress={onClose}>Zamknij</AppButton>
-    </View>
-);
-
-const AddDeliveryForm = ({ onClose }: { onClose: () => void }) => (
-    <View>
-        <AppText variant="titleLarge">Dodaj dostawę</AppText>
-        <AppButton onPress={onClose}>Zamknij</AppButton>
-    </View>
-);
-
 const ITEMS_PER_PAGE = 10;
 
 export const OrderAddEditScreen = () => {
@@ -51,7 +44,7 @@ export const OrderAddEditScreen = () => {
     const theme = useTheme();
 
     const params = route.params as { id?: string } | undefined;
-    const id = params?.id || '';
+    const id = params!.id || '';
     const isEdit = Boolean(id);
     const { data: order, error: fetchOrderError, loading: orderLoading, refresh } = useOrder(id);
 
@@ -117,7 +110,11 @@ export const OrderAddEditScreen = () => {
     const [customerValue, setCustomerValue] = useState<Option | undefined>(undefined);
     const [sellerValue, setSellerValue] = useState<Option | undefined>(undefined);
     const [orderProducts, setOrderProducts] = useState<OrderItem[]>([]);
-    const [errors, setErrors] = useState<{ customer?: string; seller?: string }>({});
+    const [errors, setErrors] = useState<{
+        customer?: string;
+        seller?: string;
+        orderItems?: string;
+    }>({});
 
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
@@ -168,9 +165,11 @@ export const OrderAddEditScreen = () => {
     );
 
     const validate = (): boolean => {
-        const e: { customer?: string; seller?: string } = {};
-        if (!customerValue) e.customer = 'Wybierz klienta';
-        if (!sellerValue) e.seller = 'Wybierz sprzedającego';
+        const e: { customer?: string; seller?: string; orderItems?: string } = {};
+        if (!customerValue) e.customer = 'Klient jest wymagany. Wybierz klienta';
+        if (!sellerValue) e.seller = 'Sprzedający jest wymagany. Wybierz sprzedającego';
+        if (orderItemsData.length < 1)
+            e.orderItems = 'Zamówienie musi posiadać przynajmniej jedną pozycję.';
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -207,7 +206,7 @@ export const OrderAddEditScreen = () => {
     };
 
     const handleAddProduct = (item: CreateOrderItem) => {
-        if (isEdit) return; // Dodatkowe zabezpieczenie
+        if (isEdit) return;
 
         const productInfo = productsData.find((p) => p.id === item.productId);
         if (productInfo) {
@@ -311,9 +310,9 @@ export const OrderAddEditScreen = () => {
         },
     });
 
-    if (!id) {
-        return <ErrorScreen title="Błąd" message="Nieprawidłowe ID zamówienia" />;
-    }
+    // if (!id) {
+    //     return <ErrorScreen title="Błąd" message="Nieprawidłowe ID zamówienia" />;
+    // }
 
     if (loading) return <LoadingScreen text="Ładowanie danych..." />;
 
@@ -371,6 +370,7 @@ export const OrderAddEditScreen = () => {
                             onInputChange={handleCustomerSearchChange}
                             placeholder="Wybierz klienta"
                             disabled={isEdit}
+                            errorMessage={errors.customer}
                         />
                     </View>
                     {!isEdit && (
@@ -400,6 +400,7 @@ export const OrderAddEditScreen = () => {
                                 onInputChange={handleSellerSearchChange}
                                 placeholder="Wybierz sprzedawcę"
                                 disabled={isEdit}
+                                errorMessage={errors.seller}
                             />
                         </View>
                         {!isEdit && (
@@ -426,6 +427,14 @@ export const OrderAddEditScreen = () => {
                     onAddProduct={handleAddProduct}
                     onSearchProduct={handleProductSearchChange}
                 />
+            )}
+
+            {errors.orderItems && (
+                <AppText
+                    style={{ color: theme.colors.error, marginHorizontal: metrics.spacing.md }}
+                >
+                    {errors.orderItems}
+                </AppText>
             )}
 
             <View>

@@ -3,7 +3,6 @@ import {
     View,
     StyleSheet,
     ScrollView,
-    Image,
     LayoutChangeEvent,
     Alert,
     ActivityIndicator,
@@ -46,7 +45,6 @@ export const CustomerAddEditScreen = () => {
     const imageOpacity = useRef(new Animated.Value(0)).current;
     const [isImageLoading, setIsImageLoading] = useState(true);
 
-    // Form State
     const [firstName, setFirstName] = useState(initial.firstName);
     const [lastName, setLastName] = useState(initial.lastName);
     const [email, setEmail] = useState(initial.email || '');
@@ -181,7 +179,7 @@ export const CustomerAddEditScreen = () => {
     const onLoad = () => {
         Animated.timing(imageOpacity, {
             toValue: 1,
-            duration: 500, // Pół sekundy płynnego pojawiania się
+            duration: 500,
             useNativeDriver: true,
         }).start(() => setIsImageLoading(false));
     };
@@ -208,7 +206,7 @@ export const CustomerAddEditScreen = () => {
                             styles.image,
                             { 
                                 height: cardHeight,
-                                opacity: imageOpacity // Podpinamy animację pod opacity
+                                opacity: imageOpacity,
                             }
                         ]}
                     />

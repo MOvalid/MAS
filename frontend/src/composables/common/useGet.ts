@@ -6,6 +6,7 @@ export interface UseGetOptions<TDomain, TDto> {
     endpoint: string;
     id?: string;
     enabled?: boolean;
+    requiresId?: boolean;
     transformResponse?: (dto: TDto) => TDomain;
     onSuccess?: (data: TDomain) => void;
     onError?: (error: string) => void;
@@ -15,6 +16,7 @@ export const useGet = <TDomain, TDto = TDomain>({
     endpoint,
     id,
     enabled = true,
+    requiresId = true,
     transformResponse,
     onSuccess,
     onError,
@@ -25,20 +27,16 @@ export const useGet = <TDomain, TDto = TDomain>({
     const [data, setData] = useState<TDomain | null>(null);
 
     const fetch = useCallback(async () => {
-
-        if (!api) return;
+        if (!api || (requiresId && !id)) return;
 
         setLoading(true);
         setError(null);
 
         try {
             const url = id ? `${endpoint}/${id}` : endpoint;
-            console.log('Fetching URL:', url);
-
             const response = await api.get<TDto>(url);
-
-            const domainData = transformResponse 
-                ? transformResponse(response.data) 
+            const domainData = transformResponse
+                ? transformResponse(response.data)
                 : (response.data as unknown as TDomain);
 
             setData(domainData);
@@ -47,10 +45,11 @@ export const useGet = <TDomain, TDto = TDomain>({
             const errorMsg = getFriendlyErrorMessage(err).message || 'Błąd pobierania danych';
             setError(errorMsg);
             onError?.(errorMsg);
+            setData(null);
         } finally {
             setLoading(false);
         }
-    }, [api, endpoint, id, transformResponse, onSuccess, onError]);
+    }, [api, endpoint, id, requiresId, transformResponse, onSuccess, onError]);
 
     useEffect(() => {
         if (enabled) {
@@ -58,5 +57,5 @@ export const useGet = <TDomain, TDto = TDomain>({
         }
     }, [id, enabled, fetch]);
 
-    return { data, loading, error, refresh: fetch };
+    return { data, loading, error, refresh: fetch, setData };
 };

@@ -88,7 +88,8 @@ export const CompanyAddEditScreen = () => {
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {};
         if (!name) newErrors.name = 'Nazwa firmy jest wymagana';
-        if (!taxId || !/^\d{10}$/.test(taxId)) newErrors.taxId = 'NIP musi składać się z 10 cyfr';
+        if (!taxId) newErrors.taxId = 'NIP jest wymagany';
+        if (!/^\d{10}$/.test(taxId)) newErrors.taxId = 'NIP musi składać się z 10 cyfr';
         if (!street) newErrors.street = 'Ulica jest wymagana';
         if (!houseNumber) newErrors.houseNumber = 'Numer jest wymagany';
         if (!city) newErrors.city = 'Miasto jest wymagane';
@@ -135,7 +136,7 @@ export const CompanyAddEditScreen = () => {
         imageContainer: { 
             width: '45%', 
             marginVertical: metrics.spacing.sm,
-            position: 'relative', // Konieczne dla absolutnego pozycjonowania spinnera
+            position: 'relative',
             borderRadius: metrics.radius.lg,
             overflow: 'hidden'
         },

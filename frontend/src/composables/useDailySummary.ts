@@ -1,13 +1,17 @@
 import { DailySummaryDto, DailySummaryViewData } from '@/types/dto/dashboard';
 import { useGet } from './common/useGet';
-import { API_DAILY_SUMMARY } from '@/constants/Endpoints';
+import { API_STATISTICS } from '@/constants/Endpoints';
 import { mapDailySummaryDtoToViewData } from '@/mappers/dashboard.mapper';
 
 export const useDailySummary = (date?: string) => {
+    // const effectiveDate = date ?? getLocalDateString();
     const effectiveDate = date ?? new Date().toISOString().split('T')[0];
-    console.log(effectiveDate)
+
+    console.log(effectiveDate);
     return useGet<DailySummaryViewData[], DailySummaryDto>({
-        endpoint: `${API_DAILY_SUMMARY}?date=${effectiveDate}`,
+        // requiresId: false,
+        id: `daySummary?date=${effectiveDate}`,
+        endpoint: API_STATISTICS,
         transformResponse: mapDailySummaryDtoToViewData,
     });
 };
