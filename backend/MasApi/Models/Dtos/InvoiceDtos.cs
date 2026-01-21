@@ -23,7 +23,6 @@ public class InvoiceListDto
     public required decimal TotalNetPrice { get; set; }
     public required decimal TotalVatAmount { get; set; }
     public required decimal TotalGrossPrice { get; set; }
-    // TODO: Add link to download invoice PDF
 }
 
 public class InvoiceDetailsDto
@@ -35,6 +34,4 @@ public class InvoiceDetailsDto
     public required DateTime IssuedAt { get; set; }
     public required DateTime PaymentDueDate { get; set; }
     public required string Status { get; set; }
-
-    // TODO: Add link to download invoice PDF
 }
