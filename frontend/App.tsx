@@ -27,6 +27,8 @@ import {
     SignUpScreen,
 } from './src/components/screens';
 import { AppDrawerContent, AppLoadingOverlay, AppScreenWrapper } from './src/components/common';
+import { registerTranslation } from 'react-native-paper-dates';
+import { useEffect } from 'react';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -240,6 +242,29 @@ export default function App() {
     const { isLoading: isAuthLoading } = useAuth();
 
     const [fontsLoaded, setFontsLoaded] = React.useState(false);
+
+    
+    useEffect(() => {
+        registerTranslation('pl', {
+            selectSingle: 'Wybierz datę',
+            selectMultiple: 'Wybierz daty',
+            selectRange: 'Wybierz zakres',
+            save: 'Zatwierdź',
+            close: 'Anuluj',
+            notAccordingToDateFormat: (inputFormat) => `Data musi być w formacie ${inputFormat}`,
+            mustBeHigherThan: (date) => `Data musi być późniejsza niż ${date}`,
+            mustBeLowerThan: (date) => `Data musi być wcześniejsza niż ${date}`,
+            mustBeBetween: (startDate, endDate) =>
+                `Data musi być pomiędzy ${startDate} a ${endDate}`,
+            dateIsDisabled: 'Ta data jest niedostępna',
+            previous: 'Poprzedni',
+            next: 'Następny',
+            typeInDate: 'Wpisz datę',
+            pickDateFromCalendar: 'Wybierz datę z kalendarza',
+            hour: 'Godzina',
+            minute: 'Minuta',
+        });
+    }, []);
 
     React.useEffect(() => {
         const loadFonts = async () => {

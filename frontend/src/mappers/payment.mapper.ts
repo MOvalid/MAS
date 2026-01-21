@@ -11,7 +11,8 @@ export const mapPaymentDtoToTableData = (payment: PaymentDto): PaymentTableData 
     id: payment.id,
     method: PAYMENT_METHOD_LABELS[payment.paymentMethod as PaymentMethod] ?? payment.paymentMethod,
     amount: formatPrice(payment.amount),
-    status: PAYMENT_STATUS_LABELS[payment.status as PaymentStatus] ?? payment.status,
+    statusLabel: PAYMENT_STATUS_LABELS[payment.status as PaymentStatus] ?? payment.status,
+    status: payment.status,
     paymentDate: payment.paymentDate ? formatPolishDate(payment.paymentDate, false) : '-',
     currency: payment.currency,
 });
@@ -33,14 +34,15 @@ export const mapPaymentDtoToDomain = (dto: PaymentDto): Payment => {
     };
 };
 
-export const mapPaymentToTableData = (payment: Payment, lp: string = ''): PaymentTableData => {
+export const mapPaymentToTableData = (payment: Payment, index: number = 1): PaymentTableData => {
     return {
-        lp,
+        lp: (index + 1).toString(),
         id: payment.id,
         method:
             PAYMENT_METHOD_LABELS[payment.paymentMethod as PaymentMethod] ?? payment.paymentMethod,
         amount: formatPrice(payment.amount),
-        status: PAYMENT_STATUS_LABELS[payment.status as PaymentStatus] ?? payment.status,
+        statusLabel: PAYMENT_STATUS_LABELS[payment.status as PaymentStatus] ?? payment.status,
+        status: payment.status,
         paymentDate: payment.paymentDate ? formatPolishDate(payment.paymentDate, false) : '-',
         currency: payment.currency,
     };

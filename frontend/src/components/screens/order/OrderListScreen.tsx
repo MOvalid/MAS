@@ -9,7 +9,6 @@ import { OrderTableData } from '@/types/domain/order';
 import { OrderSort, OrderStatus } from '@/types/common';
 import { useSellers } from '@/composables/seller';
 import { useNavigation } from '@react-navigation/native';
-import { useDebounce } from '@/hooks/useDebounce';
 import { useOrders2, useOrderTableData } from '@/composables/orders/useOrders';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/types/dto/auth';
@@ -64,7 +63,7 @@ export const OrderListScreen = () => {
     );
 
     const handleRowPress = (item: OrderTableData) => {
-        navigation.navigate('Order', { id: item.id });
+        navigation.navigate('OrderDetails', { id: item.id });
     };
 
     const loading = orderLoading || sellersLoading || false;
@@ -82,7 +81,7 @@ export const OrderListScreen = () => {
         },
         { key: 'seller', title: 'Sprzedawca', flex: 1 },
         { key: 'status', title: 'Status', flex: 1 },
-        { key: 'invoiceNumber', title: 'Faktura', flex: 1 },
+        { key: 'invoiceNumber', title: 'Faktura', align: 'center', flex: 1 },
     ];
 
     if (error)

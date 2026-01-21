@@ -15,11 +15,15 @@ import { mapInvoiceDtoToDomain } from './invoice.mapper';
 import { mapProductDtoToDomain } from './product.mapper';
 import { Currency, ORDER_STATUS_LABELS, OrderStatus } from '@/types/common';
 import { mapDeliveryDtoToDomain } from './delivery.mapper';
+import { formatPolishDate } from '@/utils/formatters';
+import { formatPrice } from '@/utils/price-utils';
 
 export const mapOrderItemDtoToDomain = (dto: OrderItemDto): OrderItem => {
+    const product = mapProductDtoToDomain(dto.product)
+    console.log(product)
     return {
         productId: dto.productId,
-        product: mapProductDtoToDomain(dto.product),
+        product: product,
         quantity: dto.quantity,
         unitNetPrice: dto.unitNetPrice,
         vatRate: dto.vatRate,
@@ -43,7 +47,7 @@ export const mapOrder1ToTableData = (
     return {
         lp: rowNumber,
         id: order.id,
-        createdAt: new Date(order.createdAt).toLocaleDateString('pl-PL'),
+        createdAt: formatPolishDate(order.createdAt, false),
         customer: customerMap[order.customerId] || 'Nieznany',
         company: '',
         status: ORDER_STATUS_LABELS[order.status as OrderStatus],
@@ -63,7 +67,7 @@ export const mapOrder2ToTableData = (
     return {
         lp: rowNumber,
         id: order.id,
-        createdAt: order.createdAt.slice(0, 10),
+        createdAt: formatPolishDate(order.createdAt, false),
         customer: order.customer,
         company: order.company,
         status: ORDER_STATUS_LABELS[order.status as OrderStatus],
@@ -95,24 +99,37 @@ export const mapOrderDto2ToDomain = (dto: OrderDto2): Order2 => {
         seller: dto.seller,
         status: dto.status,
         deliveryId: dto.deliveryId ?? '',
-        invoiceNUmber: dto.invoiceNumber ?? '—',
+        invoiceNUmber: dto.invoiceNumber ?? '-',
     };
 };
 
 export const mapOrderSummaryDtoToDomain = (dto: OrderSummaryDto): OrderSummary => {
+    const customer = mapCustomerDtoToDomain(dto.customer);
+    console.log(customer);
+    const seller = mapSellerDtoToDomain(dto.seller);
+    console.log(seller);
+    const delivery = dto.delivery ? mapDeliveryDtoToDomain(dto.delivery) : null;
+    console.log(delivery);
+    const invoice = dto.invoice ? mapInvoiceDtoToDomain(dto.invoice) : null;
+    console.log(invoice);
+    const payments = dto.payments ? dto.payments.map(mapPaymentDtoToDomain) : null;
+    console.log(payments);
+    const orderProducts = dto.orderProducts ? dto.orderProducts.map(mapOrderItemDtoToDomain) : [];
+    console.log(orderProducts);
     return {
         id: dto.id,
         createdAt: dto.createdAt,
-        status: dto.status,
+        // status: ORDER_STATUS_LABELS[dto.status as OrderStatus],
+        status: dto.status as OrderStatus,
         currency: dto.currency,
         totalNetPrice: dto.totalNetPrice,
         totalVatAmount: dto.totalVatAmount,
         totalGrossPrice: dto.totalGrossPrice,
-        customer: mapCustomerDtoToDomain(dto.customer),
-        seller: mapSellerDtoToDomain(dto.seller),
-        delivery: dto.delivery ? mapDeliveryDtoToDomain(dto.delivery) : null,
-        invoice: dto.invoice ? mapInvoiceDtoToDomain(dto.invoice) : null,
-        orderProducts: dto.orderProducts ? dto.orderProducts.map(mapOrderItemDtoToDomain) : null,
+        customer: customer,
+        seller: seller,
+        delivery: delivery,
+        invoice: invoice,
+        orderProducts: orderProducts,
         payments: dto.payments ? dto.payments.map(mapPaymentDtoToDomain) : null,
     };
 };
@@ -124,10 +141,10 @@ export const mapOrderItemToTableData = (item: OrderItem, index: number = 0): Ord
         product: item.product.name,
         quantity: item.quantity,
         unit: 'szt.',
-        unitPrice: item.unitNetPrice.toFixed(2),
-        netPrice: item.totalNetPrice.toFixed(2),
-        vatAmount: item.totalVatAmount.toFixed(2),
-        grossPrice: item.totalGrossPrice.toFixed(2),
+        unitPrice: formatPrice(item.unitNetPrice),
+        netPrice: formatPrice(item.totalNetPrice),
+        vatAmount: formatPrice(item.totalVatAmount),
+        grossPrice: formatPrice(item.totalGrossPrice),
         vatRate: `${item.vatRate}%`,
         currency: item.currency,
     };

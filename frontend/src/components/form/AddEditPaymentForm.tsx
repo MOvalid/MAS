@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// @/components/form/AddEditPaymentForm.tsx
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppText, AppButton, AppDropdown } from '@/components/common';
 import { metrics } from '@/theme/metrics';
@@ -21,53 +22,73 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
     onSave,
     onClose,
 }) => {
-    const [amount, setAmount] = useState(initialAmount?.toString() ?? '');
+    // 1. Formatowanie ceny na start (zamiana liczby na string akceptowalny przez input)
+    const [amount, setAmount] = useState(
+        initialAmount !== undefined ? initialAmount.toString() : ''
+    );
     const [currency] = useState(initialCurrency);
+
+    // 2. Zapewnienie, że metoda jest zainicjalizowana z initialMethod
     const [method, setMethod] = useState<PaymentMethod | undefined>(initialMethod);
 
+    const isEdit = !!initialAmount; // Flaga trybu edycji
+
     const handleSave = () => {
-        const amt = parseFloat(amount);
+        const amt = parseFloat(amount.replace(',', '.')); // Obsługa obu separatorów
         if (isNaN(amt) || amt <= 0 || !method) return;
         onSave(amt, currency, method);
         onClose();
     };
 
     return (
-        <View>
-            <AppText variant="titleLarge">{method ? 'Edytuj płatność' : 'Dodaj płatność'}</AppText>
+        <View style={styles.container}>
+            <AppText variant="titleLarge" style={styles.title}>
+                {isEdit ? 'Edytuj status płatności' : 'Dodaj płatność'}
+            </AppText>
 
-            <AppNumberInput label="Kwota" fullWidth value={amount} onChangeValue={setAmount} />
+            <AppNumberInput
+                label="Kwota"
+                fullWidth
+                value={amount}
+                onChangeValue={setAmount}
+                // Jeśli edytujemy, możemy zablokować zmianę kwoty zgodnie z wymaganiem PUT /payment/{id}
+                disabled={isEdit}
+            />
 
             <AppDropdown
                 label="Waluta"
                 disabled
                 fullWidth
-                options={[
-                    { label: 'PLN', value: 'PLN' },
-                    { label: 'EUR', value: 'EUR' },
-                ]}
+                options={[{ label: 'PLN', value: 'PLN' }]}
                 value={currency}
-                onChange={() => {
-                    console.log('');
-                }}
+                onChange={() => {}}
             />
 
-            <View>
+            <View style={styles.methodSection}>
                 <AppText variant="bodyMedium" style={styles.label}>
                     Metoda płatności
                 </AppText>
                 <AppCheckboxGroup
                     options={PAYMENT_METHODS}
                     selectedValue={method ?? 'BANK_TRANSFER'}
-                    onChange={(v) => setMethod(v as PaymentMethod)}
+                    onChange={(v) => {
+                        if (!isEdit) {
+                            setMethod(v as PaymentMethod);
+                        }
+                    }}
                 />
+                {isEdit && (
+                    <AppText variant="bodySmall" style={styles.helperText}>
+                        Metoda płatności nie może być zmieniona podczas edycji.
+                    </AppText>
+                )}
             </View>
 
             <View style={styles.buttonsRow}>
-                <AppButton mode="outlined" onPress={onClose}>
+                <AppButton mode="outlined" onPress={onClose} style={styles.button}>
                     Anuluj
                 </AppButton>
-                <AppButton mode="contained" onPress={handleSave}>
+                <AppButton mode="contained" onPress={handleSave} style={styles.button}>
                     Zapisz
                 </AppButton>
             </View>
@@ -76,10 +97,30 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
 };
 
 const styles = StyleSheet.create({
-    label: { marginBottom: 8 },
+    container: {
+        padding: metrics.spacing.xs,
+    },
+    title: {
+        marginBottom: metrics.spacing.lg,
+    },
+    methodSection: {
+        marginTop: metrics.spacing.md,
+    },
+    label: {
+        marginBottom: metrics.spacing.xs,
+        fontWeight: '600',
+    },
+    helperText: {
+        color: '#888',
+        fontStyle: 'italic',
+        marginTop: metrics.spacing.xs,
+    },
     buttonsRow: {
         flexDirection: 'row',
         gap: metrics.spacing.md,
-        marginTop: metrics.spacing.md,
+        marginTop: metrics.spacing.xl,
+    },
+    button: {
+        flex: 1,
     },
 });

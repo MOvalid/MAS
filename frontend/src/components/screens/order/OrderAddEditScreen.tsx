@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
-import { AppText, AppCard, AppButton, IconName } from '@/components/common';
+import { AppText, AppCard, AppButton, IconName, InfoItem } from '@/components/common';
 import { AppAutocomplete } from '@/components/common/AppAutocomplete';
 import {
     OrderProductInputCard,
@@ -11,15 +11,21 @@ import {
 import { OrderProductList } from '@/components/common/order/OrderProductList';
 import { AppModal } from '@/components/common/AppModal';
 import { metrics } from '@/theme/metrics';
-import { Currency, Option, PersonBase } from '@/types/common';
-import { OrderItem } from '@/types/domain';
+import { Currency, Option, PaymentStatus, PersonBase } from '@/types/common';
+import { Delivery, OrderItem, PaymentTableData } from '@/types/domain';
 import { useCreateOrder, useOrder, useUpdateOrder } from '@/composables/orders/useOrders';
 import { useCustomerOptions } from '@/composables/customer/useCustomers';
-import { CreateOrderItem, CreateOrderPayload } from '@/types/dto';
+import { CreateOrderItem, CreateOrderPayload, PaymentDto } from '@/types/dto';
 import { LoadingScreen } from '../LoadingScreen';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { useSellerOptions } from '@/composables/seller/useSellers';
 import { useProductOptions } from '@/composables/product/useProducts';
+import { formatAddressMultiline, formatPolishDate } from '@/utils/formatters';
+import { TableColumn, AppTable } from '@/components/common/table';
+import { useOrderItemTableData } from '@/composables/orders/useOrderItems';
+import { usePaymentTableData } from '@/composables/payment/usePayments';
+import { useOrderActions } from '@/hooks/useOrderActions';
+import { useCarrierOptions } from '@/composables/carrier/useCarriers';
 
 const AddPaymentForm = ({ onClose }: { onClose: () => void }) => (
     <View>
@@ -40,16 +46,32 @@ export const OrderAddEditScreen = () => {
     const navigation = useNavigation();
     const theme = useTheme();
 
-    const { id } = route.params ?? {};
+    const { id } = route.params;
     const isEdit = Boolean(id);
-    const { data: fetchedOrder, error: fetchOrderError, loading, refresh } = useOrder(id);
+    const { data: order, error: fetchOrderError, loading: orderLoading, refresh } = useOrder(id);
 
-    const { create, loading: createLoading } = useCreateOrder(() => navigation.goBack());
-    const { update, loading: updateLoading } = useUpdateOrder(() => navigation.goBack());
+    const { create, loading: createLoading } = useCreateOrder((newOrder) => {
+        navigation.replace('OrderDetails', { id: newOrder.id });
+    });
+    const { update, loading: updateLoading } = useUpdateOrder((updatedOrder) => {
+        navigation.replace('OrderDetails', { id: updatedOrder.id });
+    });
+
+    const { handleSavePayment, handleCancelPayment, handleSaveDelivery } = useOrderActions(
+        id,
+        refresh,
+        order?.payments || []
+    );
+
+    const orderItemsData = useOrderItemTableData(order?.orderProducts || []);
+    const paymentsData = usePaymentTableData(order?.payments || []);
 
     const [searchCustomer, setSearchCustomer] = useState('');
     const [searchSeller, setSearchSeller] = useState('');
     const [searchProduct, setSearchProduct] = useState('');
+    const [selectedPayment, setSelectedPayment] = useState<PaymentDto | null>(null);
+    const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
     const {
         data: customersData,
@@ -62,6 +84,8 @@ export const OrderAddEditScreen = () => {
         loading: sellersLoading,
         setFilters: setSellerFilters,
     } = useSellerOptions(true, { name: '' });
+
+    const { data: carrierData, loading: carrierLoading } = useCarrierOptions(true);
 
     const {
         data: productsData,
@@ -84,6 +108,8 @@ export const OrderAddEditScreen = () => {
         setProductFilters({ name: search, limit: 10 });
     };
 
+    const loading = orderLoading || customersLoading || sellersLoading || carrierLoading || false;
+
     const [customerValue, setCustomerValue] = useState<Option | undefined>(undefined);
     const [sellerValue, setSellerValue] = useState<Option | undefined>(undefined);
     const [orderProducts, setOrderProducts] = useState<OrderItem[]>([]);
@@ -97,9 +123,7 @@ export const OrderAddEditScreen = () => {
         fallback: string
     ): Option | undefined => {
         if (!person) return undefined;
-
         const fullName = [person.firstName, person.lastName].filter(Boolean).join(' ');
-
         return {
             label: fullName || fallback,
             value: person.id,
@@ -107,16 +131,16 @@ export const OrderAddEditScreen = () => {
     };
 
     useEffect(() => {
-        if (!isEdit || !fetchedOrder) return;
+        if (!isEdit || !order) return;
 
-        setOrderProducts(fetchedOrder.orderProducts || []);
+        setOrderProducts(order.orderProducts || []);
 
-        const customerOpt = formatPersonLabel(fetchedOrder.customer, 'Klient');
+        const customerOpt = formatPersonLabel(order.customer, 'Klient');
         if (customerOpt) setCustomerValue(customerOpt);
 
-        const sellerOpt = formatPersonLabel(fetchedOrder.seller, 'Sprzedawca');
+        const sellerOpt = formatPersonLabel(order.seller, 'Sprzedawca');
         if (sellerOpt) setSellerValue(sellerOpt);
-    }, [fetchedOrder, isEdit]);
+    }, [order, isEdit]);
 
     const customerOptions = useMemo(
         () => customersData.map((s) => ({ label: `${s.firstName} ${s.lastName}`, value: s.id })),
@@ -133,8 +157,6 @@ export const OrderAddEditScreen = () => {
         [productsData]
     );
 
-    const pageTitle = isEdit ? `Edycja zamówienia #${id}` : 'Dodaj nowe zamówienie';
-
     const validate = (): boolean => {
         const e: { customer?: string; seller?: string } = {};
         if (!customerValue) e.customer = 'Wybierz klienta';
@@ -142,6 +164,17 @@ export const OrderAddEditScreen = () => {
         setErrors(e);
         return Object.keys(e).length === 0;
     };
+
+    const paymentColumns: TableColumn<PaymentTableData>[] = useMemo(
+        () => [
+            { key: 'method', title: 'Metoda', flex: 1.5 },
+            { key: 'amount', title: 'Kwota', align: 'right', flex: 1 },
+            { key: 'currency', title: 'Waluta', align: 'center', flex: 0.5 },
+            { key: 'statusLabel', title: 'Status', align: 'center', flex: 0.5 },
+            { key: 'paymentDate', title: 'Data', align: 'center', flex: 0.75 },
+        ],
+        []
+    );
 
     const handleSave = async () => {
         if (!validate()) return;
@@ -157,15 +190,16 @@ export const OrderAddEditScreen = () => {
         };
 
         if (isEdit) {
-            // await update(fetchedOrder?.id, payload);
+            // Logika aktualizacji jeśli API na to pozwala
         } else {
             await create(payload);
         }
     };
 
     const handleAddProduct = (item: CreateOrderItem) => {
-        const productInfo = productsData.find((p) => p.id === item.productId);
+        if (isEdit) return; // Dodatkowe zabezpieczenie
 
+        const productInfo = productsData.find((p) => p.id === item.productId);
         if (productInfo) {
             const qty = item.quantity;
             const netPrice = productInfo.netPrice || 0;
@@ -190,17 +224,34 @@ export const OrderAddEditScreen = () => {
             setOrderProducts((prev) => [...prev, newItem]);
         }
     };
+
     const handleRemoveProduct = (index: number) => {
-        setOrderProducts((prev) => {
-            const newProducts = prev.filter((_, i) => i !== index);
-            return newProducts;
-        });
+        if (isEdit) return;
+        setOrderProducts((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const onEditPayment = (row: PaymentTableData) => {
+        const payment = order?.payments?.find((p) => p.id === row.id);
+        if (payment) {
+            setSelectedPayment(payment);
+            setPaymentModalVisible(true);
+        }
     };
 
     const styles = StyleSheet.create({
-        container: { flex: 1, padding: metrics.spacing.lg, gap: metrics.spacing.lg },
+        container: { flex: 1, padding: metrics.spacing.lg },
         card: { backgroundColor: theme.colors.background, marginBottom: metrics.spacing.lg },
         cardTitle: { marginBottom: metrics.spacing.md },
+        subtitle: { color: '#666' },
+        modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
+        modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
+        modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: metrics.spacing.md },
+        cardHeaderWithButton: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: metrics.spacing.lg,
+        },
         actionRow: {
             flexDirection: 'row',
             justifyContent: 'flex-end',
@@ -226,14 +277,12 @@ export const OrderAddEditScreen = () => {
         hint: { color: theme.colors.onSurfaceVariant, marginTop: metrics.spacing.xs },
     });
 
-    if (loading) {
-        return <LoadingScreen text="Ładowanie danych..." />;
-    }
+    if (loading) return <LoadingScreen text="Ładowanie danych..." />;
 
-    if (fetchOrderError) {
+    if (fetchOrderError || (!order && isEdit)) {
         return (
             <ErrorMessage
-                error={fetchOrderError}
+                error={fetchOrderError || 'Wystąpił błąd podczas ładowania danych'}
                 onRetry={refresh}
                 onBack={() => navigation.goBack()}
             />
@@ -242,47 +291,65 @@ export const OrderAddEditScreen = () => {
 
     return (
         <ScrollView style={styles.container}>
-            <AppText variant="headlineMedium" style={{ marginBottom: metrics.spacing.lg }}>
-                {pageTitle}
-            </AppText>
+            <View style={styles.headerRow}>
+                <View>
+                    <AppText variant="headlineMedium">Zamówienie</AppText>
+                    {isEdit && (
+                        <>
+                            <AppText style={styles.subtitle}>ID: {id}</AppText>
+                            <AppText style={styles.subtitle}>
+                                Utworzono: {formatPolishDate(order?.createdAt, false)}
+                            </AppText>
+                        </>
+                    )}
+                </View>
+                {isEdit && (
+                    <View style={styles.buttonRow}>
+                        <AppButton
+                            icon={IconName.delete}
+                            buttonColor={theme.colors.error}
+                            onPress={() => setDeleteModalVisible(true)}
+                        >
+                            Usuń
+                        </AppButton>
+                    </View>
+                )}
+            </View>
 
             <AppCard style={styles.card}>
                 <AppText variant="titleLarge" style={styles.cardTitle}>
                     Informacje podstawowe
                 </AppText>
-                <View>
-                    <View style={styles.headerRow}>
-                        <View style={{ flex: 3 }}>
-                            <AppAutocomplete<Option>
-                                label="Klient *"
-                                value={customerValue}
-                                options={customerOptions}
-                                getOptionLabel={(o) => o.label}
-                                onChange={setCustomerValue}
-                                onInputChange={handleCustomerSearchChange}
-                                placeholder="Wybierz klienta"
-                            />
-                            {errors.customer && (
-                                <AppText variant="bodySmall" style={{ color: theme.colors.error }}>
-                                    {errors.customer}
-                                </AppText>
-                            )}
-                        </View>
 
+                {/* Klient */}
+                <View style={styles.headerRow}>
+                    <View style={{ flex: 3 }}>
+                        <AppAutocomplete<Option>
+                            label="Klient *"
+                            value={customerValue}
+                            options={customerOptions}
+                            getOptionLabel={(o) => o.label}
+                            onChange={setCustomerValue}
+                            onInputChange={handleCustomerSearchChange}
+                            placeholder="Wybierz klienta"
+                            disabled={isEdit}
+                        />
+                    </View>
+                    {!isEdit && (
                         <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
                             <View style={styles.buttonWrapper}>
                                 <AppButton
                                     icon={IconName.client}
-                                    onPress={() => {
-                                        navigation.navigate('Customer');
-                                    }}
+                                    onPress={() => navigation.navigate('Customer')}
                                 >
-                                    Przejdź do klientów
+                                    Baza
                                 </AppButton>
                             </View>
                         </View>
-                    </View>
+                    )}
                 </View>
+
+                {/* Sprzedawca */}
                 <View style={{ marginTop: metrics.spacing.md }}>
                     <View style={styles.headerRow}>
                         <View style={{ flex: 3 }}>
@@ -294,66 +361,125 @@ export const OrderAddEditScreen = () => {
                                 onChange={setSellerValue}
                                 onInputChange={handleSellerSearchChange}
                                 placeholder="Wybierz sprzedawcę"
+                                disabled={isEdit}
                             />
-                            {errors.seller && (
-                                <AppText variant="bodySmall" style={{ color: theme.colors.error }}>
-                                    {errors.seller}
-                                </AppText>
-                            )}
                         </View>
-
-                        <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
-                            <View style={styles.buttonWrapper}>
-                                <AppButton
-                                    icon={IconName.seller}
-                                    onPress={() => {
-                                        navigation.navigate('Seller');
-                                    }}
-                                >
-                                    Przejdź do sprzedawców
-                                </AppButton>
+                        {!isEdit && (
+                            <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
+                                <View style={styles.buttonWrapper}>
+                                    <AppButton
+                                        icon={IconName.seller}
+                                        onPress={() => navigation.navigate('Seller')}
+                                    >
+                                        Baza
+                                    </AppButton>
+                                </View>
                             </View>
-                        </View>
+                        )}
                     </View>
                 </View>
             </AppCard>
 
-            <OrderProductInputCard
-                orderId={id}
-                productsOptions={productOptions}
-                isLoading={productsLoading}
-                onAddProduct={handleAddProduct}
-                onSearchProduct={handleProductSearchChange}
+            {!isEdit && (
+                <OrderProductInputCard
+                    orderId={id}
+                    productsOptions={productOptions}
+                    isLoading={productsLoading}
+                    onAddProduct={handleAddProduct}
+                    onSearchProduct={handleProductSearchChange}
+                />
+            )}
+
+            <OrderProductList
+                products={orderProducts}
+                onRemove={!isEdit ? handleRemoveProduct : undefined}
             />
-            <OrderProductList products={orderProducts} onRemove={handleRemoveProduct} />
 
             <AppCard style={styles.card}>
-                <AppText variant="titleLarge" style={styles.cardTitle}>
-                    Dostawa
-                </AppText>
-                {isEdit ? (
-                    <AppButton onPress={() => setDeliveryModalVisible(true)}>
-                        Dodaj / Edytuj dostawę
-                    </AppButton>
+                {isEdit && order ? (
+                    <>
+                        <View style={styles.cardHeaderWithButton}>
+                            <AppText variant="titleLarge">Dostawa</AppText>
+                            <AppButton
+                                icon={IconName.delivery}
+                                onPress={() => {
+                                    setSelectedDelivery(order?.delivery || null);
+                                    setDeliveryModalVisible(true);
+                                }}
+                            >
+                                Zarządzaj
+                            </AppButton>
+                        </View>
+                        <InfoItem
+                            label="Adres"
+                            value={formatAddressMultiline(order.delivery?.address)}
+                        />
+                        <InfoItem label="Przewoźnik" value={order.delivery?.carrierId || '-'} />
+                        <InfoItem
+                            label="Numer przesyłki"
+                            value={order.delivery?.trackingNumber || '-'}
+                        />
+                    </>
                 ) : (
-                    <AppText variant="bodyLarge" style={styles.hint}>
-                        Dostawa będzie dostępna po zapisaniu zamówienia.
-                    </AppText>
+                    <>
+                        <AppText variant="titleLarge" style={styles.cardTitle}>
+                            Dostawa
+                        </AppText>
+                        <AppText variant="bodyLarge" style={styles.hint}>
+                            Dostawa będzie dostępna po zapisaniu zamówienia.
+                        </AppText>
+                    </>
                 )}
             </AppCard>
 
             <AppCard style={styles.card}>
-                <AppText variant="titleLarge" style={styles.cardTitle}>
-                    Płatności
-                </AppText>
                 {isEdit ? (
-                    <AppButton onPress={() => setPaymentModalVisible(true)}>
-                        Dodaj płatność
-                    </AppButton>
+                    <>
+                        <View style={styles.cardHeaderWithButton}>
+                            <AppText variant="titleLarge">Płatności</AppText>
+                            <AppButton
+                                icon={IconName.payment}
+                                onPress={() => {
+                                    setSelectedPayment(null);
+                                    setPaymentModalVisible(true);
+                                }}
+                            >
+                                Dodaj płatność
+                            </AppButton>
+                        </View>
+                        <AppTable
+                            columns={paymentColumns}
+                            data={paymentsData}
+                            actions={(row) => {
+                                const isCompleted = row.status === PaymentStatus.COMPLETED;
+                                return [
+                                    {
+                                        icon: IconName.edit,
+                                        iconColor: isCompleted
+                                            ? 'transparent'
+                                            : theme.colors.primary,
+                                        onPress: () => !isCompleted && onEditPayment(row),
+                                        disabled: isCompleted,
+                                    },
+                                    {
+                                        icon: IconName.cancel,
+                                        iconColor: isCompleted ? 'transparent' : theme.colors.error,
+                                        onPress: () => !isCompleted && handleCancelPayment(row.id),
+                                        disabled: isCompleted,
+                                    },
+                                ];
+                            }}
+                        />
+                    </>
                 ) : (
-                    <AppText variant="bodyLarge" style={styles.hint}>
-                        Płatności są dodawane po utworzeniu zamówienia.
-                    </AppText>
+                    <>
+                        <AppText variant="titleLarge" style={styles.cardTitle}>
+                            Płatności
+                        </AppText>
+                        <AppText variant="bodyLarge" style={styles.hint}>
+                            Płatności są dodawane po utworzeniu zamówienia.
+                        </AppText>
+                    </>
                 )}
             </AppCard>
 
@@ -375,11 +501,28 @@ export const OrderAddEditScreen = () => {
                 </AppButton>
             </View>
 
+            {/* Modale */}
             <AppModal visible={paymentModalVisible} onClose={() => setPaymentModalVisible(false)}>
                 <AddPaymentForm onClose={() => setPaymentModalVisible(false)} />
             </AppModal>
             <AppModal visible={deliveryModalVisible} onClose={() => setDeliveryModalVisible(false)}>
                 <AddDeliveryForm onClose={() => setDeliveryModalVisible(false)} />
+            </AppModal>
+            <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
+                <AppText variant="titleLarge" style={styles.modalTitle}>
+                    Usuń zamówienie
+                </AppText>
+                <AppText style={styles.modalText}>
+                    Czy na pewno chcesz nieodwracalnie usunąć to zamówienie?
+                </AppText>
+                <View style={styles.modalButtons}>
+                    <AppButton mode="outlined" onPress={() => setDeleteModalVisible(false)}>
+                        Anuluj
+                    </AppButton>
+                    <AppButton buttonColor={theme.colors.error} onPress={() => navigation.goBack()}>
+                        Usuń
+                    </AppButton>
+                </View>
             </AppModal>
         </ScrollView>
     );

@@ -112,7 +112,7 @@ export const OrderProductInputCard: React.FC<Props> = ({
 
                     <View style={styles.detailsRow}>
                         <View style={styles.inputWrapper}>
-                            <AppText variant="bodySmall" style={styles.labelText}>
+                            <AppText variant="bodyLarge" style={styles.labelText}>
                                 Ilość
                             </AppText>
                             <AppNumberInput
@@ -125,7 +125,7 @@ export const OrderProductInputCard: React.FC<Props> = ({
                         </View>
 
                         <View style={styles.inputWrapper}>
-                            <AppText variant="bodySmall" style={styles.labelText}>
+                            <AppText variant="bodyLarge" style={styles.labelText}>
                                 Cena jedn.
                             </AppText>
                             <AppCurrencyInput

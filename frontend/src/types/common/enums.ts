@@ -95,10 +95,10 @@ export const PAYMENT_METHODS = PAYMENT_METHOD_VALUES.map((m) => ({
 }));
 
 export const PAYMENT_SUMMARY_LABELS = {
-    PAID: 'OPŁACONE',
-    PARTIAL: 'CZĘŚCIOWE',
-    NONE: 'BRAK WPŁAT',
-    OVERPAID: 'NADPŁATA',
+    PAID: 'Opłacone',
+    PARTIAL: 'Częściowe',
+    NONE: 'Brak wpłat',
+    OVERPAID: 'Nadpłata',
 } as const;
 
 export const ORDER_SORT_OPTIONS = [

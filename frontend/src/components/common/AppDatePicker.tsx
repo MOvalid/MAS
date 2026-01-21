@@ -44,7 +44,6 @@ export const AppDatePicker = ({
         <View style={[styles.nativeContainer, style]}>
             <TouchableOpacity onPress={() => setVisible(true)} style={styles.nativeTouchable}>
                 <AppText
-                    variant="displayLarge"
                     style={[
                         {
                             color: value ? colors.onSecondaryContainer : colors.primary,

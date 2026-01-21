@@ -16,6 +16,7 @@ type AppAutocompleteProps<T> = {
     placeholder?: string;
     errorMessage?: string;
     inputProps?: Partial<PaperTextInputProps>;
+    disabled?: boolean;
 };
 
 export function AppAutocomplete<T>({
@@ -27,6 +28,7 @@ export function AppAutocomplete<T>({
     onInputChange,
     placeholder = 'Wybierz...',
     errorMessage,
+    disabled = false,
 }: AppAutocompleteProps<T>) {
     const theme = useTheme();
     const { colors } = useAppTheme();
@@ -62,22 +64,26 @@ export function AppAutocomplete<T>({
     } as const;
 
     const styles = StyleSheet.create({
-        wrapper: { flex: 1 },
+        wrapper: {
+            flex: 1,
+            opacity: disabled ? 0.5 : 1,
+        },
         input: {
             height: 48,
             alignContent: 'center',
             borderRadius: metrics.radius.xl,
             borderWidth: 0,
-            backgroundColor: colors.secondaryContainer,
+            backgroundColor: disabled ? theme.colors.surfaceDisabled : colors.secondaryContainer,
         },
         outerWrapper: {
             borderRadius: metrics.radius.xl,
             overflow: 'hidden',
             marginVertical: metrics.spacing.lmd,
-
-            backgroundColor: colors.secondaryContainer,
+            backgroundColor: disabled ? theme.colors.surfaceDisabled : colors.secondaryContainer,
         },
-        labelText: { color: theme.colors.onSurfaceVariant },
+        labelText: {
+            color: theme.colors.onSurfaceVariant,
+        },
 
         errorContainerStyle: {
             position: 'absolute' as const,
@@ -90,7 +96,7 @@ export function AppAutocomplete<T>({
     });
 
     return (
-        <View style={styles.wrapper}>
+        <View style={styles.wrapper} pointerEvents={disabled ? 'none' : 'auto'}>
             <AppText variant="bodyLarge" style={styles.labelText}>
                 {label}
             </AppText>
@@ -98,6 +104,7 @@ export function AppAutocomplete<T>({
                 <Autocomplete<T>
                     value={value}
                     onChange={(option) => {
+                        if (disabled) return;
                         onChange(option);
                         setInputValue(option ? getOptionLabel(option) : '');
                         setFilterActive(false);
@@ -107,6 +114,7 @@ export function AppAutocomplete<T>({
                     inputProps={{
                         placeholder,
                         value: inputValue,
+                        editable: !disabled,
                         onChangeText: (text) => {
                             setInputValue(text);
                             setFilterActive(true);

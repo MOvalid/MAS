@@ -16,3 +16,4 @@ export { AppTextInput } from './AppTextInput';
 export { IconName } from './icons';
 export { AppScreenWrapper } from './AppScreenWrapper';
 export { AppModal } from './AppModal';
+export { InfoItem } from './InfoItem';
