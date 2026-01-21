@@ -52,7 +52,8 @@ public static class CategoryEndpoints
     public static async Task<Results<Ok<CategoryDetailsDto>, NotFound>> GetCategory(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var category = await dbContext.Categories
-            .Include(c => c.Products)
+            .Include(c => c.Products!)
+                .ThenInclude(p => p.Manufacturer)
             .FirstOrDefaultAsync(c => c.Id == id);
         if (category == null) return TypedResults.NotFound();
 
@@ -73,7 +74,8 @@ public static class CategoryEndpoints
     public static async Task<Results<Ok<CategoryDetailsDto>, NotFound, BadRequest<string>>> UpdateCategory(Guid id, CategoryCreateDto categoryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var category = await dbContext.Categories
-            .Include(c => c.Products)
+            .Include(c => c.Products!)
+                .ThenInclude(p => p.Manufacturer)
             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (category == null) return TypedResults.NotFound();

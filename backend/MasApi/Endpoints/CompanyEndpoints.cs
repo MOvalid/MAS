@@ -52,7 +52,8 @@ public static class CompanyEndpoints
     private static async Task<Results<Ok<CompanyDetailsDto>, NotFound>> GetCompany(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var company = await dbContext.Companies
-            .Include(c => c.Invoices)
+            .Include(c => c.Invoices!)
+                .ThenInclude(i => i.Order!.OrderProducts)
             .FirstOrDefaultAsync(c => c.Id == id);
         if (company == null) return TypedResults.NotFound();
 
@@ -102,7 +103,8 @@ public static class CompanyEndpoints
     private static async Task<Results<Ok<CompanyDetailsDto>, NotFound, BadRequest<string>>> UpdateCompany(Guid id, CompanyCreateDto companyRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var company = await dbContext.Companies
-            .Include(c => c.Invoices)
+            .Include(c => c.Invoices!)
+                .ThenInclude(i => i.Order!.OrderProducts)
             .FirstOrDefaultAsync(c => c.Id == id);
         if (company == null) return TypedResults.NotFound();
 

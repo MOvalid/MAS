@@ -54,8 +54,17 @@ public static class CustomerEndpoints
     private static async Task<Results<Ok<CustomerDetailsDto>, NotFound>> GetCustomer(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var customer = await dbContext.Customers
-            .Include(c => c.Orders!)
-                .ThenInclude(o => o.OrderProducts)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.OrderProducts!)
+                    .ThenInclude(op => op.Product!.Manufacturer)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Seller)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Invoice!.Company)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Payments!)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Delivery!)
             .FirstOrDefaultAsync(c => c.Id == id);
         if (customer == null) return TypedResults.NotFound();
 
@@ -105,8 +114,17 @@ public static class CustomerEndpoints
     private static async Task<Results<Ok<CustomerDetailsDto>, NotFound, BadRequest<string>>> UpdateCustomer(Guid id, CustomerCreateDto customerRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var customer = await dbContext.Customers
-            .Include(c => c.Orders!)
-                .ThenInclude(o => o.OrderProducts)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.OrderProducts!)
+                    .ThenInclude(op => op.Product!.Manufacturer)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Seller)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Invoice!.Company)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Payments!)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Delivery!)
             .FirstOrDefaultAsync(c => c.Id == id);
         if (customer == null) return TypedResults.NotFound();
 

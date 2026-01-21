@@ -71,7 +71,16 @@ public static class SellerEndpoints
     {
         var seller = await dbContext.Sellers
             .Include(s => s.Orders!)
-                .ThenInclude(o => o.OrderProducts)
+                .ThenInclude(o => o.OrderProducts!)
+                    .ThenInclude(op => op.Product!.Manufacturer)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Customer)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Invoice!.Company)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Payments!)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Delivery!)
             .FirstOrDefaultAsync(s => s.Id == id);
         if (seller == null) return TypedResults.NotFound();
 
@@ -93,7 +102,16 @@ public static class SellerEndpoints
     {
         var seller = await dbContext.Sellers
             .Include(s => s.Orders!)
-                .ThenInclude(o => o.OrderProducts)
+                .ThenInclude(o => o.OrderProducts!)
+                    .ThenInclude(op => op.Product!.Manufacturer)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Customer)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Invoice!.Company)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Payments!)
+            .Include(s => s.Orders!)
+                .ThenInclude(o => o.Delivery!)
             .FirstOrDefaultAsync(s => s.Id == id);
         if (seller == null) return TypedResults.NotFound();
 

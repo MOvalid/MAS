@@ -53,6 +53,15 @@ public static class DeliveryEndpoints
         dbContext.Deliveries.Add(delivery);
         await dbContext.SaveChangesAsync();
 
+        delivery = await dbContext.Deliveries
+            .Include(d => d.Order!.OrderProducts!)
+                .ThenInclude(op => op.Product!.Manufacturer)
+            .Include(d => d.Order!.Customer)
+            .Include(d => d.Order!.Seller)
+            .Include(d => d.Order!.Invoice!.Company)
+            .Include(d => d.Carrier)
+            .FirstAsync(d => d.Id == delivery.Id);
+
         var deliveryDto = mapper.Map<DeliveryDetailsDto>(delivery);
 
         return TypedResults.Created($"/deliveries/{delivery.Id}", deliveryDto);
@@ -61,8 +70,11 @@ public static class DeliveryEndpoints
     private static async Task<Results<Ok<DeliveryDetailsDto>, NotFound>> GetDelivery(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var delivery = await dbContext.Deliveries
-            .Include(d => d.Order)
-                .ThenInclude(o => o!.OrderProducts)
+            .Include(d => d.Order!.OrderProducts!)
+                .ThenInclude(op => op.Product!.Manufacturer)
+            .Include(d => d.Order!.Customer)
+            .Include(d => d.Order!.Seller)
+            .Include(d => d.Order!.Invoice!.Company)
             .Include(d => d.Carrier)
             .FirstOrDefaultAsync(d => d.Id == id);
         if (delivery == null) return TypedResults.NotFound();
@@ -84,8 +96,11 @@ public static class DeliveryEndpoints
     private static async Task<Results<Ok<DeliveryDetailsDto>, NotFound, BadRequest<string>>> UpdateDelivery(Guid id, DeliveryCreateDto deliveryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var delivery = await dbContext.Deliveries
-            .Include(d => d.Order)
-                .ThenInclude(o => o!.OrderProducts)
+            .Include(d => d.Order!.OrderProducts!)
+                .ThenInclude(o => o!.Product!.Manufacturer)
+            .Include(d => d.Order!.Customer)
+            .Include(d => d.Order!.Seller)
+            .Include(d => d.Order!.Invoice!.Company)
             .Include(d => d.Carrier)
             .FirstOrDefaultAsync(d => d.Id == id);
         if (delivery == null) return TypedResults.NotFound();
