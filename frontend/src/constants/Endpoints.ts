@@ -9,3 +9,4 @@ export const API_ORDERS = '/orders';
 export const API_PAYMENTS = '/payments';
 export const API_PRODUCTS = '/products';
 export const API_SELLERS = '/sellers';
+export const API_DAILY_SUMMARY = '/statistics/daySummary';

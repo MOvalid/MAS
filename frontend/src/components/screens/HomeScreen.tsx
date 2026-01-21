@@ -19,7 +19,7 @@ export const HomeScreen = () => {
         return <LoadingScreen />;
     }
 
-    if (error) {
+    if (!data || error) {
         const friendly = getFriendlyErrorMessage(error);
 
         return (

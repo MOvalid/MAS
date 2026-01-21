@@ -25,13 +25,16 @@ export const useGet = <TDomain, TDto = TDomain>({
     const [data, setData] = useState<TDomain | null>(null);
 
     const fetch = useCallback(async () => {
-        if (!api || !id) return;
+
+        if (!api) return;
 
         setLoading(true);
         setError(null);
 
         try {
-            const url = `${endpoint}/${id}`;
+            const url = id ? `${endpoint}/${id}` : endpoint;
+            console.log('Fetching URL:', url);
+
             const response = await api.get<TDto>(url);
 
             const domainData = transformResponse 
@@ -50,7 +53,7 @@ export const useGet = <TDomain, TDto = TDomain>({
     }, [api, endpoint, id, transformResponse, onSuccess, onError]);
 
     useEffect(() => {
-        if (enabled && id) {
+        if (enabled) {
             fetch();
         }
     }, [id, enabled, fetch]);
