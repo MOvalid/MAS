@@ -71,6 +71,15 @@ public static class PaymentEndpoints
         dbContext.Payments.Add(payment);
         await dbContext.SaveChangesAsync();
 
+        payment = await dbContext.Payments
+            .Include(p => p.Order!.OrderProducts!)
+                .ThenInclude(op => op.Product)
+            .Include(p => p.Order!.Invoice!.Company)
+            .Include(p => p.Order!.Customer)
+            .Include(p => p.Order!.Delivery)
+            .Include(p => p.Order!.Seller)
+            .FirstAsync(p => p.Id == payment.Id);
+
         var paymentDto = mapper.Map<PaymentDetailsDto>(payment);
 
         return TypedResults.Created($"/payments/{payment.Id}", paymentDto);
@@ -79,7 +88,8 @@ public static class PaymentEndpoints
     private static async Task<Results<Ok<PaymentDetailsDto>, NotFound>> GetPayment(Guid id, Data.MasDbContext dbContext, IMapper mapper)
     {
         var payment = await dbContext.Payments
-            .Include(p => p.Order!.OrderProducts)
+            .Include(p => p.Order!.OrderProducts!)
+                .ThenInclude(op => op.Product)
             .Include(p => p.Order!.Invoice!.Company)
             .Include(p => p.Order!.Customer)
             .Include(p => p.Order!.Delivery)
@@ -105,10 +115,12 @@ public static class PaymentEndpoints
     private static async Task<Results<Ok<PaymentDetailsDto>, NotFound, BadRequest<string>>> UpdatePayment(Guid id, PaymentUpdateDto paymentRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var payment = await dbContext.Payments
-            .Include(p => p.Order)
-                .ThenInclude(o => o!.OrderProducts)
-            .Include(p => p.Order)
-                .ThenInclude(o => o!.Invoice)
+            .Include(p => p.Order!.OrderProducts!)
+                .ThenInclude(op => op.Product)
+            .Include(p => p.Order!.Invoice!.Company)
+            .Include(p => p.Order!.Customer)
+            .Include(p => p.Order!.Delivery)
+            .Include(p => p.Order!.Seller)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (payment == null) return TypedResults.NotFound();
 

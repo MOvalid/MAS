@@ -1,7 +1,7 @@
--- 1. KATEGORIE (Categories) - 10 rekordów
-INSERT INTO [dbo].[Categories]
-    ([Id], [Name], [Description])
-VALUES
+-- 1. KATEGORIE (Categories)
+INSERT INTO [dbo].[Categories] ([Id], [Name], [Description])
+SELECT v.Id, v.Name, v.Description
+FROM (VALUES
     ('11111111-1111-1111-1111-111111111110', N'Papiery i Kartony', N'Papier ksero, wizytówkowy, ozdobny'),
     ('11111111-1111-1111-1111-111111111111', N'Przybory do pisania', N'Długopisy, pióra, ołówki'),
     ('11111111-1111-1111-1111-111111111112', N'Zeszyty i Bloki', N'Zeszyty szkolne, kołonotatniki'),
@@ -11,12 +11,14 @@ VALUES
     ('11111111-1111-1111-1111-111111111116', N'Koperty i wysyłka', N'Koperty bąbelkowe, kartony, taśmy'),
     ('11111111-1111-1111-1111-111111111117', N'Etykiety i oznaczanie', N'Etykiety samoprzylepne, zakreślacze'),
     ('11111111-1111-1111-1111-111111111118', N'Przybory kreślarskie', N'Linijki, cyrkle, ekierki'),
-    ('11111111-1111-1111-1111-111111111119', N'Kalendarze i planery', N'Kalendarze ścienne, książkowe');
+    ('11111111-1111-1111-1111-111111111119', N'Kalendarze i planery', N'Kalendarze ścienne, książkowe')
+) AS v ([Id], [Name], [Description])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Categories] WHERE Id = v.Id);
 
--- 2. KURIERZY (Carriers) - 10 rekordów
-INSERT INTO [dbo].[Carriers]
-    ([Id], [Name])
-VALUES
+-- 2. KURIERZY (Carriers)
+INSERT INTO [dbo].[Carriers] ([Id], [Name])
+SELECT v.Id, v.Name
+FROM (VALUES
     ('22222222-2222-2222-2222-222222222220', N'DHL'),
     ('22222222-2222-2222-2222-222222222221', N'DPD'),
     ('22222222-2222-2222-2222-222222222222', N'InPost Kurier'),
@@ -26,12 +28,14 @@ VALUES
     ('22222222-2222-2222-2222-222222222226', N'Poczta Polska'),
     ('22222222-2222-2222-2222-222222222227', N'GLS'),
     ('22222222-2222-2222-2222-222222222228', N'Ruch'),
-    ('22222222-2222-2222-2222-222222222229', N'Odbiór Osobisty');
+    ('22222222-2222-2222-2222-222222222229', N'Odbiór Osobisty')
+) AS v ([Id], [Name])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Carriers] WHERE Id = v.Id);
 
--- 3. FIRMY / PRODUCENCI (Companies) - 15 rekordów
-INSERT INTO [dbo].[Companies]
-    ([Id], [Name], [Description], [TaxId], [Email], [PhoneNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
-VALUES
+-- 3. FIRMY / PRODUCENCI (Companies)
+INSERT INTO [dbo].[Companies] ([Id], [Name], [Description], [TaxId], [Email], [PhoneNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
+SELECT v.Id, v.Name, v.Description, v.TaxId, v.Email, v.PhoneNumber, v.Address_Street, v.Address_HouseNumber, v.Address_City, v.Address_PostalCode, v.Address_Country
+FROM (VALUES
     ('33333333-3333-3333-3333-333333333330', N'PapierPol S.A.', N'Producent papieru', N'5250000001', N'biuro@papierpol.pl', N'552333000', N'Fabryczna', N'1', N'Kwidzyn', N'82-500', N'Polska'),
     ('33333333-3333-3333-3333-333333333331', N'PisakSystem', N'Długopisy i pióra', N'5250000002', N'kontakt@pisaksystem.pl', N'223334455', N'Mazowiecka', N'10', N'Warszawa', N'00-001', N'Polska'),
     ('33333333-3333-3333-3333-333333333332', N'NotatnikPro', N'Zeszyty', N'5250000003', N'sale@notatnik.pl', N'618888888', N'Szkolna', N'5', N'Poznań', N'60-001', N'Polska'),
@@ -46,18 +50,22 @@ VALUES
     ('33333333-3333-3333-3333-333333333341', N'LuxBiuro', N'Ekskluzywne wyposażenie', N'5250000012', N'lux@biuro.pl', N'444555666', N'Złota', N'44', N'Warszawa', N'00-002', N'Polska'),
     ('33333333-3333-3333-3333-333333333342', N'TaniaDrukarnia', N'Tanie druki', N'5250000013', N'druk@tania.pl', N'333222111', N'Boczna', N'5', N'Radom', N'26-600', N'Polska'),
     ('33333333-3333-3333-3333-333333333343', N'SzkolnyŚwiat', N'Artykuły szkolne', N'5250000014', N'szkola@swiat.pl', N'999888777', N'Edukacji', N'7', N'Lublin', N'20-002', N'Polska'),
-    ('33333333-3333-3333-3333-333333333344', N'PackMaster', N'Systemy pakowania', N'5250000015', N'pack@master.pl', N'111222333', N'Logistyczna', N'10', N'Poznań', N'60-005', N'Polska');
+    ('33333333-3333-3333-3333-333333333344', N'PackMaster', N'Systemy pakowania', N'5250000015', N'pack@master.pl', N'111222333', N'Logistyczna', N'10', N'Poznań', N'60-005', N'Polska')
+) AS v ([Id], [Name], [Description], [TaxId], [Email], [PhoneNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Companies] WHERE Id = v.Id);
 
--- 4. SPRZEDAWCA (Seller) - 1 rekord
-INSERT INTO [dbo].[Sellers]
-    ([Id], [FirstName], [LastName], [Email])
-VALUES
-    ('535458f2-60e1-7074-1cca-cbe5abdc0009', N'Jan', N'Papiernik', N'admin@skleppapierniczy.pl');
+-- 4. SPRZEDAWCA (Seller)
+INSERT INTO [dbo].[Sellers] ([Id], [FirstName], [LastName], [Email])
+SELECT v.Id, v.FirstName, v.LastName, v.Email
+FROM (VALUES
+    ('535458f2-60e1-7074-1cca-cbe5abdc0009', N'Jan', N'Papiernik', N'admin@skleppapierniczy.pl')
+) AS v ([Id], [FirstName], [LastName], [Email])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Sellers] WHERE Id = v.Id);
 
--- 5. KLIENCI (Customers) - 20 rekordów
-INSERT INTO [dbo].[Customers]
-    ([Id], [FirstName], [LastName], [Email], [PhoneNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
-VALUES
+-- 5. KLIENCI (Customers)
+INSERT INTO [dbo].[Customers] ([Id], [FirstName], [LastName], [Email], [PhoneNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
+SELECT v.Id, v.FirstName, v.LastName, v.Email, v.PhoneNumber, v.Address_Street, v.Address_HouseNumber, v.Address_City, v.Address_PostalCode, v.Address_Country
+FROM (VALUES
     ('44444444-4444-4444-4444-444444444440', N'Adam', N'Nowak', N'adam.nowak@email.com', N'500100100', N'Lipowa', N'1', N'Warszawa', N'00-100', N'Polska'),
     ('44444444-4444-4444-4444-444444444441', N'Anna', N'Kowalska', N'anna.kowalska@email.com', N'500100101', N'Dębowa', N'2', N'Kraków', N'30-200', N'Polska'),
     ('44444444-4444-4444-4444-444444444442', N'Piotr', N'Wiśniewski', N'piotr.w@email.com', N'500100102', N'Klonowa', N'3', N'Wrocław', N'50-300', N'Polska'),
@@ -77,12 +85,14 @@ VALUES
     ('44444444-4444-4444-4444-444444444456', N'Kamil', N'Grabowski', N'kamil.g@email.com', N'500100116', N'Słoneczna', N'4', N'Białystok', N'15-001', N'Polska'),
     ('44444444-4444-4444-4444-444444444457', N'Magdalena', N'Nowakowska', N'magda.n@email.com', N'500100117', N'Wspólna', N'6', N'Częstochowa', N'42-200', N'Polska'),
     ('44444444-4444-4444-4444-444444444458', N'Patryk', N'Pawłowski', N'patryk.p@email.com', N'500100118', N'Krótka', N'1', N'Gliwice', N'44-100', N'Polska'),
-    ('44444444-4444-4444-4444-444444444459', N'Julia', N'Michalska', N'julia.m@email.com', N'500100119', N'Długa', N'99', N'Bytom', N'41-900', N'Polska');
+    ('44444444-4444-4444-4444-444444444459', N'Julia', N'Michalska', N'julia.m@email.com', N'500100119', N'Długa', N'99', N'Bytom', N'41-900', N'Polska')
+) AS v ([Id], [FirstName], [LastName], [Email], [PhoneNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Customers] WHERE Id = v.Id);
 
--- 6. PRODUKTY (Products) - 50 rekordów
-INSERT INTO [dbo].[Products]
-    ([Id], [Name], [Sku], [NetPrice], [VatRate], [StockQuantity], [Description], [CategoryId], [ManufacturerId], [Height], [Length], [Width], [LastRestockedAt])
-VALUES
+-- 6. PRODUKTY (Products)
+INSERT INTO [dbo].[Products] ([Id], [Name], [Sku], [NetPrice], [VatRate], [StockQuantity], [Description], [CategoryId], [ManufacturerId], [Height], [Length], [Width], [LastRestockedAt])
+SELECT v.Id, v.Name, v.Sku, v.NetPrice, v.VatRate, v.StockQuantity, v.Description, v.CategoryId, v.ManufacturerId, v.Height, v.Length, v.Width, v.LastRestockedAt
+FROM (VALUES
     -- Papiery i Kartony (Category ...10)
     ('55555555-5555-5555-5555-555555555501', N'Papier Ksero A4 80g', N'PAP-001', 25.00, 0.23, 500, N'Ryza 500 arkuszy, biały', '11111111-1111-1111-1111-111111111110', '33333333-3333-3333-3333-333333333330', 5.0, 29.7, 21.0, '2023-09-01T00:00:00'),
     ('55555555-5555-5555-5555-555555555502', N'Papier Ksero A3 80g', N'PAP-002', 45.00, 0.23, 200, N'Ryza 500 arkuszy A3', '11111111-1111-1111-1111-111111111110', '33333333-3333-3333-3333-333333333330', 5.0, 42.0, 29.7, '2023-09-01T00:00:00'),
@@ -143,29 +153,23 @@ VALUES
     -- More items
     ('55555555-5555-5555-5555-555555555548', N'Klej w sztyfcie 20g', N'GLU-001', 4.00, 0.23, 500, N'Mocny', '11111111-1111-1111-1111-111111111114', '33333333-3333-3333-3333-333333333337', 2.0, 10.0, 2.0, '2023-09-11T00:00:00'),
     ('55555555-5555-5555-5555-555555555549', N'Taśma biurowa', N'GLU-002', 2.00, 0.23, 600, N'19mm x 33m', '11111111-1111-1111-1111-111111111114', '33333333-3333-3333-3333-333333333337', 1.9, 5.0, 5.0, '2023-09-11T00:00:00'),
-    ('55555555-5555-5555-5555-555555555550', N'Tablica Korkowa 60x40', N'ACC-006', 30.00, 0.23, 50, N'W ramie', '11111111-1111-1111-1111-111111111114', '33333333-3333-3333-3333-333333333336', 2.0, 60.0, 40.0, '2023-09-11T00:00:00');
+    ('55555555-5555-5555-5555-555555555550', N'Tablica Korkowa 60x40', N'ACC-006', 30.00, 0.23, 50, N'W ramie', '11111111-1111-1111-1111-111111111114', '33333333-3333-3333-3333-333333333336', 2.0, 60.0, 40.0, '2023-09-11T00:00:00')
+) AS v ([Id], [Name], [Sku], [NetPrice], [VatRate], [StockQuantity], [Description], [CategoryId], [ManufacturerId], [Height], [Length], [Width], [LastRestockedAt])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Products] WHERE Id = v.Id);
 
--- 7. ZAMÓWIENIA (Orders) - 30 rekordów
--- Currency: 0 = PLN (zgodnie z Currency.cs: PLN=0)
--- Status: 1=PendingPayment, 2=Paid, 4=Shipped, 5=Delivered, 6=Cancelled (zgodnie z OrderStatus.cs)
-INSERT INTO [dbo].[Orders]
-    ([Id], [CreatedAt], [CustomerId], [SellerId], [Currency], [Status])
-VALUES
+-- 7. ZAMÓWIENIA (Orders)
+INSERT INTO [dbo].[Orders] ([Id], [CreatedAt], [CustomerId], [SellerId], [Currency], [Status])
+SELECT v.Id, v.CreatedAt, v.CustomerId, v.SellerId, v.Currency, v.Status
+FROM (VALUES
     ('66666666-6666-6666-6666-666666666601', '2023-10-01T10:00:00', '44444444-4444-4444-4444-444444444440', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 5),
-    -- Delivered
     ('66666666-6666-6666-6666-666666666602', '2023-10-02T11:00:00', '44444444-4444-4444-4444-444444444441', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 5),
     ('66666666-6666-6666-6666-666666666603', '2023-10-03T12:00:00', '44444444-4444-4444-4444-444444444442', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 6),
-    -- Cancelled
     ('66666666-6666-6666-6666-666666666604', '2023-10-04T13:00:00', '44444444-4444-4444-4444-444444444443', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 5),
     ('66666666-6666-6666-6666-666666666605', '2023-10-05T14:00:00', '44444444-4444-4444-4444-444444444444', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 1),
-    -- PendingPayment
     ('66666666-6666-6666-6666-666666666606', '2023-10-06T15:00:00', '44444444-4444-4444-4444-444444444445', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 5),
     ('66666666-6666-6666-6666-666666666607', '2023-10-07T16:00:00', '44444444-4444-4444-4444-444444444446', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 4),
-    -- Shipped
     ('66666666-6666-6666-6666-666666666608', '2023-10-08T17:00:00', '44444444-4444-4444-4444-444444444447', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 2),
-    -- Paid
     ('66666666-6666-6666-6666-666666666609', '2023-10-09T18:00:00', '44444444-4444-4444-4444-444444444448', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 0),
-    -- Draft
     ('66666666-6666-6666-6666-666666666610', '2023-10-10T19:00:00', '44444444-4444-4444-4444-444444444449', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 5),
     ('66666666-6666-6666-6666-666666666611', '2023-10-11T09:00:00', '44444444-4444-4444-4444-444444444450', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 5),
     ('66666666-6666-6666-6666-666666666612', '2023-10-11T10:00:00', '44444444-4444-4444-4444-444444444451', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 4),
@@ -186,193 +190,173 @@ VALUES
     ('66666666-6666-6666-6666-666666666627', '2023-10-18T17:00:00', '44444444-4444-4444-4444-444444444446', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 1),
     ('66666666-6666-6666-6666-666666666628', '2023-10-19T10:00:00', '44444444-4444-4444-4444-444444444447', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 5),
     ('66666666-6666-6666-6666-666666666629', '2023-10-19T11:00:00', '44444444-4444-4444-4444-444444444448', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 5),
-    ('66666666-6666-6666-6666-666666666630', '2023-10-20T12:00:00', '44444444-4444-4444-4444-444444444449', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 2);
+    ('66666666-6666-6666-6666-666666666630', '2023-10-20T12:00:00', '44444444-4444-4444-4444-444444444449', '535458f2-60e1-7074-1cca-cbe5abdc0009', 0, 2)
+) AS v ([Id], [CreatedAt], [CustomerId], [SellerId], [Currency], [Status])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Orders] WHERE Id = v.Id);
 
 -- 8. POZYCJE ZAMÓWIENIA (OrderItems)
-INSERT INTO [dbo].[OrderItems]
-    ([OrderId], [ProductId], [Quantity], [UnitNetPrice], [VatRate], [Currency])
-VALUES
+-- Uwaga: Brak ID w insercie, sprawdzamy unikalność po (OrderId, ProductId)
+INSERT INTO [dbo].[OrderItems] ([OrderId], [ProductId], [Quantity], [UnitNetPrice], [VatRate], [Currency])
+SELECT v.OrderId, v.ProductId, v.Quantity, v.UnitNetPrice, v.VatRate, v.Currency
+FROM (VALUES
     ('66666666-6666-6666-6666-666666666601', '55555555-5555-5555-5555-555555555501', 2, 25.00, 0.23, 0),
-    -- 2x Papier Ksero
     ('66666666-6666-6666-6666-666666666601', '55555555-5555-5555-5555-555555555507', 5, 4.00, 0.23, 0),
-    -- 5x Długopis
     ('66666666-6666-6666-6666-666666666602', '55555555-5555-5555-5555-555555555518', 3, 12.00, 0.23, 0),
-    -- 3x Segregator
     ('66666666-6666-6666-6666-666666666603', '55555555-5555-5555-5555-555555555545', 1, 45.00, 0.23, 0),
-    -- 1x Kalendarz
     ('66666666-6666-6666-6666-666666666604', '55555555-5555-5555-5555-555555555523', 1, 35.00, 0.23, 0),
-    -- Zszywacz
     ('66666666-6666-6666-6666-666666666604', '55555555-5555-5555-5555-555555555524', 1, 40.00, 0.23, 0),
-    -- Dziurkacz
     ('66666666-6666-6666-6666-666666666605', '55555555-5555-5555-5555-555555555533', 1, 150.00, 0.23, 0),
-    -- Karton kopert
     ('66666666-6666-6666-6666-666666666606', '55555555-5555-5555-5555-555555555530', 2, 18.00, 0.23, 0),
-    -- Kredki
     ('66666666-6666-6666-6666-666666666606', '55555555-5555-5555-5555-555555555516', 5, 4.00, 0.23, 0),
-    -- Bloki
     ('66666666-6666-6666-6666-666666666607', '55555555-5555-5555-5555-555555555502', 1, 45.00, 0.23, 0),
-    -- Papier A3
     ('66666666-6666-6666-6666-666666666608', '55555555-5555-5555-5555-555555555504', 10, 15.00, 0.23, 0),
-    -- Papier Kolorowy
     ('66666666-6666-6666-6666-666666666610', '55555555-5555-5555-5555-555555555541', 20, 10.00, 0.23, 0),
-    -- Zestawy Geo
     ('66666666-6666-6666-6666-666666666611', '55555555-5555-5555-5555-555555555550', 2, 30.00, 0.23, 0),
-    -- Tablice
     ('66666666-6666-6666-6666-666666666612', '55555555-5555-5555-5555-555555555510', 1, 150.00, 0.23, 0),
-    -- Pióro
     ('66666666-6666-6666-6666-666666666613', '55555555-5555-5555-5555-555555555548', 10, 4.00, 0.23, 0),
-    -- Klej
     ('66666666-6666-6666-6666-666666666614', '55555555-5555-5555-5555-555555555535', 6, 5.00, 0.23, 0),
-    -- Taśma pakowa
     ('66666666-6666-6666-6666-666666666615', '55555555-5555-5555-5555-555555555520', 5, 15.00, 0.23, 0),
-    -- Koszulki
     ('66666666-6666-6666-6666-666666666617', '55555555-5555-5555-5555-555555555532', 2, 25.00, 0.23, 0),
-    -- Podobrazie
     ('66666666-6666-6666-6666-666666666618', '55555555-5555-5555-5555-555555555501', 5, 25.00, 0.23, 0),
-    -- 5x Papier
     ('66666666-6666-6666-6666-666666666619', '55555555-5555-5555-5555-555555555537', 4, 25.00, 0.23, 0),
-    -- Stretch
     ('66666666-6666-6666-6666-666666666620', '55555555-5555-5555-5555-555555555513', 10, 3.50, 0.23, 0),
-    -- Zeszyty
     ('66666666-6666-6666-6666-666666666621', '55555555-5555-5555-5555-555555555527', 1, 25.00, 0.23, 0),
-    -- Podajnik
     ('66666666-6666-6666-6666-666666666623', '55555555-5555-5555-5555-555555555546', 2, 25.00, 0.23, 0),
-    -- Kalendarz ścienny
     ('66666666-6666-6666-6666-666666666624', '55555555-5555-5555-5555-555555555522', 5, 8.00, 0.23, 0),
-    -- Pudło
     ('66666666-6666-6666-6666-666666666625', '55555555-5555-5555-5555-555555555540', 2, 35.00, 0.23, 0),
-    -- Etykiety
     ('66666666-6666-6666-6666-666666666626', '55555555-5555-5555-5555-555555555528', 3, 20.00, 0.23, 0),
-    -- Farby
     ('66666666-6666-6666-6666-666666666628', '55555555-5555-5555-5555-555555555509', 20, 2.00, 0.23, 0),
-    -- Ołówki
     ('66666666-6666-6666-6666-666666666629', '55555555-5555-5555-5555-555555555506', 2, 40.00, 0.23, 0),
-    -- Papier foto
-    ('66666666-6666-6666-6666-666666666630', '55555555-5555-5555-5555-555555555515', 5, 15.00, 0.23, 0);
--- Kołozeszyt
+    ('66666666-6666-6666-6666-666666666630', '55555555-5555-5555-5555-555555555515', 5, 15.00, 0.23, 0)
+) AS v ([OrderId], [ProductId], [Quantity], [UnitNetPrice], [VatRate], [Currency])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[OrderItems] WHERE OrderId = v.OrderId AND ProductId = v.ProductId);
 
--- 9. PŁATNOŚCI (Payments) - Powiązane z zamówieniami
--- Status: 0=Pending, 2=Completed
--- Method: 1=Card, 2=Transfer, 4=Blik
-INSERT INTO [dbo].[Payments]
-    ([Id], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [Status], [Currency])
-VALUES
-    (NEWID(), '66666666-6666-6666-6666-666666666601', '2023-10-01T10:05:00', 86.10, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666602', '2023-10-02T11:05:00', 44.28, 1, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666603', '2023-10-03T12:05:00', 55.35, 2, 4, 0),
-    -- Refunded/Cancelled
-    (NEWID(), '66666666-6666-6666-6666-666666666604', '2023-10-04T13:05:00', 92.25, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666605', '2023-10-05T14:05:00', 184.50, 2, 0, 0),
-    -- Pending
-    (NEWID(), '66666666-6666-6666-6666-666666666606', '2023-10-06T15:05:00', 68.88, 1, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666607', '2023-10-07T16:05:00', 55.35, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666608', '2023-10-08T17:05:00', 184.50, 2, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666610', '2023-10-10T19:05:00', 246.00, 1, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666611', '2023-10-11T09:05:00', 73.80, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666612', '2023-10-11T10:05:00', 184.50, 2, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666613', '2023-10-11T11:05:00', 49.20, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666614', '2023-10-12T12:05:00', 36.90, 1, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666615', '2023-10-12T13:05:00', 92.25, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666617', '2023-10-13T15:05:00', 61.50, 2, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666618', '2023-10-14T16:05:00', 153.75, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666619', '2023-10-14T17:05:00', 123.00, 1, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666620', '2023-10-15T10:05:00', 43.05, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666621', '2023-10-15T11:05:00', 30.75, 2, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666623', '2023-10-16T13:05:00', 61.50, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666624', '2023-10-17T14:05:00', 49.20, 1, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666625', '2023-10-17T15:05:00', 86.10, 2, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666626', '2023-10-18T16:05:00', 73.80, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666628', '2023-10-19T10:05:00', 49.20, 4, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666629', '2023-10-19T11:05:00', 98.40, 1, 2, 0),
-    (NEWID(), '66666666-6666-6666-6666-666666666630', '2023-10-20T12:05:00', 92.25, 4, 2, 0);
+-- 9. PŁATNOŚCI (Payments)
+INSERT INTO [dbo].[Payments] ([Id], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [Status], [Currency])
+SELECT v.Id, v.OrderId, v.PaymentDate, v.Amount, v.PaymentMethod, v.Status, v.Currency
+FROM (VALUES
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0001', '66666666-6666-6666-6666-666666666601', '2023-10-01T10:05:00', 86.10, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0002', '66666666-6666-6666-6666-666666666602', '2023-10-02T11:05:00', 44.28, 1, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0003', '66666666-6666-6666-6666-666666666603', '2023-10-03T12:05:00', 55.35, 2, 4, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0004', '66666666-6666-6666-6666-666666666604', '2023-10-04T13:05:00', 92.25, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0005', '66666666-6666-6666-6666-666666666605', '2023-10-05T14:05:00', 184.50, 2, 0, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0006', '66666666-6666-6666-6666-666666666606', '2023-10-06T15:05:00', 68.88, 1, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0007', '66666666-6666-6666-6666-666666666607', '2023-10-07T16:05:00', 55.35, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0008', '66666666-6666-6666-6666-666666666608', '2023-10-08T17:05:00', 184.50, 2, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0009', '66666666-6666-6666-6666-666666666610', '2023-10-10T19:05:00', 246.00, 1, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0010', '66666666-6666-6666-6666-666666666611', '2023-10-11T09:05:00', 73.80, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0011', '66666666-6666-6666-6666-666666666612', '2023-10-11T10:05:00', 184.50, 2, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0012', '66666666-6666-6666-6666-666666666613', '2023-10-11T11:05:00', 49.20, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0013', '66666666-6666-6666-6666-666666666614', '2023-10-12T12:05:00', 36.90, 1, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0014', '66666666-6666-6666-6666-666666666615', '2023-10-12T13:05:00', 92.25, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0015', '66666666-6666-6666-6666-666666666617', '2023-10-13T15:05:00', 61.50, 2, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0016', '66666666-6666-6666-6666-666666666618', '2023-10-14T16:05:00', 153.75, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0017', '66666666-6666-6666-6666-666666666619', '2023-10-14T17:05:00', 123.00, 1, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0018', '66666666-6666-6666-6666-666666666620', '2023-10-15T10:05:00', 43.05, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0019', '66666666-6666-6666-6666-666666666621', '2023-10-15T11:05:00', 30.75, 2, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0020', '66666666-6666-6666-6666-666666666623', '2023-10-16T13:05:00', 61.50, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0021', '66666666-6666-6666-6666-666666666624', '2023-10-17T14:05:00', 49.20, 1, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0022', '66666666-6666-6666-6666-666666666625', '2023-10-17T15:05:00', 86.10, 2, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0023', '66666666-6666-6666-6666-666666666626', '2023-10-18T16:05:00', 73.80, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0024', '66666666-6666-6666-6666-666666666628', '2023-10-19T10:05:00', 49.20, 4, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0025', '66666666-6666-6666-6666-666666666629', '2023-10-19T11:05:00', 98.40, 1, 2, 0),
+    ('CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC0026', '66666666-6666-6666-6666-666666666630', '2023-10-20T12:05:00', 92.25, 4, 2, 0)
+) AS v ([Id], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [Status], [Currency])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Payments] WHERE Id = v.Id);
 
--- 10. DOSTAWY (Deliveries) - Wybrane dostarczone zamówienia
-INSERT INTO [dbo].[Deliveries]
-    ([Id], [OrderId], [CarrierId], [DeliveryDate], [TrackingNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
-VALUES
-    (NEWID(), '66666666-6666-6666-6666-666666666601', '22222222-2222-2222-2222-222222222220', '2023-10-03T10:00:00', N'DHL-1001', N'Lipowa', N'1', N'Warszawa', N'00-100', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666602', '22222222-2222-2222-2222-222222222221', '2023-10-04T12:00:00', N'DPD-2002', N'Dębowa', N'2', N'Kraków', N'30-200', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666604', '22222222-2222-2222-2222-222222222223', '2023-10-06T09:00:00', N'INP-4004', N'Brzozowa', N'4', N'Poznań', N'60-400', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666606', '22222222-2222-2222-2222-222222222225', '2023-10-08T15:00:00', N'FDX-6006', N'Sosnowa', N'6', N'Łódź', N'90-600', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666610', '22222222-2222-2222-2222-222222222222', '2023-10-12T11:00:00', N'INP-1010', N'Świerkowa', N'10', N'Katowice', N'40-100', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666611', '22222222-2222-2222-2222-222222222220', '2023-10-13T10:00:00', N'DHL-1111', N'Główna', N'15', N'Gdynia', N'81-001', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666613', '22222222-2222-2222-2222-222222222223', '2023-10-13T14:00:00', N'INP-1313', N'Piękna', N'3', N'Kielce', N'25-001', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666615', '22222222-2222-2222-2222-222222222226', '2023-10-14T10:00:00', N'PP00-1515', NULL, N'22', N'Olsztyn', N'10-001', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666617', '22222222-2222-2222-2222-222222222227', '2023-10-15T12:00:00', N'GLS-1717', NULL, N'4', N'Białystok', N'15-001', N'Polska'),
-    (NEWID(), '66666666-6666-6666-6666-666666666620', '22222222-2222-2222-2222-222222222220', '2023-10-17T11:00:00', N'DHL-2020', NULL, N'99', N'Bytom', N'41-900', N'Polska');
+-- 10. DOSTAWY (Deliveries)
+INSERT INTO [dbo].[Deliveries] ([Id], [OrderId], [CarrierId], [DeliveryDate], [TrackingNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
+SELECT v.Id, v.OrderId, v.CarrierId, v.DeliveryDate, v.TrackingNumber, v.Address_Street, v.Address_HouseNumber, v.Address_City, v.Address_PostalCode, v.Address_Country
+FROM (VALUES
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0001', '66666666-6666-6666-6666-666666666601', '22222222-2222-2222-2222-222222222220', '2023-10-03T10:00:00', N'DHL-1001', N'Lipowa', N'1', N'Warszawa', N'00-100', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0002', '66666666-6666-6666-6666-666666666602', '22222222-2222-2222-2222-222222222221', '2023-10-04T12:00:00', N'DPD-2002', N'Dębowa', N'2', N'Kraków', N'30-200', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0003', '66666666-6666-6666-6666-666666666604', '22222222-2222-2222-2222-222222222223', '2023-10-06T09:00:00', N'INP-4004', N'Brzozowa', N'4', N'Poznań', N'60-400', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0004', '66666666-6666-6666-6666-666666666606', '22222222-2222-2222-2222-222222222225', '2023-10-08T15:00:00', N'FDX-6006', N'Sosnowa', N'6', N'Łódź', N'90-600', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0005', '66666666-6666-6666-6666-666666666610', '22222222-2222-2222-2222-222222222222', '2023-10-12T11:00:00', N'INP-1010', N'Świerkowa', N'10', N'Katowice', N'40-100', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0006', '66666666-6666-6666-6666-666666666611', '22222222-2222-2222-2222-222222222220', '2023-10-13T10:00:00', N'DHL-1111', N'Główna', N'15', N'Gdynia', N'81-001', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0007', '66666666-6666-6666-6666-666666666613', '22222222-2222-2222-2222-222222222223', '2023-10-13T14:00:00', N'INP-1313', N'Piękna', N'3', N'Kielce', N'25-001', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0008', '66666666-6666-6666-6666-666666666615', '22222222-2222-2222-2222-222222222226', '2023-10-14T10:00:00', N'PP00-1515', NULL, N'22', N'Olsztyn', N'10-001', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0009', '66666666-6666-6666-6666-666666666617', '22222222-2222-2222-2222-222222222227', '2023-10-15T12:00:00', N'GLS-1717', NULL, N'4', N'Białystok', N'15-001', N'Polska'),
+    ('BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBB0010', '66666666-6666-6666-6666-666666666620', '22222222-2222-2222-2222-222222222220', '2023-10-17T11:00:00', N'DHL-2020', NULL, N'99', N'Bytom', N'41-900', N'Polska')
+) AS v ([Id], [OrderId], [CarrierId], [DeliveryDate], [TrackingNumber], [Address_Street], [Address_HouseNumber], [Address_City], [Address_PostalCode], [Address_Country])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Deliveries] WHERE Id = v.Id);
 
--- 11. FAKTURY (Invoices) - Status: 1=Sent, 2=Paid
-INSERT INTO [dbo].[Invoices]
-    ([Id], [OrderId], [CompanyId], [IssuedAt], [Status], [InvoiceNumber], [PaymentDueDate])
-VALUES
-    (NEWID(), '66666666-6666-6666-6666-666666666601', '33333333-3333-3333-3333-333333333330', '2023-10-01T10:00:00', 2, N'FV/23/10/01', '2023-10-15T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666602', '33333333-3333-3333-3333-333333333330', '2023-10-02T11:00:00', 2, N'FV/23/10/02', '2023-10-16T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666604', '33333333-3333-3333-3333-333333333330', '2023-10-04T13:00:00', 2, N'FV/23/10/04', '2023-10-18T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666606', '33333333-3333-3333-3333-333333333330', '2023-10-06T15:00:00', 2, N'FV/23/10/06', '2023-10-20T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666607', '33333333-3333-3333-3333-333333333330', '2023-10-07T16:00:00', 1, N'FV/23/10/07', '2023-10-21T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666608', '33333333-3333-3333-3333-333333333330', '2023-10-08T17:00:00', 2, N'FV/23/10/08', '2023-10-22T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666610', '33333333-3333-3333-3333-333333333330', '2023-10-10T19:00:00', 2, N'FV/23/10/10', '2023-10-24T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666611', '33333333-3333-3333-3333-333333333330', '2023-10-11T09:00:00', 2, N'FV/23/10/11', '2023-10-25T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666612', '33333333-3333-3333-3333-333333333330', '2023-10-11T10:00:00', 1, N'FV/23/10/12', '2023-10-25T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666614', '33333333-3333-3333-3333-333333333330', '2023-10-12T12:00:00', 2, N'FV/23/10/14', '2023-10-26T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666618', '33333333-3333-3333-3333-333333333330', '2023-10-14T16:00:00', 2, N'FV/23/10/18', '2023-10-28T00:00:00'),
-    (NEWID(), '66666666-6666-6666-6666-666666666630', '33333333-3333-3333-3333-333333333330', '2023-10-20T12:00:00', 2, N'FV/23/10/30', '2023-11-03T00:00:00');
+-- 11. FAKTURY (Invoices)
+INSERT INTO [dbo].[Invoices] ([Id], [OrderId], [CompanyId], [IssuedAt], [Status], [InvoiceNumber], [PaymentDueDate])
+SELECT v.Id, v.OrderId, v.CompanyId, v.IssuedAt, v.Status, v.InvoiceNumber, v.PaymentDueDate
+FROM (VALUES
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0001', '66666666-6666-6666-6666-666666666601', '33333333-3333-3333-3333-333333333330', '2023-10-01T10:00:00', 2, N'FV/23/10/01', '2023-10-15T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0002', '66666666-6666-6666-6666-666666666602', '33333333-3333-3333-3333-333333333330', '2023-10-02T11:00:00', 2, N'FV/23/10/02', '2023-10-16T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0003', '66666666-6666-6666-6666-666666666604', '33333333-3333-3333-3333-333333333330', '2023-10-04T13:00:00', 2, N'FV/23/10/04', '2023-10-18T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0004', '66666666-6666-6666-6666-666666666606', '33333333-3333-3333-3333-333333333330', '2023-10-06T15:00:00', 2, N'FV/23/10/06', '2023-10-20T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0005', '66666666-6666-6666-6666-666666666607', '33333333-3333-3333-3333-333333333330', '2023-10-07T16:00:00', 1, N'FV/23/10/07', '2023-10-21T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0006', '66666666-6666-6666-6666-666666666608', '33333333-3333-3333-3333-333333333330', '2023-10-08T17:00:00', 2, N'FV/23/10/08', '2023-10-22T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0007', '66666666-6666-6666-6666-666666666610', '33333333-3333-3333-3333-333333333330', '2023-10-10T19:00:00', 2, N'FV/23/10/10', '2023-10-24T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0008', '66666666-6666-6666-6666-666666666611', '33333333-3333-3333-3333-333333333330', '2023-10-11T09:00:00', 2, N'FV/23/10/11', '2023-10-25T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0009', '66666666-6666-6666-6666-666666666612', '33333333-3333-3333-3333-333333333330', '2023-10-11T10:00:00', 1, N'FV/23/10/12', '2023-10-25T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0010', '66666666-6666-6666-6666-666666666614', '33333333-3333-3333-3333-333333333330', '2023-10-12T12:00:00', 2, N'FV/23/10/14', '2023-10-26T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0011', '66666666-6666-6666-6666-666666666618', '33333333-3333-3333-3333-333333333330', '2023-10-14T16:00:00', 2, N'FV/23/10/18', '2023-10-28T00:00:00'),
+    ('AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA0012', '66666666-6666-6666-6666-666666666630', '33333333-3333-3333-3333-333333333330', '2023-10-20T12:00:00', 2, N'FV/23/10/30', '2023-11-03T00:00:00')
+) AS v ([Id], [OrderId], [CompanyId], [IssuedAt], [Status], [InvoiceNumber], [PaymentDueDate])
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[Invoices] WHERE Id = v.Id);
 
 -- =============================================================
 -- DODATEK: WIELKIE ZAMÓWIENIE (Wszystkie produkty)
 -- =============================================================
 
--- Używamy zmiennych dla czytelności i spójności ID w tym bloku
 DECLARE @BigOrderId UNIQUEIDENTIFIER = '77777777-7777-7777-7777-777777777777';
 DECLARE @BigCustomerId UNIQUEIDENTIFIER = '44444444-4444-4444-4444-444444444440'; -- Adam Nowak
 DECLARE @MainCompanyId UNIQUEIDENTIFIER = '33333333-3333-3333-3333-333333333330'; -- PapierPol S.A.
 DECLARE @SellerId UNIQUEIDENTIFIER = '535458f2-60e1-7074-1cca-cbe5abdc0009';
 
 -- 1. Utworzenie Zamówienia
--- Status: 2 = Paid (wg OrderStatus.cs)
--- Currency: 0 = PLN (wg Currency.cs)
-INSERT INTO [dbo].[Orders] ([Id], [CreatedAt], [CustomerId], [SellerId], [Currency], [Status])
-VALUES (@BigOrderId, DATEADD(hour, -2, GETDATE()), @BigCustomerId, @SellerId, 0, 2);
+IF NOT EXISTS (SELECT 1 FROM [dbo].[Orders] WHERE Id = @BigOrderId)
+BEGIN
+    INSERT INTO [dbo].[Orders] ([Id], [CreatedAt], [CustomerId], [SellerId], [Currency], [Status])
+    VALUES (@BigOrderId, DATEADD(hour, -2, GETDATE()), @BigCustomerId, @SellerId, 0, 2);
+END
 
--- 2. Dodanie WSZYSTKICH produktów do zamówienia (Dynamiczny INSERT)
--- Ilość: 10 sztuk każdego produktu
+-- 2. Dodanie WSZYSTKICH produktów do zamówienia
 INSERT INTO [dbo].[OrderItems] ([OrderId], [ProductId], [Quantity], [UnitNetPrice], [VatRate], [Currency])
 SELECT 
     @BigOrderId,
     p.Id,
-    10,             -- Ilość: 10 sztuk
-    p.NetPrice,     -- Cena z definicji produktu
-    p.VatRate,      -- VAT z definicji produktu
-    0               -- Currency: 0 (PLN)
-FROM [dbo].[Products] p;
+    10,             
+    p.NetPrice,     
+    p.VatRate,      
+    0               
+FROM [dbo].[Products] p
+WHERE NOT EXISTS (SELECT 1 FROM [dbo].[OrderItems] WHERE OrderId = @BigOrderId AND ProductId = p.Id);
 
--- 3. Dodanie Płatności (Automatyczne wyliczenie sumy)
--- PaymentMethod: 2 = BankTransfer (wg PaymentMethod.cs)
--- PaymentStatus: 2 = Completed (wg PaymentStatus.cs)
-INSERT INTO [dbo].[Payments] ([Id], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [Status], [Currency])
-SELECT 
-    NEWID(),
-    @BigOrderId,
-    GETDATE(),
-    -- Obliczenie sumy brutto: (CenaNetto * Ilość) * (1 + VAT)
-    SUM(Quantity * UnitNetPrice * (1 + VatRate)), 
-    2, -- BankTransfer
-    2, -- Completed
-    0  -- PLN
-FROM [dbo].[OrderItems]
-WHERE OrderId = @BigOrderId;
+-- 3. Dodanie Płatności
+IF NOT EXISTS (SELECT 1 FROM [dbo].[Payments] WHERE Id = 'CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC9999')
+BEGIN
+    INSERT INTO [dbo].[Payments] ([Id], [OrderId], [PaymentDate], [Amount], [PaymentMethod], [Status], [Currency])
+    SELECT 
+        'CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCC9999',
+        @BigOrderId,
+        GETDATE(),
+        SUM(Quantity * UnitNetPrice * (1 + VatRate)), 
+        2, -- BankTransfer
+        2, -- Completed
+        0  -- PLN
+    FROM [dbo].[OrderItems]
+    WHERE OrderId = @BigOrderId;
+END
 
--- 4. Dodanie Faktury powiązanej z Firmą
--- Status: 2 = Paid (wg InvoiceStatus.cs)
-INSERT INTO [dbo].[Invoices] 
-([Id], [OrderId], [CompanyId], [IssuedAt], [Status], [InvoiceNumber], [PaymentDueDate]) 
-VALUES 
-(
-    NEWID(), 
-    @BigOrderId, 
-    @MainCompanyId, -- Firma przypisana do faktury
-    GETDATE(), 
-    2,              -- Status: Paid
-    N'FV/MEGA/2023', 
-    DATEADD(day, 14, GETDATE())
-);
+-- 4. Dodanie Faktury
+IF NOT EXISTS (SELECT 1 FROM [dbo].[Invoices] WHERE Id = 'AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA9999')
+BEGIN
+    INSERT INTO [dbo].[Invoices] 
+    ([Id], [OrderId], [CompanyId], [IssuedAt], [Status], [InvoiceNumber], [PaymentDueDate]) 
+    VALUES 
+    (
+        'AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAA9999', 
+        @BigOrderId, 
+        @MainCompanyId, 
+        GETDATE(), 
+        2,              
+        N'FV/MEGA/2023', 
+        DATEADD(day, 14, GETDATE())
+    );
+END

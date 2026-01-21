@@ -55,6 +55,11 @@ public static class ProductEndpoints
         dbContext.Products.Add(product);
         await dbContext.SaveChangesAsync();
 
+        product = await dbContext.Products
+            .Include(p => p.Category)
+            .Include(p => p.Manufacturer)
+            .FirstAsync(p => p.Id == product.Id);
+
         var productDto = mapper.Map<ProductDetailsDto>(product);
 
         return TypedResults.Created($"/products/{product.Id}", productDto);
@@ -121,7 +126,10 @@ public static class ProductEndpoints
 
     private static async Task<Results<Ok<ProductDetailsDto>, NotFound, BadRequest<string>>> UpdateProduct(Guid id, ProductCreateDto productRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var product = await dbContext.Products.FindAsync(id);
+        var product = await dbContext.Products
+            .Include(p => p.Category)
+            .Include(p => p.Manufacturer)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (product == null) return TypedResults.NotFound();
 
         if (productRequest.CategoryId != null)

@@ -96,6 +96,17 @@ public static class OrderEndpoints
             throw;
         }
 
+        order = await dbContext.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.Seller)
+            .Include(o => o.OrderProducts!)
+                .ThenInclude(op => op.Product)
+                .ThenInclude(p => p!.Manufacturer)
+            .Include(o => o.Payments)
+            .Include(o => o.Invoice!.Company)
+            .Include(o => o.Delivery)
+            .FirstAsync(o => o.Id == order.Id);
+
         var orderDto = mapper.Map<OrderDetailsDto>(order);
 
         return TypedResults.Created($"/orders/{order.Id}", orderDto);
@@ -193,9 +204,9 @@ public static class OrderEndpoints
             .Include(o => o.Customer)
             .Include(o => o.Seller)
             .Include(o => o.OrderProducts!)
-                .ThenInclude(op => op.Product)
+                .ThenInclude(op => op.Product!.Manufacturer)
             .Include(o => o.Payments)
-            .Include(o => o.Invoice)
+            .Include(o => o.Invoice!.Company)
             .Include(o => o.Delivery)
             .FirstOrDefaultAsync(o => o.Id == id);
         if (order == null) return TypedResults.NotFound();

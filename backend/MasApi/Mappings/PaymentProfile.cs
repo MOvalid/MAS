@@ -10,6 +10,8 @@ public class PaymentProfile : Profile
 
         CreateMap<Models.Dtos.PaymentCreateDto, Models.Payment>().ReverseMap();
 
+        CreateMap<Models.Dtos.PaymentUpdateDto, Models.Payment>();
+
         CreateMap<Models.Dtos.PaymentDetailsDto, Models.Payment>()
             .ReverseMap()
             .ForMember(dest => dest.InvoiceId, opt => opt.MapFrom(src => src.Order!.Invoice != null ? src.Order.Invoice.Id : (Guid?)null));

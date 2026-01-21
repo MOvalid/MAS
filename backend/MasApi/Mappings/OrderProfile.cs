@@ -10,6 +10,9 @@ public class OrderProfile : Profile
 
         CreateMap<Models.Dtos.OrderCreateDto, Models.Order>().ReverseMap();
         CreateMap<Models.Dtos.OrderDetailsDto, Models.Order>().ReverseMap();
+
+        CreateMap<Models.Dtos.OrderUpdateDto, Models.Order>();
+
         CreateMap<Models.Dtos.OrderListDto, Models.Order>()
             .ReverseMap()
             .ForMember(dest => dest.Customer, opt => opt.MapFrom(src => src.Customer!.FirstName + " " + src.Customer.LastName))
