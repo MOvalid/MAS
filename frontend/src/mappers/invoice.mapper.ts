@@ -27,7 +27,8 @@ export const mapInvoiceDetailsDtoToDomain = (dto: InvoiceDetailsDto): InvoiceDet
     return {
         id: dto.id,
         invoiceNumber: dto.invoiceNumber,
-        status: dto.status,
+        status: dto.status as InvoiceStatus,
+        statusLabel: INVOICE_STATUS_LABELS[dto.status as InvoiceStatus],
         issuedAt: dto.issuedAt,
         paymentDueDate: dto.paymentDueDate,
         order: mapOrderDto2ToDomain(dto.order),
@@ -35,11 +36,10 @@ export const mapInvoiceDetailsDtoToDomain = (dto: InvoiceDetailsDto): InvoiceDet
     };
 };
 
-
 export const mapInvoiceToTableData = (
-    domain: Invoice, 
-    index: number, 
-    page: number = 1, 
+    domain: Invoice,
+    index: number,
+    page: number = 1,
     limit: number = 10
 ): InvoiceTableData => {
     const lp = (page - 1) * limit + index + 1;
@@ -51,8 +51,9 @@ export const mapInvoiceToTableData = (
         orderId: domain.orderId,
         issuedAt: formatPolishDate(domain.issuedAt, false),
         paymentDueDate: formatPolishDate(domain.paymentDueDate, false),
-        status: INVOICE_STATUS_LABELS[domain.status as InvoiceStatus],
-        totalGrossPrice: formatPrice(domain.totalGrossPrice), 
+        status: domain.status as InvoiceStatus,
+        statusLabel: INVOICE_STATUS_LABELS[domain.status as InvoiceStatus],
+        totalGrossPrice: formatPrice(domain.totalGrossPrice),
         currency: 'PLN',
     };
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { AppText, AppButton, IconName } from '@/components/common';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
 import { AppTable, TableColumn } from '@/components/common/table';
@@ -14,10 +14,14 @@ import {
     useGenerateInvoicePdf,
     useInvoices,
     useInvoiceTableData,
+    useDeleteInvoice,
 } from '@/composables/invoice/useInvoices';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ErrorScreen } from '../ErrorScreen';
 import { useSnackbar } from '@/context/SnackbarContext';
+import { useTheme } from 'react-native-paper';
+import { LoadingScreen } from '../LoadingScreen';
+import { canInvoiceBeDeleted } from '@/utils/invoice-utils';
 
 export const InvoiceListScreen = () => {
     const [search, setSearch] = useState('');
@@ -32,6 +36,7 @@ export const InvoiceListScreen = () => {
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { showSnackbar } = useSnackbar();
+    const theme = useTheme();
 
     const {
         data: invoices,
@@ -61,6 +66,14 @@ export const InvoiceListScreen = () => {
 
     const { generatePdf, isGenerating } = useGenerateInvoicePdf(
         () => showSnackbar('Faktura została pobrana', 'success'),
+        (err) => showSnackbar(err, 'error')
+    );
+
+    const { remove: performDelete, loading: isDeleting } = useDeleteInvoice(
+        () => {
+            showSnackbar('Faktura została usunięta', 'success');
+            refetch();
+        },
         (err) => showSnackbar(err, 'error')
     );
 
@@ -94,9 +107,28 @@ export const InvoiceListScreen = () => {
             showSnackbar('Błąd: Nie znaleziono identyfikatora faktury', 'error');
             return;
         }
-        generatePdf(row.id);
+        generatePdf(row.id, row.invoiceNumber);
     };
-    const deleteInvoice = (row: InvoiceTableData) => console.log('Delete', row);
+
+    const deleteInvoice = (row: InvoiceTableData) => {
+        if (!canInvoiceBeDeleted(row.status)) {
+            showSnackbar('Można usuwać tylko faktury anulowane lub szkice', 'error');
+            return;
+        }
+
+        Alert.alert(
+            'Potwierdź usunięcie',
+            `Czy na pewno chcesz trwale usunąć fakturę ${row.invoiceNumber}?`,
+            [
+                { text: 'Anuluj', style: 'cancel' },
+                { 
+                    text: 'Usuń', 
+                    style: 'destructive', 
+                    onPress: () => performDelete(row.id) 
+                },
+            ]
+        );
+    };
 
     const columns: TableColumn<InvoiceTableData>[] = [
         { key: 'lp', title: 'Lp.', align: 'left', flex: 0.2 },
@@ -105,11 +137,13 @@ export const InvoiceListScreen = () => {
         { key: 'paymentDueDate', title: 'Data opłacenia', align: 'center', flex: 1 },
         { key: 'totalGrossPrice', title: 'Kwota', align: 'center', flex: 1 },
         { key: 'currency', title: 'Waluta', align: 'center', flex: 1 },
-        { key: 'status', title: 'Status', align: 'center', flex: 1 },
+        { key: 'statusLabel', title: 'Status', align: 'center', flex: 1 },
     ];
 
     if (error)
         return <ErrorScreen title="Błąd ładowania danych" message={error} onRetry={refetch} />;
+
+    if (isGenerating) return <LoadingScreen />;
 
     return (
         <ScrollView style={styles.container}>
@@ -119,13 +153,6 @@ export const InvoiceListScreen = () => {
                     Nowa faktura
                 </AppButton>
             </View>
-
-            {isGenerating && (
-                <View style={styles.generatingOverlay}>
-                    <ActivityIndicator size="small" color={metrics.colors.primary} />
-                    <AppText variant="bodySmall">Generowanie PDF...</AppText>
-                </View>
-            )}
 
             <InvoiceListFilters
                 search={search}

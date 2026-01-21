@@ -18,6 +18,7 @@ import {
     mapInvoiceToTableData,
 } from '@/mappers/invoice.mapper';
 import { useAuth } from '@/context/AuthContext';
+import { TIMEOUT } from '@/config';
 
 export type InvoiceFilters = {
     search?: string;
@@ -91,7 +92,7 @@ export const useGenerateInvoicePdf = (
     const [isGenerating, setIsGenerating] = useState(false);
     const { getAccessToken, api } = useAuth();
 
-    const generatePdf = async (invoiceId: string) => {
+    const generatePdf = async (invoiceId: string, invoiceNumber: string) => {
         setIsGenerating(true);
         try {
             const token = getAccessToken ? await getAccessToken() : null;
@@ -116,9 +117,19 @@ export const useGenerateInvoicePdf = (
 
             const blob = await response.blob();
             const blobUrl = window.URL.createObjectURL(blob);
-            window.open(blobUrl, '_blank');
 
-            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+
+            const safeFileName = invoiceNumber.replace(/[/\\?%*:|"<>]/g, '_');
+            link.setAttribute('download', `${safeFileName}.pdf`);
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            setTimeout(() => window.URL.revokeObjectURL(blobUrl), TIMEOUT);
 
             onSuccess?.();
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

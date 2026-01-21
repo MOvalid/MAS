@@ -10,6 +10,7 @@ export type InvoiceTableData = {
     invoiceNumber: string;
     totalGrossPrice: string;
     currency: string;
+    statusLabel: string;
     status: string;
 };
 
@@ -34,4 +35,5 @@ export interface InvoiceDetails {
     issuedAt: string; // ISO datetime
     paymentDueDate: string; // ISO datetime
     status: string;
+    statusLabel: string;
 }
