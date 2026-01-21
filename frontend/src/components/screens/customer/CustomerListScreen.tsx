@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import { AppButton, AppText, IconName } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { ClientListFilters } from '../client/ClientListFilters';
@@ -13,6 +13,7 @@ import { CustomerTableData } from '@/types/domain';
 
 export const CustomerListScreen = () => {
     const navigation = useNavigation();
+    const theme = useTheme();
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState<CustomerSort>('ALPHA_ASC');
 
@@ -127,6 +128,7 @@ export const CustomerListScreen = () => {
                             },
                             {
                                 icon: IconName.delete,
+                                iconColor: theme.colors.error,
                                 onPress: () => console.log('Usuwanie klienta'),
                             },
                         ]}

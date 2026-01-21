@@ -11,8 +11,8 @@ import {
 import { OrderProductList } from '@/components/common/order/OrderProductList';
 import { AppModal } from '@/components/common/AppModal';
 import { metrics } from '@/theme/metrics';
-import { Currency, Option, PaymentStatus, PersonBase } from '@/types/common';
-import { Delivery, OrderItem, PaymentTableData } from '@/types/domain';
+import { Currency, Option, OrderStatus, PaymentMethod, PaymentStatus, PersonBase } from '@/types/common';
+import { Address, Delivery, OrderItem, PaymentTableData } from '@/types/domain';
 import { useCreateOrder, useOrder, useUpdateOrder } from '@/composables/orders/useOrders';
 import { useCustomerOptions } from '@/composables/customer/useCustomers';
 import { CreateOrderItem, CreateOrderPayload, PaymentDto } from '@/types/dto';
@@ -26,6 +26,8 @@ import { useOrderItemTableData } from '@/composables/orders/useOrderItems';
 import { usePaymentTableData } from '@/composables/payment/usePayments';
 import { useOrderActions } from '@/hooks/useOrderActions';
 import { useCarrierOptions } from '@/composables/carrier/useCarriers';
+import { ErrorScreen } from '../ErrorScreen';
+import { AddEditDeliveryForm, AddEditPaymentForm } from '@/components/form';
 
 const AddPaymentForm = ({ onClose }: { onClose: () => void }) => (
     <View>
@@ -41,12 +43,15 @@ const AddDeliveryForm = ({ onClose }: { onClose: () => void }) => (
     </View>
 );
 
+const ITEMS_PER_PAGE = 10;
+
 export const OrderAddEditScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const theme = useTheme();
 
-    const { id } = route.params;
+    const params = route.params as { id?: string } | undefined;
+    const id = params?.id || '';
     const isEdit = Boolean(id);
     const { data: order, error: fetchOrderError, loading: orderLoading, refresh } = useOrder(id);
 
@@ -57,11 +62,8 @@ export const OrderAddEditScreen = () => {
         navigation.replace('OrderDetails', { id: updatedOrder.id });
     });
 
-    const { handleSavePayment, handleCancelPayment, handleSaveDelivery } = useOrderActions(
-        id,
-        refresh,
-        order?.payments || []
-    );
+    const { handleSavePayment, handleCancelPayment, handleSaveDelivery, isLoading } =
+        useOrderActions(id, '', refresh, order?.payments || []);
 
     const orderItemsData = useOrderItemTableData(order?.orderProducts || []);
     const paymentsData = usePaymentTableData(order?.payments || []);
@@ -72,6 +74,7 @@ export const OrderAddEditScreen = () => {
     const [selectedPayment, setSelectedPayment] = useState<PaymentDto | null>(null);
     const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [visibleProductsCount, setVisibleProductsCount] = useState(ITEMS_PER_PAGE);
 
     const {
         data: customersData,
@@ -108,7 +111,8 @@ export const OrderAddEditScreen = () => {
         setProductFilters({ name: search, limit: 10 });
     };
 
-    const loading = orderLoading || customersLoading || sellersLoading || carrierLoading || false;
+    const loading =
+        orderLoading || customersLoading || sellersLoading || carrierLoading || isLoading || false;
 
     const [customerValue, setCustomerValue] = useState<Option | undefined>(undefined);
     const [sellerValue, setSellerValue] = useState<Option | undefined>(undefined);
@@ -129,6 +133,12 @@ export const OrderAddEditScreen = () => {
             value: person.id,
         };
     };
+
+    const paginatedProducts = useMemo(() => {
+        return orderProducts.slice(0, visibleProductsCount);
+    }, [orderProducts, visibleProductsCount]);
+
+    const hasMoreProducts = orderProducts.length > visibleProductsCount;
 
     useEffect(() => {
         if (!isEdit || !order) return;
@@ -238,14 +248,30 @@ export const OrderAddEditScreen = () => {
         }
     };
 
+    const onSavePayment = (amount: number, currency: string, method: PaymentMethod) => {
+        handleSavePayment(amount, currency, method, selectedPayment?.id);
+        setPaymentModalVisible(false);
+        setSelectedPayment(null);
+    };
+
+    const onSaveDelivery = (address: Address, carrier: string, tracking: string, date: string) => {
+        handleSaveDelivery(address, carrier, tracking, date);
+        setDeliveryModalVisible(false);
+    };
+
     const styles = StyleSheet.create({
-        container: { flex: 1, padding: metrics.spacing.lg },
+        container: { flex: 1 },
+        contentContainer: { padding: metrics.spacing.lg, gap: metrics.spacing.lg },
         card: { backgroundColor: theme.colors.background, marginBottom: metrics.spacing.lg },
         cardTitle: { marginBottom: metrics.spacing.md },
         subtitle: { color: '#666' },
         modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
         modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
-        modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: metrics.spacing.md },
+        modalButtons: {
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            gap: metrics.spacing.md,
+        },
         cardHeaderWithButton: {
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -265,9 +291,10 @@ export const OrderAddEditScreen = () => {
             gap: metrics.spacing.lg,
         },
         buttonRow: {
-            flex: 1,
             flexDirection: 'row',
-            justifyContent: 'center',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: metrics.spacing.md,
         },
         buttonWrapper: {
             flex: 1,
@@ -275,7 +302,18 @@ export const OrderAddEditScreen = () => {
         },
         button: { minWidth: 160 },
         hint: { color: theme.colors.onSurfaceVariant, marginTop: metrics.spacing.xs },
+        loadMoreContainer: {
+            paddingVertical: metrics.spacing.sm,
+            alignItems: 'center',
+            backgroundColor: theme.colors.surface,
+            borderBottomLeftRadius: metrics.radius.md,
+            borderBottomRightRadius: metrics.radius.md,
+        },
     });
+
+    if (!id) {
+        return <ErrorScreen title="Błąd" message="Nieprawidłowe ID zamówienia" />;
+    }
 
     if (loading) return <LoadingScreen text="Ładowanie danych..." />;
 
@@ -290,7 +328,7 @@ export const OrderAddEditScreen = () => {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
             <View style={styles.headerRow}>
                 <View>
                     <AppText variant="headlineMedium">Zamówienie</AppText>
@@ -303,7 +341,7 @@ export const OrderAddEditScreen = () => {
                         </>
                     )}
                 </View>
-                {isEdit && (
+                {isEdit && order?.status === OrderStatus.DRAFT && (
                     <View style={styles.buttonRow}>
                         <AppButton
                             icon={IconName.delete}
@@ -342,7 +380,7 @@ export const OrderAddEditScreen = () => {
                                     icon={IconName.client}
                                     onPress={() => navigation.navigate('Customer')}
                                 >
-                                    Baza
+                                    Przejdź do klientów
                                 </AppButton>
                             </View>
                         </View>
@@ -371,7 +409,7 @@ export const OrderAddEditScreen = () => {
                                         icon={IconName.seller}
                                         onPress={() => navigation.navigate('Seller')}
                                     >
-                                        Baza
+                                        Przejdź do klientów
                                     </AppButton>
                                 </View>
                             </View>
@@ -390,10 +428,37 @@ export const OrderAddEditScreen = () => {
                 />
             )}
 
-            <OrderProductList
-                products={orderProducts}
-                onRemove={!isEdit ? handleRemoveProduct : undefined}
-            />
+            <View>
+                <OrderProductList
+                    products={paginatedProducts} // Przekazujemy tylko pociętą listę
+                    onRemove={!isEdit ? handleRemoveProduct : undefined}
+                />
+
+                {hasMoreProducts && (
+                    <View style={styles.loadMoreContainer}>
+                        <AppButton
+                            mode="text"
+                            icon={IconName.chevronDown}
+                            onPress={() => setVisibleProductsCount((prev) => prev + ITEMS_PER_PAGE)}
+                        >
+                            Rozwiń kolejne{' '}
+                            {Math.min(ITEMS_PER_PAGE, orderProducts.length - visibleProductsCount)}{' '}
+                            pozycji
+                        </AppButton>
+                    </View>
+                )}
+
+                {!hasMoreProducts && orderProducts.length > ITEMS_PER_PAGE && (
+                    <View style={styles.loadMoreContainer}>
+                        <AppButton
+                            mode="text"
+                            onPress={() => setVisibleProductsCount(ITEMS_PER_PAGE)}
+                        >
+                            Zwiń listę
+                        </AppButton>
+                    </View>
+                )}
+            </View>
 
             <AppCard style={styles.card}>
                 {isEdit && order ? (
@@ -403,8 +468,10 @@ export const OrderAddEditScreen = () => {
                             <AppButton
                                 icon={IconName.delivery}
                                 onPress={() => {
-                                    setSelectedDelivery(order?.delivery || null);
-                                    setDeliveryModalVisible(true);
+                                    if (order) {
+                                        setSelectedDelivery(order.delivery || null);
+                                        setDeliveryModalVisible(true);
+                                    }
                                 }}
                             >
                                 Zarządzaj
@@ -502,12 +569,37 @@ export const OrderAddEditScreen = () => {
             </View>
 
             {/* Modale */}
-            <AppModal visible={paymentModalVisible} onClose={() => setPaymentModalVisible(false)}>
-                <AddPaymentForm onClose={() => setPaymentModalVisible(false)} />
+            <AppModal
+                visible={paymentModalVisible}
+                onClose={() => {
+                    setPaymentModalVisible(false);
+                    setSelectedPayment(null);
+                }}
+            >
+                <AddEditPaymentForm
+                    initialAmount={selectedPayment?.amount}
+                    initialCurrency={selectedPayment?.currency ?? 'PLN'}
+                    initialMethod={(selectedPayment?.paymentMethod as PaymentMethod) ?? undefined}
+                    onClose={() => setPaymentModalVisible(false)}
+                    onSave={onSavePayment}
+                />
             </AppModal>
-            <AppModal visible={deliveryModalVisible} onClose={() => setDeliveryModalVisible(false)}>
-                <AddDeliveryForm onClose={() => setDeliveryModalVisible(false)} />
-            </AppModal>
+
+            {isEdit && order && (
+                <AppModal
+                    visible={deliveryModalVisible}
+                    onClose={() => setDeliveryModalVisible(false)}
+                >
+                    <AddEditDeliveryForm
+                        initialAddress={order.delivery?.address}
+                        initialCarrierId={order.delivery?.carrierId ?? ''}
+                        initialTracking={order.delivery?.trackingNumber ?? ''}
+                        initialDeliveryDate={order.delivery?.deliveryDate ?? ''}
+                        onClose={() => setDeliveryModalVisible(false)}
+                        onSave={onSaveDelivery}
+                    />
+                </AppModal>
+            )}
             <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
                 <AppText variant="titleLarge" style={styles.modalTitle}>
                     Usuń zamówienie

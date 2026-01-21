@@ -189,3 +189,18 @@ export const formatAddressMultiline = (address?: Address | AddressDto | null): s
 
     return lines.length ? lines.join('\n') : '—';
 };
+
+export const formatPhoneNumber = (phone: string | number | undefined | null): string => {
+    if (!phone) return '-';
+
+    const cleaned = phone.toString().replace(/[^\d+]/g, '');
+
+    const match = cleaned.match(/^(?:\+48)?(\d{3})(\d{3})(\d{3})$/);
+
+    if (match) {
+        const prefix = cleaned.startsWith('+') ? '+48 ' : '';
+        return `${prefix}${match[1]} ${match[2]} ${match[3]}`;
+    }
+
+    return cleaned.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
+};

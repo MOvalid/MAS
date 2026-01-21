@@ -50,9 +50,10 @@ export const mapOrder1ToTableData = (
         createdAt: formatPolishDate(order.createdAt, false),
         customer: customerMap[order.customerId] || 'Nieznany',
         company: '',
-        status: ORDER_STATUS_LABELS[order.status as OrderStatus],
+        statusLabel: ORDER_STATUS_LABELS[order.status as OrderStatus],
+        status: order.status as OrderStatus,
         seller: sellerMap[order.sellerId] || 'Nieznany',
-        invoiceNumber: '—',
+        invoiceNumber: '',
     };
 };
 
@@ -70,9 +71,10 @@ export const mapOrder2ToTableData = (
         createdAt: formatPolishDate(order.createdAt, false),
         customer: order.customer,
         company: order.company,
-        status: ORDER_STATUS_LABELS[order.status as OrderStatus],
+        statusLabel: ORDER_STATUS_LABELS[order.status as OrderStatus],
+        status: order.status as OrderStatus,
         seller: order.seller,
-        invoiceNumber: order.invoiceNUmber || 'Brak',
+        invoiceNumber: order.invoiceNUmber || '',
     };
 };
 

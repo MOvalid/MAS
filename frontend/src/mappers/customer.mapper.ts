@@ -2,6 +2,7 @@ import { CustomerDto } from '../types/dto/customer';
 import { Customer, CustomerTableData } from '../types/domain/customer';
 import { mapAddressDtoToDomain, mapAddressToDto } from './address.mapper';
 import { mapDtoListToDomain } from './common.mapper';
+import { formatPhoneNumber } from '@/utils/formatters';
 
 export const mapCustomerDtoToDomain = (dto: CustomerDto): Customer => {
     return {
@@ -54,7 +55,7 @@ export const mapCustomerDtoToTableRow = (dto: CustomerDto, index: number) => {
         lp: (index + 1).toString(),
         fullName: formatFullName(dto.firstName, dto.lastName),
         email: dto.email,
-        phone: dto.phoneNumber || '-',
+        phone: dto.phoneNumber ? formatPhoneNumber(dto.phoneNumber) : '-',
         city: dto.address?.city || '-',
     };
 };
@@ -75,7 +76,7 @@ export const mapCustomerToTableRow = (
         firstName: customer.firstName,
         lastName: customer.lastName,
         email: customer.email || '-',
-        phone: customer.phoneNumber || '-',
+        phone: customer.phoneNumber ? formatPhoneNumber(customer.phoneNumber) : '-',
         address: formattedAddress,
     };
 };

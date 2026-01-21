@@ -28,26 +28,41 @@ import { useOrderItemTableData } from '@/composables/orders/useOrderItems';
 import { LoadingScreen } from '../LoadingScreen';
 import { useOrderActions } from '@/hooks/useOrderActions';
 import { useCarrierOptions } from '@/composables/carrier/useCarriers';
+import { useSnackbar } from '@/context/SnackbarContext';
+import { useGenerateInvoicePdf } from '@/composables/invoice/useInvoices';
+
+const ITEMS_PER_PAGE = 10;
 
 export const OrderDetailsScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const theme = useTheme();
-    const { id } = route.params as { id: string };
+    const { showSnackbar } = useSnackbar();
+    const params = route.params as { id?: string } | undefined;
+    const id = params?.id || '';
 
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+    const [visibleProductsCount, setVisibleProductsCount] = useState(ITEMS_PER_PAGE);
     const [selectedPayment, setSelectedPayment] = useState<PaymentDto | null>(null);
     const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
 
-    const { data: order, loading, error, refresh } = useOrder(id);
+    const { data: order, loading: orderLoading, error, refresh } = useOrder(id);
     const { data: carriers } = useCarrierOptions(true, { name: '' });
 
-    const { handleSavePayment, handleCancelPayment, handleSaveDelivery } = useOrderActions(
-        id,
-        refresh,
-        order?.payments || []
+    const {
+        handleSavePayment,
+        handleCancelPayment,
+        handleSaveDelivery,
+        handleCreateInvoice,
+        handleDeleteOrder,
+        isLoading,
+    } = useOrderActions(id, '', refresh, order?.payments || []);
+
+    const { generatePdf, isGenerating: isDownloading } = useGenerateInvoicePdf(
+        () => showSnackbar('Faktura została pobrana', 'success'),
+        (err) => showSnackbar(err, 'error')
     );
 
     const { orderTotal, paymentsTotal, remainingAmount, status, isOverpaid } =
@@ -60,6 +75,18 @@ export const OrderDetailsScreen = () => {
         const carrier = carriers.find((c) => c.id === order.delivery?.carrierId);
         return carrier ? carrier.name : order.delivery.carrierId;
     }, [order?.delivery?.carrierId, carriers]);
+
+    const paginatedProducts = useMemo(() => {
+        return orderItemsData.slice(0, visibleProductsCount);
+    }, [orderItemsData, visibleProductsCount]);
+
+    const hasMoreProducts = orderItemsData.length > visibleProductsCount;
+
+    const handleLoadMore = () => {
+        setVisibleProductsCount((prev) => prev + ITEMS_PER_PAGE);
+    };
+
+    const loading = orderLoading || isLoading || false;
 
     const orderItemsColumns: TableColumn<OrderItemTableData>[] = useMemo(
         () => [
@@ -88,6 +115,14 @@ export const OrderDetailsScreen = () => {
         if (payment) {
             setSelectedPayment(payment);
             setPaymentModalVisible(true);
+        }
+    };
+
+    const onDownloadInvoice = () => {
+        if (order?.invoice?.id) {
+            generatePdf(order.invoice.id, order.invoice.invoiceNumber);
+        } else {
+            showSnackbar('Brak danych faktury', 'error');
         }
     };
 
@@ -133,27 +168,51 @@ export const OrderDetailsScreen = () => {
                         Utworzono: {formatPolishDate(order.createdAt, false)}
                     </AppText>
                 </View>
+
                 <View style={styles.buttonRow}>
+                    {!order.invoice && (
+                        <AppButton
+                            icon={IconName.invoice}
+                            mode="outlined"
+                            onPress={handleCreateInvoice}
+                            loading={isLoading}
+                        >
+                            Wystaw fakturę
+                        </AppButton>
+                    )}
+
+                    {order.invoice && (
+                        <AppButton
+                            icon={IconName.download}
+                            mode="outlined"
+                            onPress={onDownloadInvoice}
+                            loading={isDownloading}
+                        >
+                            Faktura
+                        </AppButton>
+                    )}
+
                     <AppButton
                         icon={IconName.edit}
                         mode="contained"
-                        onPress={() => {
-                            navigation.navigate('OrderEdit', { id: order.id });
-                        }}
+                        onPress={() => navigation.navigate('OrderEdit', { id: order.id })}
                     >
                         Edytuj
                     </AppButton>
-                    <AppButton
-                        icon={IconName.delete}
-                        buttonColor={theme.colors.error}
-                        onPress={() => setDeleteModalVisible(true)}
-                    >
-                        Usuń
-                    </AppButton>
+
+                    {order.status === OrderStatus.DRAFT && (
+                        <AppButton
+                            icon={IconName.delete}
+                            buttonColor={theme.colors.error}
+                            onPress={() => setDeleteModalVisible(true)}
+                        >
+                            Usuń
+                        </AppButton>
+                    )}
                 </View>
             </View>
 
-            <AppCard>
+            <AppCard style={styles.card}>
                 <AppText variant="titleLarge" style={styles.cardTitle}>
                     Informacje podstawowe
                 </AppText>
@@ -179,8 +238,31 @@ export const OrderDetailsScreen = () => {
                 <AppTable
                     title="Pozycje zamówienia"
                     columns={orderItemsColumns}
-                    data={orderItemsData}
+                    data={paginatedProducts}
                 />
+                {hasMoreProducts && (
+                    <View style={styles.loadMoreContainer}>
+                        <AppButton mode="text" icon={IconName.chevronDown} onPress={handleLoadMore}>
+                            Rozwiń kolejne{' '}
+                            {Math.min(ITEMS_PER_PAGE, orderItemsData.length - visibleProductsCount)}{' '}
+                            pozycji
+                        </AppButton>
+                        <AppText style={styles.paginationHint}>
+                            Wyświetlono {visibleProductsCount} z {orderItemsData.length}
+                        </AppText>
+                    </View>
+                )}
+
+                {!hasMoreProducts && orderItemsData.length > ITEMS_PER_PAGE && (
+                    <View style={styles.loadMoreContainer}>
+                        <AppButton
+                            mode="text"
+                            onPress={() => setVisibleProductsCount(ITEMS_PER_PAGE)}
+                        >
+                            Zwiń listę
+                        </AppButton>
+                    </View>
+                )}
             </AppCard>
 
             <AppCard>
@@ -263,7 +345,13 @@ export const OrderDetailsScreen = () => {
                     <AppButton mode="outlined" onPress={() => setDeleteModalVisible(false)}>
                         Anuluj
                     </AppButton>
-                    <AppButton buttonColor={theme.colors.error} onPress={() => navigation.goBack()}>
+                    <AppButton
+                        buttonColor={theme.colors.error}
+                        onPress={() => {
+                            handleDeleteOrder();
+                            navigation.goBack();
+                        }}
+                    >
                         Usuń
                     </AppButton>
                 </View>
@@ -300,12 +388,13 @@ export const OrderDetailsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f5f5f5' },
+    container: { flex: 1 },
     contentContainer: { padding: metrics.spacing.lg, gap: metrics.spacing.lg },
+    card: { marginBottom: metrics.spacing.lg },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: metrics.spacing.md,
+        marginBottom: metrics.spacing.lg,
     },
     subtitle: { color: '#666' },
     buttonRow: { flexDirection: 'row', gap: metrics.spacing.md },
@@ -322,4 +411,16 @@ const styles = StyleSheet.create({
     modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
     modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
     modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: metrics.spacing.md },
+    loadMoreContainer: {
+        paddingVertical: metrics.spacing.md,
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+        marginTop: metrics.spacing.xs,
+    },
+    paginationHint: {
+        fontSize: 12,
+        color: '#888',
+        marginTop: metrics.spacing.xs,
+    },
 });

@@ -10,10 +10,13 @@ import {
 import { useCreateDelivery, useUpdateDelivery } from '@/composables/delivery/useDeliveries';
 import { mapAddressToDto } from '@/mappers/address.mapper';
 import { PaymentDto } from '@/types/dto';
+import { useCreateInvoice } from '@/composables/invoice/useInvoices';
+import { useDeleteOrder } from '@/composables/orders/useOrders';
 
 export const useOrderActions = (
-    orderId: string, 
-    refresh: () => void, 
+    orderId: string,
+    companyId: string,
+    refresh: () => void,
     currentPayments: PaymentDto[] = []
 ) => {
     const { showSnackbar } = useSnackbar();
@@ -24,6 +27,14 @@ export const useOrderActions = (
             refresh();
         },
         (err) => showSnackbar(`Błąd dodawania płatności: ${err}`, 'error')
+    );
+
+    const { create: createInvoice, loading: isCreatingInvoice } = useCreateInvoice(
+        () => {
+            showSnackbar('Dodano nową fakturę', 'success');
+            refresh();
+        },
+        (err) => showSnackbar(`Błąd dodawania faktury: ${err}`, 'error')
     );
 
     const { update: updatePayment, loading: isUpdatingPayment } = useUpdatePayment(
@@ -57,6 +68,13 @@ export const useOrderActions = (
         },
         (err) => showSnackbar(`Błąd dodawania dostawy: ${err}`, 'error')
     );
+
+    const { remove: deleteOrder, loading: isDeletingOrder } = useDeleteOrder(
+        () => {
+            showSnackbar('Usunięto zamówienie.', 'success');
+        },
+        (err) => showSnackbar(`Błąd podczas usuwania dostawy: ${err}`, 'error')
+    )
 
     const handleSavePayment = async (
         amount: number,
@@ -96,9 +114,8 @@ export const useOrderActions = (
         carrierId: string,
         tracking: string,
         deliveryDate: string,
-        deliveryId?: string 
+        deliveryId?: string
     ) => {
-
         const selectedDate = new Date(deliveryDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -123,15 +140,30 @@ export const useOrderActions = (
         }
     };
 
+    const handleCreateInvoice = async () => {
+        await createInvoice({
+            orderId: orderId,
+        });
+    };
+
+    const handleDeleteOrder = async () => {
+        await deleteOrder(orderId);
+    }
+
     return {
         handleSavePayment,
         handleCancelPayment,
         handleSaveDelivery,
+        handleCreateInvoice,
+        handleDeleteOrder,
         isLoading:
-            isCreatingPayment || 
-            isUpdatingPayment || 
-            isDeletingPayment || 
-            isUpdatingDelivery || 
-            isCreatingDelivery,
+            isCreatingPayment ||
+            isUpdatingPayment ||
+            isDeletingPayment ||
+            isUpdatingDelivery ||
+            isCreatingDelivery ||
+            isCreatingInvoice ||
+            isDeletingOrder ||
+            false,
     };
 };

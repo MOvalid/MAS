@@ -96,7 +96,8 @@ export const InvoiceListScreen = () => {
     }, [paymentStart, paymentEnd]);
 
     const handleRowPress = (item: InvoiceTableData) => {
-        navigation.navigate('OrderDetails', { id: item.orderId });
+        console.log('Order ID: ' + item.orderId);
+        navigation.navigate('Order', { screen: 'OrderDetails', params: { id: item.orderId } });
     };
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
@@ -190,7 +191,7 @@ export const InvoiceListScreen = () => {
                             {
                                 icon: IconName.delete,
                                 onPress: () => deleteInvoice(row),
-                                iconColor: 'red',
+                                iconColor: theme.colors.error,
                                 disabled: isGenerating,
                             },
                         ]}

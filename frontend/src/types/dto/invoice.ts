@@ -26,7 +26,7 @@ export interface InvoiceDetailsDto {
 
 
 export interface CreateInvoicePayload {
-    companyId: string;
+    companyId?: string;
     orderId: string;
 }
 

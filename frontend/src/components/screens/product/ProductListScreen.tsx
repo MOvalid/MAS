@@ -13,6 +13,7 @@ import { useCategories } from '@/composables/category';
 import { useProducts, useProductTableData } from '@/composables/product/useProducts';
 import { ProductTableData } from '@/types/domain';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
+import { useTheme } from 'react-native-paper';
 
 export const ProductListScreen = () => {
     const [search, setSearch] = useState('');
@@ -21,6 +22,7 @@ export const ProductListScreen = () => {
     const [sort, setSort] = useState<ProductSort>('NAME_ASC');
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const theme = useTheme();
 
     const { data: categories, loading: categoriesLoading } = useCategories();
     const {
@@ -122,6 +124,7 @@ export const ProductListScreen = () => {
                             },
                             {
                                 icon: IconName.delete,
+                                iconColor: theme.colors.error,
                                 onPress: () => console.log('Usuwanie produktu'),
                             },
                         ]}
