@@ -106,7 +106,7 @@ export const OrderListScreen = () => {
             render: (item) => item.company || item.customer,
         },
         { key: 'seller', title: 'Sprzedawca', flex: 1 },
-        { key: 'status', title: 'Status', flex: 1 },
+        { key: 'statusLabel', title: 'Status', flex: 1 },
         { key: 'invoiceNumber', title: 'Faktura', align: 'center', flex: 1 },
     ];
     if (error)

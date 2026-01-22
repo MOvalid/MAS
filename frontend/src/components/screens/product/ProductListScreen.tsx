@@ -14,6 +14,7 @@ import { useProducts, useProductTableData } from '@/composables/product/useProdu
 import { ProductTableData } from '@/types/domain';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { useTheme } from 'react-native-paper';
+import { useSnackbar } from '@/context/SnackbarContext';
 
 export const ProductListScreen = () => {
     const [search, setSearch] = useState('');
@@ -23,6 +24,7 @@ export const ProductListScreen = () => {
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const theme = useTheme();
+    const { showSnackbar } = useSnackbar();
 
     const { data: categories, loading: categoriesLoading } = useCategories();
     const {
@@ -125,7 +127,11 @@ export const ProductListScreen = () => {
                             {
                                 icon: IconName.delete,
                                 iconColor: theme.colors.error,
-                                onPress: () => console.log('Usuwanie produktu'),
+                                onPress: () =>
+                                    showSnackbar(
+                                        'Nie można usunąć tego produktu, ponieważ znajduje się on w historii zamówień klientów.',
+                                        'error'
+                                    ),
                             },
                         ]}
                     />

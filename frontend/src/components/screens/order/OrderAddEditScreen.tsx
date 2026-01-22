@@ -44,7 +44,7 @@ export const OrderAddEditScreen = () => {
     const theme = useTheme();
 
     const params = route.params as { id?: string } | undefined;
-    const id = params!.id || '';
+    const id = params?.id || '';
     const isEdit = Boolean(id);
     const { data: order, error: fetchOrderError, loading: orderLoading, refresh } = useOrder(id);
 
@@ -374,7 +374,13 @@ export const OrderAddEditScreen = () => {
                         />
                     </View>
                     {!isEdit && (
-                        <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
+                        <View
+                            style={{
+                                ...styles.buttonRow,
+                                flex: 1,
+                                marginTop: metrics.spacing.lg,
+                            }}
+                        >
                             <View style={styles.buttonWrapper}>
                                 <AppButton
                                     icon={IconName.client}
@@ -387,7 +393,6 @@ export const OrderAddEditScreen = () => {
                     )}
                 </View>
 
-                {/* Sprzedawca */}
                 <View style={{ marginTop: metrics.spacing.md }}>
                     <View style={styles.headerRow}>
                         <View style={{ flex: 3 }}>
@@ -404,13 +409,19 @@ export const OrderAddEditScreen = () => {
                             />
                         </View>
                         {!isEdit && (
-                            <View style={{ ...styles.buttonRow, marginTop: metrics.spacing.lg }}>
+                            <View
+                                style={{
+                                    ...styles.buttonRow,
+                                    flex: 1,
+                                    marginTop: metrics.spacing.lg,
+                                }}
+                            >
                                 <View style={styles.buttonWrapper}>
                                     <AppButton
                                         icon={IconName.seller}
                                         onPress={() => navigation.navigate('Seller')}
                                     >
-                                        Przejdź do klientów
+                                        Przejdź do sprzedawców
                                     </AppButton>
                                 </View>
                             </View>
@@ -426,21 +437,15 @@ export const OrderAddEditScreen = () => {
                     isLoading={productsLoading}
                     onAddProduct={handleAddProduct}
                     onSearchProduct={handleProductSearchChange}
+                    errorMessage={errors.orderItems}
                 />
-            )}
-
-            {errors.orderItems && (
-                <AppText
-                    style={{ color: theme.colors.error, marginHorizontal: metrics.spacing.md }}
-                >
-                    {errors.orderItems}
-                </AppText>
             )}
 
             <View>
                 <OrderProductList
-                    products={paginatedProducts} // Przekazujemy tylko pociętą listę
+                    products={paginatedProducts}
                     onRemove={!isEdit ? handleRemoveProduct : undefined}
+                    errorMessage={errors.orderItems}
                 />
 
                 {hasMoreProducts && (

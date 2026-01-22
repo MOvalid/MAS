@@ -22,6 +22,7 @@ type Props = {
     onSearchProduct?: (query: string) => void;
     isLoading?: boolean;
     editable?: boolean;
+    errorMessage?: string;
 };
 
 export const OrderProductInputCard: React.FC<Props> = ({
@@ -31,6 +32,7 @@ export const OrderProductInputCard: React.FC<Props> = ({
     onSearchProduct,
     isLoading,
     editable = false,
+    errorMessage = '',
 }) => {
     const theme = useTheme();
     const [selectedProduct, setSelectedProduct] = useState<ProductOption | undefined>();
@@ -107,6 +109,7 @@ export const OrderProductInputCard: React.FC<Props> = ({
                             onChange={setSelectedProduct}
                             onInputChange={onSearchProduct}
                             placeholder="Szukaj produktu..."
+                            errorMessage={errorMessage}
                         />
                     </View>
 

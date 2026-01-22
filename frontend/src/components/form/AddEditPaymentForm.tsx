@@ -1,11 +1,12 @@
 // @/components/form/AddEditPaymentForm.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppText, AppButton, AppDropdown } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { PAYMENT_METHODS, PaymentMethod } from '@/types/common';
 import { AppNumberInput } from '../common/AppNumberInput';
 import { AppCheckboxGroup } from '../common/AppCheckboxGroup';
+import { useAppTheme } from '@/context/AppThemeContext';
 
 interface AddEditPaymentFormProps {
     initialAmount?: number;
@@ -22,20 +23,41 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
     onSave,
     onClose,
 }) => {
-    // 1. Formatowanie ceny na start (zamiana liczby na string akceptowalny przez input)
+    const { colors } = useAppTheme();
     const [amount, setAmount] = useState(
         initialAmount !== undefined ? initialAmount.toString() : ''
     );
     const [currency] = useState(initialCurrency);
-
-    // 2. Zapewnienie, że metoda jest zainicjalizowana z initialMethod
     const [method, setMethod] = useState<PaymentMethod | undefined>(initialMethod);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const isEdit = !!initialAmount; // Flaga trybu edycji
+    const isEdit = !!initialAmount;
+
+    const validate = (): boolean => {
+        const newErrors: Record<string, string> = {};
+        const parsedAmount = parseFloat(amount.replace(',', '.'));
+
+        if (!amount || amount.trim() === '') {
+            newErrors.amount = 'Kwota płatności jest wymagana';
+        } else if (isNaN(parsedAmount)) {
+            newErrors.amount = 'Wprowadź poprawną liczbę';
+        } else if (parsedAmount <= 0) {
+            newErrors.amount = 'Kwota płatności musi być większa od zera';
+        }
+
+        if (!method) newErrors.method = 'Metoda płatności jest wymagana';
+        if (!currency) newErrors.currency = 'Waluta płatności jest wymagana';
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleSave = () => {
-        const amt = parseFloat(amount.replace(',', '.')); // Obsługa obu separatorów
-        if (isNaN(amt) || amt <= 0 || !method) return;
+        if (!validate()) return;
+
+        const amt = parseFloat(amount.replace(',', '.'));
+        if (!method) return;
+
         onSave(amt, currency, method);
         onClose();
     };
@@ -51,8 +73,8 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
                 fullWidth
                 value={amount}
                 onChangeValue={setAmount}
-                // Jeśli edytujemy, możemy zablokować zmianę kwoty zgodnie z wymaganiem PUT /payment/{id}
                 disabled={isEdit}
+                errorMessage={errors.amount}
             />
 
             <AppDropdown
@@ -61,6 +83,7 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
                 fullWidth
                 options={[{ label: 'PLN', value: 'PLN' }]}
                 value={currency}
+                errorMessage={errors.currency}
                 onChange={() => {}}
             />
 
@@ -71,6 +94,7 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
                 <AppCheckboxGroup
                     options={PAYMENT_METHODS}
                     selectedValue={method ?? 'BANK_TRANSFER'}
+                    errorMessage={errors.amount}
                     onChange={(v) => {
                         if (!isEdit) {
                             setMethod(v as PaymentMethod);
@@ -84,13 +108,15 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
                 )}
             </View>
 
-            <View style={styles.buttonsRow}>
-                <AppButton mode="outlined" onPress={onClose} style={styles.button}>
-                    Anuluj
-                </AppButton>
-                <AppButton mode="contained" onPress={handleSave} style={styles.button}>
-                    Zapisz
-                </AppButton>
+            <View style={[styles.footer, { borderTopColor: colors.outlineVariant }]}>
+                <View style={styles.buttonContainer}>
+                    <AppButton mode="outlined" onPress={onClose}>
+                        Anuluj
+                    </AppButton>
+                    <AppButton mode="contained" onPress={handleSave}>
+                        Zapisz
+                    </AppButton>
+                </View>
             </View>
         </View>
     );
@@ -99,6 +125,14 @@ export const AddEditPaymentForm: React.FC<AddEditPaymentFormProps> = ({
 const styles = StyleSheet.create({
     container: {
         padding: metrics.spacing.xs,
+    },
+    footer: {
+        borderTopWidth: 1,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: metrics.spacing.md,
     },
     title: {
         marginBottom: metrics.spacing.lg,
@@ -119,8 +153,5 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: metrics.spacing.md,
         marginTop: metrics.spacing.xl,
-    },
-    button: {
-        flex: 1,
     },
 });

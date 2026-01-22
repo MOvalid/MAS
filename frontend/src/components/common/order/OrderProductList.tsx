@@ -5,25 +5,39 @@ import { OrderItem, OrderItemTableData } from '@/types/domain/order-item';
 import { TableColumn } from '../table';
 import { metrics } from '@/theme/metrics';
 import { mapOrderItemToTableData } from '@/mappers/order.mapper';
+import { useTheme } from 'react-native-paper';
 
 type Props = {
     products: OrderItem[];
     onChange?: (updated: OrderItem[]) => void;
     onRemove?: (index: number) => void;
+    errorMessage?: string;
 };
 
-export const OrderProductList: React.FC<Props> = ({ products, onChange, onRemove }) => {
+export const OrderProductList: React.FC<Props> = ({
+    products,
+    onChange,
+    onRemove,
+    errorMessage = '',
+}) => {
+    const theme = useTheme();
+    const hasError = Boolean(errorMessage);
     const styles = {
         noData: {
             textAlign: 'center',
             padding: metrics.spacing.md,
+            fontWeight: hasError ? 'bold' : 'normal',
         },
     } as const;
 
     if (products.length === 0) {
         return (
             <AppCard>
-                <AppText variant="bodyLarge" style={styles.noData}>
+                <AppText
+                    color={!hasError ? theme.colors.onBackground : theme.colors.error}
+                    variant="bodyLarge"
+                    style={styles.noData}
+                >
                     Brak pozycji w zamówieniu
                 </AppText>
             </AppCard>

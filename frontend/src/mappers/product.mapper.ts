@@ -47,7 +47,7 @@ export const mapProductDtoToDomain = (dto: ProductDto): Product => {
         vatAmount: vatAmount,
         grossPrice: dto.netPrice + vatAmount,
         currency: 'PLN',
-        lastRestockedAt: null,
+        lastRestockedAt: dto.lastRestockedAt,
     };
 };
 
@@ -85,6 +85,7 @@ export const mapProductToDto = (product: Product): ProductDto => ({
     stockQuantity: product.stockQuantity,
     stockLevel: product.stockLevel,
     categoryId: product.categoryId ?? '',
+    lastRestockedAt: product.lastRestockedAt,
 });
 
 export const mapProductToUpdatePayload = (

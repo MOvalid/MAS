@@ -133,7 +133,7 @@ export const OrderDetailsScreen = () => {
     };
 
     const onSaveDelivery = (address: Address, carrier: string, tracking: string, date: string) => {
-        handleSaveDelivery(address, carrier, tracking, date);
+        handleSaveDelivery(address, carrier, tracking, date, order?.delivery?.id);
         setDeliveryModalVisible(false);
     };
 
@@ -332,6 +332,14 @@ export const OrderDetailsScreen = () => {
                 <InfoItem label="Adres" value={formatAddressMultiline(order.delivery?.address)} />
                 <InfoItem label="Opcja dostawy" value={carrierName} />
                 <InfoItem label="Numer przesyłki" value={order.delivery?.trackingNumber || '-'} />
+                <InfoItem
+                    label="Data dostawy"
+                    value={
+                        order.delivery?.deliveryDate
+                            ? formatPolishDate(order.delivery?.deliveryDate, false)
+                            : '-'
+                    }
+                />
             </AppCard>
 
             <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
@@ -373,7 +381,13 @@ export const OrderDetailsScreen = () => {
                 />
             </AppModal>
 
-            <AppModal visible={deliveryModalVisible} onClose={() => setDeliveryModalVisible(false)}>
+            <AppModal
+                visible={deliveryModalVisible}
+                onClose={() => {
+                    setDeliveryModalVisible(false);
+                    setSelectedDelivery(null);
+                }}
+            >
                 <AddEditDeliveryForm
                     initialAddress={order.delivery?.address}
                     initialCarrierId={order.delivery?.carrierId ?? ''}

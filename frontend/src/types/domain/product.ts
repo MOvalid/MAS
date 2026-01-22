@@ -27,7 +27,7 @@ export interface Product {
     grossPrice: number;
     vatAmount: number;
     currency: string;
-    lastRestockedAt: string | null;
+    lastRestockedAt: string;
 }
 
 export interface ProductDimensions {

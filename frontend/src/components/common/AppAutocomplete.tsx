@@ -87,7 +87,7 @@ export function AppAutocomplete<T>({
 
         errorContainerStyle: {
             position: 'absolute' as const,
-            bottom: -metrics.spacing.lg,
+            bottom: -metrics.spacing.xs,
             left: 0,
             right: 0,
             height: metrics.spacing.lg,

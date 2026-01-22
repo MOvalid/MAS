@@ -12,6 +12,7 @@ export interface ProductDto {
     stockQuantity: number;
     stockLevel: string;
     categoryId: string;
+    lastRestockedAt: string;
 }
 
 export interface ProductDetailsDto {

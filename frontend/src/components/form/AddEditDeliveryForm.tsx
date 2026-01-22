@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { AppText, AppButton, AppTextInput } from '@/components/common';
 import { AppDatePicker } from '@/components/common/AppDatePicker';
-import { RadioButton, ActivityIndicator } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { metrics } from '@/theme/metrics';
 import { Address } from '@/types/domain';
 import { useCarrierOptions } from '@/composables/carrier/useCarriers';
 import { useAppTheme } from '@/context/AppThemeContext';
+import { AppCheckboxGroup } from '../common/AppCheckboxGroup';
 
 interface AddEditDeliveryFormProps {
     initialAddress?: Address;
@@ -40,31 +41,48 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
     const [trackingNumber, setTrackingNumber] = useState(initialTracking);
     const [deliveryDate, setDeliveryDate] = useState(initialDeliveryDate);
     const [carrierId, setCarrierId] = useState(initialCarrierId);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const { data: carriersData, loading: carriersLoading } = useCarrierOptions(true, { name: '' });
 
+    const validate = (): boolean => {
+        const newErrors: Record<string, string> = {};
+
+        if (!street.trim()) newErrors.street = 'Ulica jest wymagana';
+        if (!number.trim()) newErrors.number = 'Numer domu jest wymagany';
+        if (!city.trim()) newErrors.city = 'Miasto jest wymagane';
+        if (!postalCode.trim()) newErrors.postalCode = 'Kod pocztowy jest wymagany';
+        if (!country.trim()) newErrors.country = 'Kraj jest wymagany';
+
+        if (!trackingNumber.trim()) newErrors.trackingNumber = 'Numer przesyłki jest wymagany';
+        if (!deliveryDate) newErrors.deliveryDate = 'Data dostawy jest wymagana';
+        if (!carrierId) newErrors.carrierId = 'Wybór przewoźnika jest wymagany';
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSave = () => {
+        if (!validate()) return;
+
         const addr: Address = { street, houseNumber: number, city, postalCode, country };
         onSave(addr, carrierId, trackingNumber, deliveryDate);
     };
 
     return (
         <View style={styles.wrapper}>
-            {/* NAGŁÓWEK */}
             <View style={styles.header}>
                 <AppText variant="titleLarge" style={styles.title}>
                     Zarządzanie dostawą
                 </AppText>
             </View>
 
-            {/* SCROLLOWANA TREŚĆ */}
             <ScrollView
                 showsVerticalScrollIndicator={true}
                 style={styles.scrollArea}
                 contentContainerStyle={styles.scrollContent}
                 nestedScrollEnabled={true}
             >
-                {/* SEKCJA 1: ADRES */}
                 <View style={[styles.section, { backgroundColor: colors.surface }]}>
                     <AppText
                         variant="titleLarge"
@@ -73,46 +91,51 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
                         Adres dostawy
                     </AppText>
 
-                    {/* Wiersz 1: Ulica (pełna szerokość) */}
                     <View style={styles.row}>
                         <AppTextInput
                             fullWidth
                             label="Ulica"
                             value={street}
                             onChangeText={setStreet}
+                            errorMessage={errors.street}
                         />
                     </View>
 
-                    {/* Wiersz 2: Numer i Kod pocztowy */}
                     <View style={styles.row}>
                         <AppTextInput
                             style={{ flex: 1 }}
                             label="Numer domu"
                             value={number}
                             onChangeText={setNumber}
+                            errorMessage={errors.number}
                         />
                         <AppTextInput
                             style={{ flex: 1 }}
                             label="Kod pocztowy"
                             value={postalCode}
                             onChangeText={setPostalCode}
+                            errorMessage={errors.postalCode}
                         />
                     </View>
 
-                    {/* Wiersz 3: Miasto i Kraj */}
                     <View style={styles.row}>
                         <AppTextInput
                             label="Miasto"
                             value={city}
                             onChangeText={setCity}
+                            errorMessage={errors.city}
                             // fullWidth
                         />
 
-                        <AppTextInput label="Kraj" value={country} onChangeText={setCountry} />
+                        <AppTextInput
+                            label="Kraj"
+                            value={country}
+                            onChangeText={setCountry}
+                            errorMessage={errors.country}
+                        />
                     </View>
                 </View>
 
-                {/* SEKCJA 2: SZCZEGÓŁY PRZESYŁKI */}
                 <View style={[styles.section, { backgroundColor: colors.surface }]}>
                     <AppText
                         variant="titleLarge"
@@ -127,19 +150,25 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
                             label="Numer przesyłki"
                             value={trackingNumber}
                             onChangeText={setTrackingNumber}
+                            errorMessage={errors.trackingNumber}
                         />
                         <View style={styles.datePickerWrapper}>
                             <AppDatePicker
                                 value={deliveryDate}
                                 onChange={setDeliveryDate}
                                 placeholder="Data dostawy"
+                                errorMessage={errors.deliveryDate}
                             />
                         </View>
                     </View>
                 </View>
 
-                {/* SEKCJA 3: PRZEWOŹNIK */}
-                <View style={[styles.section, { backgroundColor: colors.surface }]}>
+                <View
+                    style={[
+                        styles.section,
+                        { backgroundColor: colors.surface, paddingBottom: metrics.spacing.lg },
+                    ]}
+                >
                     <AppText
                         variant="titleLarge"
                         style={[styles.sectionTitle, { color: colors.primary }]}
@@ -152,23 +181,20 @@ export const AddEditDeliveryForm: React.FC<AddEditDeliveryFormProps> = ({
                             <ActivityIndicator size="small" color={colors.primary} />
                         </View>
                     ) : (
-                        <RadioButton.Group onValueChange={setCarrierId} value={carrierId}>
-                            <View style={styles.radioGrid}>
-                                {carriersData.map((c) => (
-                                    <View key={c.id} style={styles.radioItem}>
-                                        <RadioButton.Android value={c.id} color={colors.primary} />
-                                        <AppText variant="bodyMedium" style={styles.radioLabel}>
-                                            {c.name}
-                                        </AppText>
-                                    </View>
-                                ))}
-                            </View>
-                        </RadioButton.Group>
+                        <AppCheckboxGroup
+                            numColumns={2}
+                            options={carriersData.map((c) => ({
+                                label: c.name,
+                                value: c.id,
+                            }))}
+                            selectedValue={carrierId}
+                            onChange={(value) => setCarrierId(value)}
+                            errorMessage={errors.carrierId}
+                        />
                     )}
                 </View>
             </ScrollView>
 
-            {/* STOPKA */}
             <View style={[styles.footer, { borderTopColor: colors.outlineVariant }]}>
                 <View style={styles.buttonContainer}>
                     <AppButton mode="outlined" onPress={onClose} style={styles.button}>
@@ -260,9 +286,7 @@ const styles = StyleSheet.create({
         marginLeft: metrics.spacing.xs,
     },
     footer: {
-        // paddingTop: metrics.spacing.lg,
         borderTopWidth: 1,
-        // marginTop: metrics.spacing.md,
     },
     buttonContainer: {
         flexDirection: 'row',

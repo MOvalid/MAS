@@ -10,10 +10,12 @@ import { CompanySort } from '@/types/common';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
 import { CompanyTableData } from '@/types/domain';
+import { useSnackbar } from '@/context/SnackbarContext';
 
 export const CompanyListScreen = () => {
     const navigation = useNavigation();
     const theme = useTheme();
+    const { showSnackbar } = useSnackbar();
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState<CompanySort>('ALPHA_ASC');
 
@@ -125,7 +127,11 @@ export const CompanyListScreen = () => {
                             {
                                 icon: IconName.delete,
                                 iconColor: theme.colors.error,
-                                onPress: () => console.log('Usuwanie firmy'),
+                                onPress: () =>
+                                    showSnackbar(
+                                        'Aktualnie usuwanie firmy jest niedostępne.',
+                                        'error'
+                                    ),
                             },
                         ]}
                     />

@@ -1,6 +1,5 @@
-// AppCheckboxGroup.tsx
 import React from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable, Text, Dimensions } from 'react-native';
 import { AppText } from './AppText';
 import { useAppTheme } from '../../context/AppThemeContext';
 import { metrics } from '../../theme/metrics';
@@ -14,59 +13,83 @@ interface AppCheckboxGroupProps<T = string> {
     options: CheckboxOption<T>[];
     selectedValue: T;
     onChange: (value: T) => void;
-    horizontal?: boolean;
+    numColumns?: number;
+    errorMessage?: string;
 }
 
 export const AppCheckboxGroup = <T extends string>({
     options,
     selectedValue,
     onChange,
-    horizontal = false,
+    numColumns = 1,
+    errorMessage = '',
 }: AppCheckboxGroupProps<T>) => {
     const { colors } = useAppTheme();
 
+    const styles = StyleSheet.create({
+        container: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            marginHorizontal: -metrics.spacing.xs,
+        },
+        optionWrapper: {
+            width: `${100 / numColumns}%`,
+            paddingHorizontal: metrics.spacing.xs,
+            marginBottom: metrics.spacing.sm,
+        },
+        optionRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: metrics.spacing.sm,
+            paddingVertical: metrics.spacing.xs,
+        },
+        checkbox: {
+            width: 20,
+            height: 20,
+            borderRadius: metrics.radius.sm,
+            borderWidth: 2,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        errorContainer: {
+            marginTop: metrics.spacing.xs,
+            minHeight: metrics.spacing.md,
+        },
+        errorText: {
+            color: colors.error,
+            fontSize: metrics.text.small,
+        },
+    });
+
     return (
-        <View
-            style={[
-                horizontal && { flexDirection: 'row', flexWrap: 'wrap', gap: metrics.spacing.md },
-            ]}
-        >
+        <View style={styles.container}>
             {options.map((option) => (
-                <Pressable
-                    key={String(option.value)}
-                    style={[styles.optionRow, horizontal && { marginRight: metrics.spacing.md }]}
-                    onPress={() => onChange(option.value)}
-                >
-                    <View
-                        style={[
-                            styles.checkbox,
-                            {
-                                backgroundColor:
-                                    selectedValue === option.value ? colors.primary : 'transparent',
-                                borderColor: colors.primary,
-                            },
-                        ]}
-                    />
-                    <AppText>{option.label}</AppText>
-                </Pressable>
+                <View key={String(option.value)} style={styles.optionWrapper}>
+                    <Pressable style={styles.optionRow} onPress={() => onChange(option.value)}>
+                        <View
+                            style={[
+                                styles.checkbox,
+                                {
+                                    backgroundColor:
+                                        selectedValue === option.value
+                                            ? colors.primary
+                                            : 'transparent',
+                                    borderColor: colors.primary,
+                                },
+                            ]}
+                        />
+                        <AppText numberOfLines={1} style={{ flex: 1 }}>
+                            {option.label}
+                        </AppText>
+                    </Pressable>
+                </View>
             ))}
+
+            {errorMessage ? (
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{errorMessage}</Text>
+                </View>
+            ) : null}
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    optionRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: metrics.spacing.sm,
-        gap: metrics.spacing.sm,
-    },
-    checkbox: {
-        width: 20,
-        height: 20,
-        borderRadius: metrics.radius.sm,
-        borderWidth: 2,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-});
