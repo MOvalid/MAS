@@ -31,6 +31,7 @@ export interface OrderTableData {
     customer: string;
     company: string;
     status: string;
+    statusLabel: string;
     seller: string;
     invoiceNumber: string;
 }

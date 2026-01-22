@@ -9,10 +9,10 @@ import { useTheme } from 'react-native-paper';
 import { AppAutocomplete } from '../AppAutocomplete';
 import { CreateOrderItem } from '@/types/dto';
 
-type ProductOption = {
+export type ProductOption = {
     label: string;
     value: string;
-    unitPrice?: number;
+    unitPrice: number;
 };
 
 type Props = {
@@ -22,6 +22,7 @@ type Props = {
     onSearchProduct?: (query: string) => void;
     isLoading?: boolean;
     editable?: boolean;
+    errorMessage?: string;
 };
 
 export const OrderProductInputCard: React.FC<Props> = ({
@@ -31,6 +32,7 @@ export const OrderProductInputCard: React.FC<Props> = ({
     onSearchProduct,
     isLoading,
     editable = false,
+    errorMessage = '',
 }) => {
     const theme = useTheme();
     const [selectedProduct, setSelectedProduct] = useState<ProductOption | undefined>();
@@ -39,7 +41,7 @@ export const OrderProductInputCard: React.FC<Props> = ({
 
     useEffect(() => {
         if (selectedProduct) {
-            setUnitPrice(selectedProduct.unitPrice ?? 0);
+            setUnitPrice(selectedProduct.unitPrice);
         }
     }, [selectedProduct]);
 
@@ -107,12 +109,13 @@ export const OrderProductInputCard: React.FC<Props> = ({
                             onChange={setSelectedProduct}
                             onInputChange={onSearchProduct}
                             placeholder="Szukaj produktu..."
+                            errorMessage={errorMessage}
                         />
                     </View>
 
                     <View style={styles.detailsRow}>
                         <View style={styles.inputWrapper}>
-                            <AppText variant="bodySmall" style={styles.labelText}>
+                            <AppText variant="bodyLarge" style={styles.labelText}>
                                 Ilość
                             </AppText>
                             <AppNumberInput
@@ -125,7 +128,7 @@ export const OrderProductInputCard: React.FC<Props> = ({
                         </View>
 
                         <View style={styles.inputWrapper}>
-                            <AppText variant="bodySmall" style={styles.labelText}>
+                            <AppText variant="bodyLarge" style={styles.labelText}>
                                 Cena jedn.
                             </AppText>
                             <AppCurrencyInput

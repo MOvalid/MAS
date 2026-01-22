@@ -1,5 +1,5 @@
 import { Address } from './address';
-import { Order } from '.';
+import { Order2 } from '.';
 
 export interface Customer {
     id: string; // UUID
@@ -8,10 +8,10 @@ export interface Customer {
     email?: string;
     phoneNumber?: string;
     address: Address;
-    orders: Order[] | null;
+    orders: Order2[] | null;
 };
 
-export interface CustomerTableRow {
+export interface CustomerTableData {
     id: string;
     lp: string;
     firstName: string;

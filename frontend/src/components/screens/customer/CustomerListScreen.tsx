@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import { AppButton, AppText, IconName } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { ClientListFilters } from '../client/ClientListFilters';
 import { useCustomers, useCustomerTableData } from '@/composables/customer/useCustomers';
-import { AppTable } from '@/components/common/table';
+import { AppTable, TableColumn } from '@/components/common/table';
 import { CustomerSort } from '@/types/common';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
+import { CustomerTableData } from '@/types/domain';
+import { useSnackbar } from '@/context/SnackbarContext';
 
 export const CustomerListScreen = () => {
     const navigation = useNavigation();
+    const theme = useTheme();
+    const { showSnackbar } = useSnackbar();
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState<CustomerSort>('ALPHA_ASC');
 
@@ -25,7 +29,7 @@ export const CustomerListScreen = () => {
         error,
         refetch,
         setFilters,
-    } = useCustomers(true, { search, sortBy: sort });
+    } = useCustomers(true, { search, sorting: sort });
 
     const tableData = useCustomerTableData(customers, page, limit);
 
@@ -39,11 +43,14 @@ export const CustomerListScreen = () => {
 
     const onPrevious = () => setPage((p) => Math.max(1, p - 1));
     const onNext = () => setPage((p) => Math.min(Math.ceil(total / limit), p + 1));
+    const handleRowPress = (item: CustomerTableData) => {
+        navigation.navigate('CustomerDetails', { id: item.id });
+    };
 
     useEffect(() => {
         setFilters({
-            search: search,
-            sortBy: sort,
+            search: search.trim(),
+            sorting: sort,
         });
     }, [search, sort, setFilters]);
 
@@ -69,6 +76,15 @@ export const CustomerListScreen = () => {
             alignItems: 'center',
         },
     });
+
+    const columns: TableColumn<CustomerTableData>[] = [
+        { key: 'lp', title: 'Lp.', flex: 0.3 },
+        { key: 'firstName', title: 'Imię', flex: 1 },
+        { key: 'lastName', title: 'Nazwisko', flex: 1 },
+        { key: 'email', title: 'Email', flex: 1.2 },
+        { key: 'phone', title: 'Telefon', flex: 1 },
+        { key: 'address', title: 'Adres', flex: 1.5 },
+    ];
 
     if (error) {
         return <ErrorMessage error={error} onRetry={refetch} onBack={() => navigation.goBack()} />;
@@ -97,43 +113,44 @@ export const CustomerListScreen = () => {
                 ]}
             />
 
-            {loading && page === 1 ? (
+            {loading ? (
                 <View style={styles.center}>
                     <ActivityIndicator size="large" />
                 </View>
             ) : (
-                <AppTable
-                    columns={[
-                        { key: 'lp', title: 'Lp.', flex: 0.3 },
-                        { key: 'firstName', title: 'Imię', flex: 1 },
-                        { key: 'lastName', title: 'Nazwisko', flex: 1 },
-                        { key: 'email', title: 'Email', flex: 1.2 },
-                        { key: 'phone', title: 'Telefon', flex: 1 },
-                        { key: 'address', title: 'Adres', flex: 1.5 },
-                    ]}
-                    data={tableData}
-                    actions={(row) => [
-                        {
-                            icon: IconName.edit,
-                            onPress: () => navigation.navigate('CustomerEdit', { id: row.id }),
-                        },
-                        {
-                            icon: IconName.delete,
-                            onPress: () => console.log('Usuwanie klienta'),
-                        },
-                    ]}
-                />
-            )}
-
-            {tableData.length > 0 && !loading && (
-                <View style={styles.paginationRow}>
-                    <AppPaginationControls
-                        page={page}
-                        totalPages={Math.max(1, Math.ceil(total / limit))}
-                        onPrevious={onPrevious}
-                        onNext={onNext}
+                <>
+                    <AppTable
+                        columns={columns}
+                        data={tableData}
+                        onRowPress={handleRowPress}
+                        actions={(row) => [
+                            {
+                                icon: IconName.edit,
+                                onPress: () => navigation.navigate('CustomerEdit', { id: row.id }),
+                            },
+                            {
+                                icon: IconName.delete,
+                                iconColor: theme.colors.error,
+                                onPress: () =>
+                                    showSnackbar(
+                                        'Aktualnie usuwanie firmy jest niedostępne.',
+                                        'error'
+                                    ),
+                            },
+                        ]}
                     />
-                </View>
+
+                    {customers.length > 0 && (
+                        <View style={styles.paginationRow}>
+                            <AppPaginationControls
+                                page={page}
+                                totalPages={Math.max(1, Math.ceil(total / limit))}
+                                onPrevious={onPrevious}
+                                onNext={onNext}
+                            />
+                        </View>
+                    )}
+                </>
             )}
         </ScrollView>
     );

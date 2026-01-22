@@ -1,4 +1,4 @@
-import { Company, CompanyTableRow } from '@/types/domain/company';
+import { Company, CompanyTableData } from '@/types/domain/company';
 import { API_COMPANIES } from '@/constants/Endpoints';
 import { usePaginated } from '../pagination/usePagination';
 import { useCreate } from '../common/useCreate';
@@ -79,7 +79,7 @@ export const useCompanyTableData = (
     companyDtos: Company[],
     page: number = 1,
     limit: number = 10
-): CompanyTableRow[] => {
+): CompanyTableData[] => {
     return useMemo(() => {
         return companyDtos.map((dto, index) => mapCompanyToTableRow(dto, index, page, limit));
     }, [companyDtos, page, limit]);

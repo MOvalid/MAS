@@ -6,33 +6,33 @@ export enum Currency {
 }
 
 export enum InvoiceStatus {
-    ALL = 'ALL',
-    DRAFT = 'DRAFT',
-    SENT = 'SENT',
-    PAID = 'PAID',
-    OVERDUE = 'OVERDUE',
-    CANCELLED = 'CANCELLED',
+    ALL = 'All',
+    DRAFT = 'Draft',
+    SENT = 'Sent',
+    PAID = 'Paid',
+    OVERDUE = 'Overdue',
+    CANCELLED = 'Cancelled',
 }
 
 export enum OrderStatus {
-    ALL = 'ALL',
-    DRAFT = 'DRAFT',
-    PAYMENT_PENDING = 'PAYMENT_PENDING',
-    PAID = 'PAID',
-    PROCESSING = 'PROCESSING',
-    SHIPPED = 'SHIPPED',
-    DELIVERED = 'DELIVERED',
-    CANCELLED = 'CANCELLED',
-    RETURNED = 'RETURNED',
+    ALL = 'All',
+    DRAFT = 'Draft',
+    PAYMENT_PENDING = 'PendingPayment',
+    PAID = 'Paid',
+    PROCESSING = 'Processing',
+    SHIPPED = 'Shipped',
+    DELIVERED = 'Delivered',
+    CANCELLED = 'Cancelled',
+    RETURNED = 'Returned',
 }
 
 export enum PaymentStatus {
-    PENDING = 'PENDING',
-    PROCESSING = 'PROCESSING',
-    COMPLETED = 'COMPLETED',
-    FAILED = 'FAILED',
-    REFUNDED = 'REFUNDED',
-    CANCELLED = 'CANCELLED',
+    PENDING = 'Pending',
+    PROCESSING = 'Processing',
+    COMPLETED = 'Completed',
+    FAILED = 'Failed',
+    REFUNDED = 'Refunded',
+    CANCELLED = 'Cancelled',
 }
 
 export enum PaymentMethod {
@@ -95,10 +95,10 @@ export const PAYMENT_METHODS = PAYMENT_METHOD_VALUES.map((m) => ({
 }));
 
 export const PAYMENT_SUMMARY_LABELS = {
-    PAID: 'OPŁACONE',
-    PARTIAL: 'CZĘŚCIOWE',
-    NONE: 'BRAK WPŁAT',
-    OVERPAID: 'NADPŁATA',
+    PAID: 'Opłacone',
+    PARTIAL: 'Częściowe',
+    NONE: 'Brak wpłat',
+    OVERPAID: 'Nadpłata',
 } as const;
 
 export const ORDER_SORT_OPTIONS = [
@@ -114,14 +114,9 @@ export type ProductSort =
     | 'MANUFACTURER_ASC'
     | 'MANUFACTURER_ASC'
     | 'PRICE_ASC'
-    | 'PRICE_DESC';
-export type StockProductSortOption =
-    | 'NAME_ASC'
-    | 'NAME_DESC'
-    | 'MANUFACTURER_ASC'
-    | 'MANUFACTURER_ASC'
-    | 'PRICE_ASC'
-    | 'PRICE_DESC';
+    | 'PRICE_DESC'
+    | 'STOCK_ASC'
+    | 'STOCK_DESC';
 export type OrderSort = 'CLIENT_ASC' | 'CLIENT_DESC' | 'CREATED_ASC' | 'CREATED_DESC';
 export type CustomerSort = 'ALPHA_ASC' | 'ALPHA_DESC';
 export type CompanySort = 'ALPHA_ASC' | 'ALPHA_DESC';

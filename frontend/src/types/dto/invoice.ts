@@ -9,6 +9,9 @@ export interface InvoiceDto {
     issuedAt: string; // ISO datetime
     status: string;
     paymentDueDate: string; // ISO datetime
+    totalNetPrice: number;
+    totalVatAmount: number;
+    totalGrossPrice: number;
 }
 
 export interface InvoiceDetailsDto {
@@ -23,7 +26,7 @@ export interface InvoiceDetailsDto {
 
 
 export interface CreateInvoicePayload {
-    companyId: string;
+    companyId?: string;
     orderId: string;
 }
 

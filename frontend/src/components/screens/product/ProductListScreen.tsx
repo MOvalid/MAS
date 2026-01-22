@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { metrics } from '@/theme/metrics';
 import { AppButton, AppText, IconName } from '@/components/common';
 import { AppTable, TableColumn } from '@/components/common/table/AppTable';
@@ -12,7 +12,9 @@ import { RootStackParamList } from '@/types/dto/auth';
 import { useCategories } from '@/composables/category';
 import { useProducts, useProductTableData } from '@/composables/product/useProducts';
 import { ProductTableData } from '@/types/domain';
-import { useDebounce } from '@/hooks/useDebounce';
+import { ErrorMessage } from '@/components/common/AppStageMessage';
+import { useTheme } from 'react-native-paper';
+import { useSnackbar } from '@/context/SnackbarContext';
 
 export const ProductListScreen = () => {
     const [search, setSearch] = useState('');
@@ -21,27 +23,29 @@ export const ProductListScreen = () => {
     const [sort, setSort] = useState<ProductSort>('NAME_ASC');
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const theme = useTheme();
+    const { showSnackbar } = useSnackbar();
 
     const { data: categories, loading: categoriesLoading } = useCategories();
     const {
         data: products,
         page,
+        error,
+        refetch,
         setPage,
         total,
         limit,
         loading,
         setFilters,
-    } = useProducts(true, { search, sortBy: sort });
-
-    const debouncedSearch = useDebounce(search, 500);
+    } = useProducts(true, { search, sorting: sort });
 
     useEffect(() => {
         setFilters({
-            search: debouncedSearch,
-            sortBy: sort,
+            search: search.trim(),
+            sorting: sort,
             categoryId: category === 'ALL' ? undefined : category,
         });
-    }, [debouncedSearch, sort, category]);
+    }, [search, sort, category]);
 
     const tableData = useProductTableData(products, page, limit);
 
@@ -70,6 +74,10 @@ export const ProductListScreen = () => {
         { key: 'grossPrice', title: 'Cena brutto', flex: 0.75, align: 'center' },
         { key: 'currency', title: 'Waluta', flex: 0.5, align: 'center' },
     ];
+
+    if (error) {
+        return <ErrorMessage error={error} onRetry={refetch} onBack={() => navigation.goBack()} />;
+    }
 
     return (
         <ScrollView style={styles.container}>
@@ -101,32 +109,44 @@ export const ProductListScreen = () => {
                     setPage(1);
                 }}
             />
-
-            <AppTable
-                columns={columns}
-                data={tableData}
-                onRowPress={handleRowPress}
-                actions={(row) => [
-                    {
-                        icon: IconName.edit,
-                        onPress: () => navigation.navigate('ProductEdit', { id: row.id }),
-                    },
-                    {
-                        icon: IconName.delete,
-                        onPress: () => console.log('Usuwanie produktu'),
-                    },
-                ]}
-            />
-
-            {products.length > 0 && !loading && (
-                <View style={styles.paginationRow}>
-                    <AppPaginationControls
-                        page={page}
-                        totalPages={Math.max(1, Math.ceil(total / limit))}
-                        onPrevious={onPrevious}
-                        onNext={onNext}
-                    />
+            {loading ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" />
                 </View>
+            ) : (
+                <>
+                    <AppTable
+                        columns={columns}
+                        data={tableData}
+                        onRowPress={handleRowPress}
+                        actions={(row) => [
+                            {
+                                icon: IconName.edit,
+                                onPress: () => navigation.navigate('ProductEdit', { id: row.id }),
+                            },
+                            {
+                                icon: IconName.delete,
+                                iconColor: theme.colors.error,
+                                onPress: () =>
+                                    showSnackbar(
+                                        'Nie można usunąć tego produktu, ponieważ znajduje się on w historii zamówień klientów.',
+                                        'error'
+                                    ),
+                            },
+                        ]}
+                    />
+
+                    {products.length > 0 && (
+                        <View style={styles.paginationRow}>
+                            <AppPaginationControls
+                                page={page}
+                                totalPages={Math.max(1, Math.ceil(total / limit))}
+                                onPrevious={onPrevious}
+                                onNext={onNext}
+                            />
+                        </View>
+                    )}
+                </>
             )}
         </ScrollView>
     );
@@ -134,6 +154,11 @@ export const ProductListScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, gap: metrics.spacing.lg },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getFriendlyErrorMessage } from '@/utils/error-utils';
 
@@ -22,6 +22,14 @@ export const useCreate = <TCreate, TDomain, TDto>({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const onSuccessRef = useRef(onSuccess);
+    const onErrorRef = useRef(onError);
+
+    useEffect(() => {
+        onSuccessRef.current = onSuccess;
+        onErrorRef.current = onError;
+    }, [onSuccess, onError]);
+
     const create = useCallback(
         async (payload: TCreate): Promise<TDomain | null> => {
             if (!api) return null;
@@ -32,23 +40,31 @@ export const useCreate = <TCreate, TDomain, TDto>({
             try {
                 const requestData = transformRequest ? transformRequest(payload) : payload;
                 const response = await api.post<TDto>(endpoint, requestData);
-
+                console.log('[useCreate] Response received successfully!');
+                if (!response) throw new Error('No response from API');
+                console.log(response.data as unknown as TDomain);
+                console.log(transformResponse);
                 const domainData = transformResponse
                     ? transformResponse(response.data)
                     : (response.data as unknown as TDomain);
-
-                onSuccess?.(domainData);
+                console.log('[useCreate] Domain data retrieved successfully!');
+                onSuccessRef.current?.(domainData);
+                console.log('[useCreate] onSuccess()');
                 return domainData;
             } catch (err) {
-                const errorMsg = getFriendlyErrorMessage(err).message || 'Błąd zapisu';
+                const errorObj = getFriendlyErrorMessage(err);
+                const errorMsg = errorObj.message || 'Błąd zapisu';
+
                 setError(errorMsg);
-                onError?.(errorMsg);
+                onErrorRef.current?.(errorMsg);
+                console.log(errorMsg);
+                console.log('[useCreate] onError()');
                 return null;
             } finally {
                 setLoading(false);
             }
         },
-        [api, endpoint, onSuccess, onError, transformResponse]
+        [api, endpoint, transformRequest, transformResponse]
     );
 
     return { create, loading, error };

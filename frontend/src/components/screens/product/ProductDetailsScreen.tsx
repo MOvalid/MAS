@@ -28,7 +28,7 @@ export const ProductDetailsScreen = () => {
         () => {
             setDeleteModalVisible(false);
             navigation.goBack();
-            // Opcjonalnie: Alert.alert('Sukces', 'Produkt został usunięty');
+            Alert.alert('Sukces', 'Produkt został usunięty');
         },
         (err) => {
             Alert.alert('Błąd', err);
@@ -158,7 +158,7 @@ export const ProductDetailsScreen = () => {
                         {product.manufacturer && (
                             <DetailRow
                                 label="Producent:"
-                                value={product.manufacturer}
+                                value={product.manufacturer.name}
                                 styles={styles}
                             />
                         )}

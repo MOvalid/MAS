@@ -3,12 +3,14 @@ import { Order2 } from './order';
 
 export type InvoiceTableData = {
     lp: string;
+    id: string
     issuedAt: string;
     orderId: string;
     paymentDueDate: string;
     invoiceNumber: string;
-    totalGrossPrice: number;
+    totalGrossPrice: string;
     currency: string;
+    statusLabel: string;
     status: string;
 };
 
@@ -20,6 +22,9 @@ export interface Invoice {
     issuedAt: string; // ISO datetime
     status: string;
     paymentDueDate: string; // ISO datetime
+    totalNetPrice: number;
+    totalVatAmount: number;
+    totalGrossPrice: number;
 }
 
 export interface InvoiceDetails {
@@ -30,4 +35,5 @@ export interface InvoiceDetails {
     issuedAt: string; // ISO datetime
     paymentDueDate: string; // ISO datetime
     status: string;
+    statusLabel: string;
 }

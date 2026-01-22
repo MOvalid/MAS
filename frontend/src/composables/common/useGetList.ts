@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getFriendlyErrorMessage } from '@/utils/error-utils';
 import { useDebounce } from '@/hooks/useDebounce';
+import { PaginatedResponse } from '../pagination/usePagination';
 
 export interface UseGetListOptions<TDomain, TDto = TDomain> {
     endpoint: string;
@@ -28,12 +29,10 @@ export const useGetList = <TDomain, TDto = TDomain>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [filters, setFiltersState] = useState<Record<string, any>>(initialFilters);
 
-    // ✅ Use ref to store stable references to callbacks
     const onSuccessRef = useRef(onSuccess);
     const onErrorRef = useRef(onError);
     const transformResponseRef = useRef(transformResponse);
 
-    // Update refs when callbacks change
     useEffect(() => {
         onSuccessRef.current = onSuccess;
     }, [onSuccess]);
@@ -63,11 +62,23 @@ export const useGetList = <TDomain, TDto = TDomain>({
         console.log(`[useGetList] Fetching ${endpoint}`, activeFilters);
 
         try {
-            const response = await api.get<TDto[]>(endpoint, { params: activeFilters });
+            const response = await api.get<PaginatedResponse<TDto> | TDto[]>(endpoint, {
+                params: activeFilters,
+            });
+            const responseData = response.data;
+            let rawData: TDto[];
+
+            if (responseData && !Array.isArray(responseData) && 'items' in responseData) {
+                rawData = responseData.items;
+            } else if (Array.isArray(responseData)) {
+                rawData = responseData;
+            } else {
+                rawData = [];
+            }
 
             const domainData = transformResponseRef.current
-                ? transformResponseRef.current(response.data)
-                : (response.data as unknown as TDomain[]);
+                ? transformResponseRef.current(rawData)
+                : (rawData as unknown as TDomain[]);
 
             console.log(`[useGetList] Success, fetched ${domainData.length} items`);
             setData(domainData);

@@ -61,7 +61,8 @@ export const SnackbarProvider: React.FC<SnackbarProviderProps> = ({ children }) 
 const createStyles = (theme: MD3Theme) =>
     StyleSheet.create({
         snackbar: {
-            position: Platform.OS === 'web' ? 'fixed' : 'absolute',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            position: (Platform.OS === 'web' ? 'fixed' : 'absolute') as any,
             top: metrics.spacing.xl,
             alignSelf: 'center',
             width: Platform.OS === 'web' ? '40%' : '90%',
@@ -70,7 +71,7 @@ const createStyles = (theme: MD3Theme) =>
             zIndex: 9999,
         },
         snackbarText: {
-            ...theme.fonts.bodySmall,
+            ...theme.fonts.bodyMedium,
             textAlign: 'center',
         },
         success: { backgroundColor: theme.colors.inverseSurface },

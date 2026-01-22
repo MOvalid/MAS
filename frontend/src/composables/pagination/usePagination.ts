@@ -5,12 +5,12 @@ import { useDebounce } from '@/hooks/useDebounce';
 
 export interface PaginatedResponse<T> {
     items: T[];
-    total: number;
+    totalCount: number;
 }
 
 export type BaseFilters<TSort> = {
     search?: string;
-    sortBy?: TSort;
+    sorting?: TSort;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 };
@@ -64,14 +64,15 @@ export function usePaginated<T, TSort>({
         try {
             const response = await api.get<PaginatedResponse<T>>(endpoint, {
                 params: {
-                    page,
-                    limit,
+                    page: page,
+                    limit: limit,
+                    search: debouncedFilters.search,
                     ...debouncedFilters,
                 },
             });
 
             setItems(response.data.items ?? []);
-            setTotal(response.data.total ?? 0);
+            setTotal(response.data.totalCount ?? 0);
         } catch (err: unknown) {
             console.error(`[usePaginated] Error fetching ${endpoint}:`, err);
             const friendly = getFriendlyErrorMessage(err);

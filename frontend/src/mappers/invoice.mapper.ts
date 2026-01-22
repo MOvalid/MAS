@@ -5,6 +5,8 @@ import { Invoice, InvoiceDetails, InvoiceTableData } from '@/types/domain';
 import { mapOrderDto2ToDomain } from './order.mapper';
 import { mapCompanyDtoToDomain } from './company.mapper';
 import { INVOICE_STATUS_LABELS, InvoiceStatus } from '@/types/common';
+import { formatPolishDate } from '@/utils/formatters';
+import { formatPrice } from '@/utils/price-utils';
 
 export const mapInvoiceDtoToDomain = (dto: InvoiceDto): Invoice => {
     return {
@@ -15,6 +17,9 @@ export const mapInvoiceDtoToDomain = (dto: InvoiceDto): Invoice => {
         issuedAt: dto.issuedAt,
         status: dto.status,
         paymentDueDate: dto.paymentDueDate,
+        totalNetPrice: dto.totalNetPrice,
+        totalVatAmount: dto.totalVatAmount,
+        totalGrossPrice: dto.totalGrossPrice,
     };
 };
 
@@ -22,7 +27,8 @@ export const mapInvoiceDetailsDtoToDomain = (dto: InvoiceDetailsDto): InvoiceDet
     return {
         id: dto.id,
         invoiceNumber: dto.invoiceNumber,
-        status: dto.status,
+        status: dto.status as InvoiceStatus,
+        statusLabel: INVOICE_STATUS_LABELS[dto.status as InvoiceStatus],
         issuedAt: dto.issuedAt,
         paymentDueDate: dto.paymentDueDate,
         order: mapOrderDto2ToDomain(dto.order),
@@ -30,23 +36,24 @@ export const mapInvoiceDetailsDtoToDomain = (dto: InvoiceDetailsDto): InvoiceDet
     };
 };
 
-
 export const mapInvoiceToTableData = (
-    domain: Invoice, 
-    index: number, 
-    page: number = 1, 
+    domain: Invoice,
+    index: number,
+    page: number = 1,
     limit: number = 10
 ): InvoiceTableData => {
     const lp = (page - 1) * limit + index + 1;
 
     return {
         lp: lp.toString(),
+        id: domain.id,
         invoiceNumber: domain.invoiceNumber,
         orderId: domain.orderId,
-        issuedAt: domain.issuedAt,
-        paymentDueDate: domain.paymentDueDate,
-        status: INVOICE_STATUS_LABELS[domain.status as InvoiceStatus],
-        totalGrossPrice: 0, 
+        issuedAt: formatPolishDate(domain.issuedAt, false),
+        paymentDueDate: formatPolishDate(domain.paymentDueDate, false),
+        status: domain.status as InvoiceStatus,
+        statusLabel: INVOICE_STATUS_LABELS[domain.status as InvoiceStatus],
+        totalGrossPrice: formatPrice(domain.totalGrossPrice),
         currency: 'PLN',
     };
 };

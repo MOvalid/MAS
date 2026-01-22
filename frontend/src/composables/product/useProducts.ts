@@ -2,10 +2,16 @@ import { useCallback, useMemo } from 'react';
 import {
     mapProductDetailsDtoToDomain,
     mapProductDtoToDomain,
-    mapProductToTableRow,
+    mapProductToStockTableData,
+    mapProductToTableData,
 } from '@/mappers/product.mapper';
 import { API_PRODUCTS } from '@/constants/Endpoints';
-import { Product, ProductDetails, ProductTableData } from '@/types/domain/product';
+import {
+    Product,
+    ProductDetails,
+    ProductTableData,
+    StockProductTableData,
+} from '@/types/domain/product';
 import {
     CreateProductPayload,
     ProductDetailsDto,
@@ -19,7 +25,6 @@ import { useGet } from '../common/useGet';
 import { usePaginated } from '../pagination/usePagination';
 import { ProductSort } from '@/types/common';
 import { useGetList } from '../common/useGetList';
-import { useDebounce } from '@/hooks/useDebounce';
 
 export const useCreateProduct = (
     onSuccess?: (productDetails: ProductDetails) => void,
@@ -106,6 +111,16 @@ export const useProductTableData = (
     limit: number = 10
 ): ProductTableData[] => {
     return useMemo(() => {
-        return products.map((dto, index) => mapProductToTableRow(dto, index, page, limit));
+        return products.map((dto, index) => mapProductToTableData(dto, index, page, limit));
+    }, [products, page, limit]);
+};
+
+export const useStockProductTableData = (
+    products: Product[],
+    page: number = 1,
+    limit: number = 10
+): StockProductTableData[] => {
+    return useMemo(() => {
+        return products.map((dto, index) => mapProductToStockTableData(dto, index, page, limit));
     }, [products, page, limit]);
 };

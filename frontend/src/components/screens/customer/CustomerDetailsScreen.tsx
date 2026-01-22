@@ -6,7 +6,6 @@ import { metrics } from '@/theme/metrics';
 import { useState } from 'react';
 import { AppModal } from '@/components/common/AppModal';
 import { LoadingScreen } from '../LoadingScreen';
-// Importujemy hooki domenowe dla Customer
 import { useCustomer, useDeleteCustomer } from '@/composables/customer/useCustomers';
 import { ErrorMessage, NotFoundMessage } from '@/components/common/AppStageMessage';
 
@@ -173,7 +172,7 @@ export const CustomerDetailsScreen = () => {
                         Adres:
                     </AppText>
                     <AppText variant="bodyLarge" style={styles.value}>
-                        {customer.address.street} {customer.address.number}
+                        {customer.address.street} {customer.address.houseNumber}
                         {'\n'}
                         {customer.address.postalCode} {customer.address.city}
                         {'\n'}

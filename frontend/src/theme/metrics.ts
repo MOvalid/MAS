@@ -22,7 +22,7 @@ export const metrics = {
         title: 24,
     },
     element: {
-        height: 48,
+        height: 56,
     },
     fontWeight: {
         regular: '400',

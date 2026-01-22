@@ -10,9 +10,10 @@ export interface ProductDto {
     netPrice: number;
     vatRate: number;
     stockQuantity: number;
+    stockLevel: string;
     categoryId: string;
+    lastRestockedAt: string;
 }
-
 
 export interface ProductDetailsDto {
     id: string;

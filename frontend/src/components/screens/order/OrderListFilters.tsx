@@ -24,8 +24,8 @@ interface OrderListFiltersProps {
     seller?: string;
     onSellerChange: (value: string) => void;
     sellerOptions?: { label: string; value: string }[];
-    sortBy: OrderSort;
-    onSortByChange: (value: OrderSort) => void;
+    sort: OrderSort;
+    onSortChange: (value: OrderSort) => void;
     dateError?: string | null;
 }
 
@@ -41,8 +41,8 @@ export const OrderListFilters: React.FC<OrderListFiltersProps> = ({
     seller,
     onSellerChange,
     sellerOptions,
-    sortBy,
-    onSortByChange,
+    sort,
+    onSortChange: onSortByChange,
     dateError,
 }) => {
     const theme = useTheme();
@@ -157,7 +157,7 @@ export const OrderListFilters: React.FC<OrderListFiltersProps> = ({
                         Sortowanie
                     </AppText>
                     <AppDropdown
-                        value={sortBy}
+                        value={sort}
                         onChange={(v) => onSortByChange(v as OrderSort)}
                         options={ORDER_SORT_OPTIONS}
                         fullWidth

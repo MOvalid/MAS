@@ -9,7 +9,7 @@ export interface Company {
     phoneNumber?: string;
 }
 
-export interface CompanyTableRow {
+export interface CompanyTableData {
     id: string;
     lp: string;
     name: string;

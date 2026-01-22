@@ -6,7 +6,6 @@ import { metrics } from '@/theme/metrics';
 import { useState } from 'react';
 import { AppModal } from '@/components/common/AppModal';
 import { formatNip } from '@/utils/formatters';
-// Importujemy hooki domenowe
 import { useCompany, useDeleteCompany } from '@/composables/company/useCompanies';
 import { LoadingScreen } from '../LoadingScreen';
 import { ErrorMessage, NotFoundMessage } from '@/components/common/AppStageMessage';
@@ -180,7 +179,7 @@ export const CompanyDetailsScreen = () => {
                         Adres:
                     </AppText>
                     <AppText variant="bodyLarge" style={styles.value}>
-                        {company.address.street} {company.address.number}
+                        {company.address.street} {company.address.houseNumber}
                         {'\n'}
                         {company.address.postalCode} {company.address.city}
                         {'\n'}

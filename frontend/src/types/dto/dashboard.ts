@@ -1,6 +1,24 @@
-export interface DailySummaryDto {
+export interface DailySummaryViewData {
     id: string;
-    key: 'dailyRevenue' | 'orders' | 'newCustomers' | 'invoicesSent' | 'stockProducts' | 'returns';
+    key:
+        | 'totalOrders'
+        | 'totalRevenue'
+        | 'totalInvoices'
+        | 'totalProductsSold'
+        | 'totalInvoicesIssued'
+        | 'averageOrderValue'
+        | 'averageProductsPerOrder';
     title: string;
     value: string;
 }
+
+export interface DailySummaryDto {
+    totalOrders: number;
+    totalRevenue: number;
+    totalInvoicesIssued: number;
+    totalProductsSold: number;
+    averageOrderValue: number;
+    averageProductsPerOrder: number;
+}
+
+

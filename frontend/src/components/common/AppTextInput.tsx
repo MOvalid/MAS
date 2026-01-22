@@ -54,6 +54,7 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
         borderRadius: metrics.radius.xl,
         backgroundColor: backgroundColor,
         opacity: disabled ? 0.5 : 1,
+        flex: 1,
     };
 
     const inputStyle: ViewStyle = {
@@ -99,8 +100,12 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
                 onChangeText={handleChangeText}
                 {...props}
                 right={
-                    !disabled && internalValue ? (
-                        <TextInput.Icon icon="close" onPress={() => handleChangeText('')} />
+                    !disabled ? (
+                        <TextInput.Icon 
+                            icon="close" 
+                            onPress={internalValue ? () => handleChangeText('') : undefined}
+                            color={internalValue ? undefined : 'transparent'} 
+                        />
                     ) : null
                 }
             />
@@ -130,7 +135,7 @@ const getStyles = (
             marginBottom: metrics.spacing[margin],
             borderRadius: metrics.radius.xl,
             backgroundColor: colors.secondaryContainer,
-            flexShrink: 1, // ważne w układzie flex
+            flexShrink: 1,
         },
         input: {
             flex: 1,

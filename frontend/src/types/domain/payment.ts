@@ -15,6 +15,7 @@ export interface PaymentTableData {
     method: string;
     amount: string;
     currency: string;
+    statusLabel: string;
     status: string;
     paymentDate: string;
 }

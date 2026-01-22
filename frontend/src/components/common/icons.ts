@@ -25,6 +25,8 @@ export const IconName = {
     lock: 'lock-outline',
     search: 'magnify',
     info: 'information-outline',
+    invoice: 'invoice-list-outline',
+    chevronDown: 'chevron-down'
 } as const;
 
 export type IconKey = keyof typeof IconName;

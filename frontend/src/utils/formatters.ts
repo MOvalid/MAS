@@ -48,7 +48,7 @@ export const formatTime = (date?: Date | null): string => {
  * @param withTime - Whether to include the time (default: true).
  * @returns A formatted date string according to the Polish locale.
  */
-export function formatPolishDate(isoString: string | null, withTime = true): string {
+export function formatPolishDate(isoString: string | null | undefined, withTime = true): string {
     if (!isoString) return '';
 
     const date = new Date(isoString);
@@ -150,7 +150,7 @@ export const formatNip = (nip: string | undefined): string => {
 export const formatAddressInline = (address?: Address | AddressDto | null): string => {
     if (!address) return '—';
 
-    const street = [address.street, address.number].filter(Boolean).join(' ');
+    const street = [address.street, address.houseNumber].filter(Boolean).join(' ');
     const city = [address.postalCode, address.city].filter(Boolean).join(' ');
 
     const parts = [street, city, address.country].filter(Boolean);
@@ -179,13 +179,30 @@ export const formatAddressInline = (address?: Address | AddressDto | null): stri
  * @returns Multiline formatted address string.
  */
 export const formatAddressMultiline = (address?: Address | AddressDto | null): string => {
-    if (!address) return '—';
+    if (!address) return 'Brak';
 
     const lines = [
-        [address.street, address.number].filter(Boolean).join(' '),
+        [address.street, address.houseNumber].filter(Boolean).join(' '),
         [address.postalCode, address.city].filter(Boolean).join(' '),
         address.country,
     ].filter(Boolean);
 
     return lines.length ? lines.join('\n') : '—';
 };
+
+export const formatPhoneNumber = (phone: string | number | undefined | null): string => {
+    if (!phone) return '-';
+
+    const cleaned = phone.toString().replace(/[^\d+]/g, '');
+
+    const match = cleaned.match(/^(?:\+48)?(\d{3})(\d{3})(\d{3})$/);
+
+    if (match) {
+        const prefix = cleaned.startsWith('+') ? '+48 ' : '';
+        return `${prefix}${match[1]} ${match[2]} ${match[3]}`;
+    }
+
+    return cleaned.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
+};
+
+

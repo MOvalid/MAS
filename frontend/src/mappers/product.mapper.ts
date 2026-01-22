@@ -4,20 +4,42 @@ import {
     ProductDetails,
     ProductTableData,
     ProductDimensions,
+    StockProductTableData,
 } from '../types/domain/product';
 import { ProductDto, ProductDetailsDto, UpdateProductPayload } from '../types/dto/product';
 import { mapCompanyDtoToDomain, mapCompanyToDto } from './company.mapper';
-import { ProductCategory } from '@/types/domain';
+import { Address, ProductCategory } from '@/types/domain';
+
+const emergencyCompany = {
+    id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', // UUID
+    name: 'Emergency company',
+    taxId: '12345678900',
+    address: {
+        street: 'Testowa',
+        houseNumber: '1',
+        city: 'Test',
+        postalCode: '00-000',
+        country: 'Polska',
+    } as Address,
+    email: 'emergency@google.com',
+    phone: '1234567890',
+};
 
 export const mapProductDtoToDomain = (dto: ProductDto): Product => {
     const vatAmount = calculateVat(dto.netPrice, dto.vatRate);
+    // if (dto.manufacturer) throw new Error('Manufacturer in ProductDto is null!');
+    if (!dto.manufacturer) console.error('Manufacturer is null');
+    const manufacturer = dto.manufacturer
+        ? mapCompanyDtoToDomain(dto.manufacturer)
+        : emergencyCompany;
     return {
         id: dto.id,
         name: dto.name,
         sku: dto.sku,
         stockQuantity: dto.stockQuantity,
+        stockLevel: dto.stockLevel,
         description: null,
-        manufacturer: mapCompanyDtoToDomain(dto.manufacturer),
+        manufacturer: manufacturer,
         categoryId: dto.categoryId,
         categoryName: null,
         netPrice: dto.netPrice,
@@ -25,7 +47,7 @@ export const mapProductDtoToDomain = (dto: ProductDto): Product => {
         vatAmount: vatAmount,
         grossPrice: dto.netPrice + vatAmount,
         currency: 'PLN',
-        lastRestockedAt: null,
+        lastRestockedAt: dto.lastRestockedAt,
     };
 };
 
@@ -37,6 +59,7 @@ export const mapProductDetailsDtoToDomain = (dto: ProductDetailsDto): ProductDet
         name: dto.name,
         sku: dto.sku,
         stockQuantity: dto.stockQuantity,
+        // stockLevel: dto.stockLevel,
         description: dto.description,
         categoryId: dto.category.id,
         category: dto.category as ProductCategory,
@@ -60,7 +83,9 @@ export const mapProductToDto = (product: Product): ProductDto => ({
     netPrice: product.netPrice,
     vatRate: product.vatRate,
     stockQuantity: product.stockQuantity,
+    stockLevel: product.stockLevel,
     categoryId: product.categoryId ?? '',
+    lastRestockedAt: product.lastRestockedAt,
 });
 
 export const mapProductToUpdatePayload = (
@@ -96,18 +121,7 @@ export const mapProductDetailsToUpdatePayload = (product: ProductDetails): Updat
     };
 };
 
-// export const mapProductToTableRow = (product: Product, index: number): ProductTableRow => ({
-//     lp: index + 1,
-//     id: product.id,
-//     name: product.name,
-//     categoryName: product.categoryName ?? 'Brak kategorii',
-//     price: formatPrice(product.grossPrice),
-//     currency: product.currency,
-//     available: product.stockQuantity > 0,
-//     stockQuantity: product.stockQuantity,
-// });
-
-export const mapProductToTableRow = (
+export const mapProductToTableData = (
     product: Product,
     index: number,
     page: number = 1,
@@ -121,10 +135,34 @@ export const mapProductToTableRow = (
         name: product.name,
         manufacturer: product.manufacturer.name,
         categoryId: product.categoryId || '',
-        netPrice: product.netPrice.toFixed(2),
-        grossPrice: product.grossPrice.toFixed(2),
+        netPrice: formatPrice(product.netPrice),
+        grossPrice: formatPrice(product.grossPrice),
         currency: 'PLN',
         available: product.stockQuantity > 0,
         stockQuantity: product.stockQuantity,
+    };
+};
+
+export const mapProductToStockTableData = (
+    product: Product,
+    index: number,
+    page: number = 1,
+    limit: number = 10
+): StockProductTableData => {
+    const rowNumber = (page - 1) * limit + index + 1;
+
+    return {
+        lp: rowNumber.toString(),
+        id: product.id,
+        name: product.name,
+        manufacturerName: product.manufacturer.name,
+        sku: product.sku,
+        stockQuantity: product.stockQuantity,
+        stockLevel: product.stockLevel,
+        unit: 'szt.',
+        netPrice: formatPrice(product.netPrice),
+        grossPrice: formatPrice(product.grossPrice),
+        currency: product.currency,
+        lastRestockedAt: product.lastRestockedAt || new Date().toISOString(),
     };
 };

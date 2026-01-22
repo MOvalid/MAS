@@ -15,12 +15,13 @@ export interface OrderItem {
 
 export interface OrderItemTableData {
     lp: string;
+    _index: number;
     product: string; // name
     quantity: number;
     unit: string;
     unitPrice: string;
     netPrice: string;
-    vat: string;
+    vatAmount: string;
     vatRate: string;
     grossPrice: string;
     currency: string;
