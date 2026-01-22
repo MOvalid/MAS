@@ -18,11 +18,11 @@ const breadcrumbConfig: BreadcrumbConfig = {
     Home: { label: 'Strona główna' },
 
     // Klienci
-    Client: { label: 'Klienci' },
-    ClientList: { label: 'Lista klientów', screen: 'Client', nested: 'ClientList' },
-    ClientAdd: { label: 'Dodanie klienta', screen: 'Client', nested: 'ClientAdd' },
-    ClientEdit: { label: 'Edycja klienta', screen: 'Client', nested: 'ClientEdit' },
-    ClientDetails: { label: 'Szczegóły klienta', screen: 'Client', nested: 'ClientDetails' },
+    Customer: { label: 'Klienci' },
+    CustomerList: { label: 'Lista klientów', screen: 'Customer', nested: 'CustomerList' },
+    CustomerAdd: { label: 'Dodanie klienta', screen: 'Customer', nested: 'CustomerAdd' },
+    CustomerEdit: { label: 'Edycja klienta', screen: 'Customer', nested: 'CustomerEdit' },
+    CustomerDetails: { label: 'Szczegóły klienta', screen: 'Customer', nested: 'CustomerDetails' },
 
     // Firmy
     Company: { label: 'Firmy' },

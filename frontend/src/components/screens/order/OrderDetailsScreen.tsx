@@ -1,119 +1,168 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
-
-import { AppText, AppCard, AppButton, IconName } from '@/components/common';
+import { AppText, AppCard, AppButton, IconName, InfoItem } from '@/components/common';
 import { AppModal } from '@/components/common/AppModal';
 import { AppTable, TableColumn } from '@/components/common/table';
 import { metrics } from '@/theme/metrics';
 import { formatAddressMultiline, formatPolishDate } from '@/utils/formatters';
-
 import { PaymentDto, DeliveryDto } from '@/types/dto';
 import {
-    ORDER_STATUS_LABELS,
-    OrderStatus,
     PAYMENT_SUMMARY_LABELS,
     PaymentMethod,
     PaymentSummaryStatus,
+    ORDER_STATUS_LABELS,
+    OrderStatus,
+    PaymentStatus,
 } from '@/types/common';
-import { OrderItemTableRow, PaymentTableRow } from '@/types/domain';
+import { Address, Delivery, OrderItemTableData, PaymentTableData } from '@/types/domain';
 import { formatPrice } from '@/utils/price-utils';
 import { AddEditDeliveryForm, AddEditPaymentForm } from '@/components/form';
 import { useOrderPaymentSummary } from '@/hooks/useOrderPaymentSummary';
 import { getPaymentStatusColor } from '@/utils/color-utils';
+import { useOrder } from '@/composables/orders/useOrders';
+import { ErrorScreen } from '../ErrorScreen';
+import { usePaymentTableData } from '@/composables/payment/usePayments';
+import { useOrderItemTableData } from '@/composables/orders/useOrderItems';
+import { LoadingScreen } from '../LoadingScreen';
+import { useOrderActions } from '@/hooks/useOrderActions';
+import { useCarrierOptions } from '@/composables/carrier/useCarriers';
 import { useSnackbar } from '@/context/SnackbarContext';
-import { mapPaymentListToTableRows } from '@/mappers/payment.mapper';
-import { getMockOrderSummary } from '@/utils/data-generator';
-import { mapOrderItemDtoListToTableRows } from '@/mappers/order.mapper';
+import { useGenerateInvoicePdf } from '@/composables/invoice/useInvoices';
 
-const mockOrder = getMockOrderSummary();
+const ITEMS_PER_PAGE = 10;
 
 export const OrderDetailsScreen = () => {
+    const route = useRoute();
     const navigation = useNavigation();
-    const { showSnackbar } = useSnackbar();
     const theme = useTheme();
+    const { showSnackbar } = useSnackbar();
+    const params = route.params as { id?: string } | undefined;
+    const id = params?.id || '';
+
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+    const [visibleProductsCount, setVisibleProductsCount] = useState(ITEMS_PER_PAGE);
     const [selectedPayment, setSelectedPayment] = useState<PaymentDto | null>(null);
-    const [selectedDelivery, setSelectedDelivery] = useState<DeliveryDto | null>(null);
+    const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
 
-    const order = mockOrder;
+    const { data: order, loading: orderLoading, error, refresh } = useOrder(id);
+    const { data: carriers } = useCarrierOptions(true, { name: '' });
 
-    const orderItemsData: OrderItemTableRow[] = useMemo(
-        () => mapOrderItemDtoListToTableRows(order.orderItems ?? []),
-        [order.orderItems]
+    const {
+        handleSavePayment,
+        handleCancelPayment,
+        handleSaveDelivery,
+        handleCreateInvoice,
+        handleDeleteOrder,
+        isLoading,
+    } = useOrderActions(id, '', refresh, order?.payments || []);
+
+    const { generatePdf, isGenerating: isDownloading } = useGenerateInvoicePdf(
+        () => showSnackbar('Faktura została pobrana', 'success'),
+        (err) => showSnackbar(err, 'error')
     );
-    const paymentsData: PaymentTableRow[] = useMemo(
-        () => mapPaymentListToTableRows(order.payments ?? []),
-        [order.payments]
+
+    const { orderTotal, paymentsTotal, remainingAmount, status, isOverpaid } =
+        useOrderPaymentSummary(order?.orderProducts || [], order?.payments || []);
+
+    const orderItemsData = useOrderItemTableData(order?.orderProducts || []);
+    const paymentsData = usePaymentTableData(order?.payments || []);
+    const carrierName = useMemo(() => {
+        if (!order?.delivery?.carrierId || !carriers) return '-';
+        const carrier = carriers.find((c) => c.id === order.delivery?.carrierId);
+        return carrier ? carrier.name : order.delivery.carrierId;
+    }, [order?.delivery?.carrierId, carriers]);
+
+    const paginatedProducts = useMemo(() => {
+        return orderItemsData.slice(0, visibleProductsCount);
+    }, [orderItemsData, visibleProductsCount]);
+
+    const hasMoreProducts = orderItemsData.length > visibleProductsCount;
+
+    const handleLoadMore = () => {
+        setVisibleProductsCount((prev) => prev + ITEMS_PER_PAGE);
+    };
+
+    const loading = orderLoading || isLoading || false;
+
+    const orderItemsColumns: TableColumn<OrderItemTableData>[] = useMemo(
+        () => [
+            { key: 'product', title: 'Produkt', flex: 3 },
+            { key: 'quantity', title: 'Ilość', align: 'center', flex: 0.25 },
+            { key: 'unit', title: 'Jdn.', align: 'right', flex: 0.25 },
+            { key: 'unitPrice', title: 'Cena netto', align: 'right', flex: 0.5 },
+            { key: 'grossPrice', title: 'Kwota brutto', align: 'right', flex: 0.5 },
+        ],
+        []
     );
 
-    const orderItemsColumns: TableColumn<OrderItemTableRow>[] = [
-        { key: 'product', title: 'Produkt', flex: 2 },
-        { key: 'quantity', title: 'Ilość', align: 'center', flex: 0.5 },
-        { key: 'unit', title: 'Jdn.', align: 'right', flex: 0.5 },
-        { key: 'unitPrice', title: 'Cena netto', align: 'right', flex: 0.75 },
-        { key: 'netPrice', title: 'Kwota netto', align: 'right', flex: 0.75 },
-        { key: 'vat', title: 'Kwota VAT', align: 'right', flex: 0.75 },
-        { key: 'vatRate', title: 'VAT', align: 'right', flex: 0.5 },
-        { key: 'grossPrice', title: 'Kwota brutto', align: 'right', flex: 0.8 },
-        { key: 'currency', title: 'Waluta', align: 'center', flex: 0.5 },
-    ];
+    const paymentColumns: TableColumn<PaymentTableData>[] = useMemo(
+        () => [
+            { key: 'method', title: 'Metoda', flex: 1.5 },
+            { key: 'amount', title: 'Kwota', align: 'right', flex: 1 },
+            { key: 'currency', title: 'Waluta', align: 'center', flex: 0.5 },
+            { key: 'statusLabel', title: 'Status', align: 'center', flex: 0.5 },
+            { key: 'paymentDate', title: 'Data', align: 'center', flex: 0.75 },
+        ],
+        []
+    );
 
-    const paymentColumns: TableColumn<PaymentTableRow>[] = [
-        { key: 'method', title: 'Metoda płatności', flex: 1.5 },
-        { key: 'amount', title: 'Kwota', align: 'right', flex: 1 },
-        { key: 'currency', title: 'Waluta', align: 'center', flex: 0.5 },
-        { key: 'status', title: 'Status', align: 'center', flex: 0.5 },
-        { key: 'paidAt', title: 'Data płatności', align: 'center', flex: 0.75 },
-    ];
-
-    const addPayment = () => {
-        setSelectedPayment(null);
-        setPaymentModalVisible(true);
+    const onEditPayment = (row: PaymentTableData) => {
+        const payment = order?.payments?.find((p) => p.id === row.id);
+        if (payment) {
+            setSelectedPayment(payment);
+            setPaymentModalVisible(true);
+        }
     };
 
-    const editPayment = (row: PaymentTableRow) => {
-        const selectedPayment = order.payments?.find((p) => p.id === row.id);
-        if (!selectedPayment) return;
-        setSelectedPayment(selectedPayment);
-        setPaymentModalVisible(true);
+    const onDownloadInvoice = () => {
+        if (order?.invoice?.id) {
+            generatePdf(order.invoice.id, order.invoice.invoiceNumber);
+        } else {
+            showSnackbar('Brak danych faktury', 'error');
+        }
     };
 
-    const cancelPayment = (row: PaymentTableRow) => showSnackbar('CANCEL PAYMENT', 'warning');
-
-    const editDelivery = () => {
-        if (!order.delivery) return;
-        setSelectedDelivery(order.delivery);
-        setDeliveryModalVisible(true);
-    };
-
-    const onClosePaymentModal = () => {
+    const onSavePayment = (amount: number, currency: string, method: PaymentMethod) => {
+        handleSavePayment(amount, currency, method, selectedPayment?.id);
         setPaymentModalVisible(false);
         setSelectedPayment(null);
     };
 
-    const onCloseDeliveryModal = () => {
+    const onSaveDelivery = (address: Address, carrier: string, tracking: string, date: string) => {
+        handleSaveDelivery(address, carrier, tracking, date, order?.delivery?.id);
         setDeliveryModalVisible(false);
-        setSelectedDelivery(null);
     };
 
-    const handleDelete = () => {
-        setDeleteModalVisible(false);
-        navigation.goBack();
+    const onAddPayment = () => {
+        setSelectedPayment(null);
+        setPaymentModalVisible(true);
     };
 
-    const { orderTotal, paymentsTotal, remainingAmount, status, isOverpaid } =
-        useOrderPaymentSummary(order.orderItems, order.payments);
+    if (loading && !order) return <LoadingScreen />;
+    if (error || !order)
+        return (
+            <ErrorScreen
+                title="Błąd pobierania"
+                message={error || 'Nie znaleziono zamówienia'}
+                onRetry={refresh}
+            />
+        );
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.contentContainer}
+            scrollEventThrottle={16}
+        >
+            {/* Nagłówek i Akcje Główne */}
             <View style={styles.headerRow}>
                 <View>
                     <AppText variant="headlineMedium">Zamówienie</AppText>
-
                     <AppText style={styles.subtitle}>ID: {order.id}</AppText>
                     <AppText style={styles.subtitle}>
                         Utworzono: {formatPolishDate(order.createdAt, false)}
@@ -121,110 +170,129 @@ export const OrderDetailsScreen = () => {
                 </View>
 
                 <View style={styles.buttonRow}>
-                    <View style={styles.buttonWrapper}>
+                    {!order.invoice && (
+                        <AppButton
+                            icon={IconName.invoice}
+                            mode="outlined"
+                            onPress={handleCreateInvoice}
+                            loading={isLoading}
+                        >
+                            Wystaw fakturę
+                        </AppButton>
+                    )}
+
+                    {order.invoice && (
                         <AppButton
                             icon={IconName.download}
-                            onPress={() => {
-                                console.log('Generowanie faktury...');
-                                showSnackbar('Generowanie faktury...');
-                            }}
+                            mode="outlined"
+                            onPress={onDownloadInvoice}
+                            loading={isDownloading}
                         >
-                            Pobierz fakturę
+                            Faktura
                         </AppButton>
-                    </View>
+                    )}
 
-                    <View style={styles.buttonWrapper}>
-                        <AppButton icon={IconName.edit} onPress={() => { }}>
-                            Edytuj zamówienie
-                        </AppButton>
-                    </View>
+                    <AppButton
+                        icon={IconName.edit}
+                        mode="contained"
+                        onPress={() => navigation.navigate('OrderEdit', { id: order.id })}
+                    >
+                        Edytuj
+                    </AppButton>
 
-                    <View style={styles.buttonWrapper}>
+                    {order.status === OrderStatus.DRAFT && (
                         <AppButton
                             icon={IconName.delete}
-                            onPress={() => setDeleteModalVisible(true)}
                             buttonColor={theme.colors.error}
+                            onPress={() => setDeleteModalVisible(true)}
                         >
-                            Usuń zamówienie
+                            Usuń
                         </AppButton>
-                    </View>
+                    )}
                 </View>
             </View>
 
-            <AppCard>
+            <AppCard style={styles.card}>
                 <AppText variant="titleLarge" style={styles.cardTitle}>
                     Informacje podstawowe
                 </AppText>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Status:{' '}
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {ORDER_STATUS_LABELS[order.status as OrderStatus] ?? order.status}
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Klient:{' '}
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {order.customer
+                <InfoItem
+                    label="Status"
+                    value={ORDER_STATUS_LABELS[order.status as OrderStatus] || order.status}
+                />
+                <InfoItem
+                    label="Klient"
+                    value={
+                        order.customer
                             ? `${order.customer.firstName} ${order.customer.lastName}`
-                            : '-'}
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Sprzedawca:{' '}
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {order.seller.firstName} {order.seller.lastName}
-                    </AppText>
-                </View>
+                            : '-'
+                    }
+                />
+                <InfoItem
+                    label="Sprzedawca"
+                    value={`${order.seller.firstName} ${order.seller.lastName}`}
+                />
             </AppCard>
 
             <AppCard>
                 <AppTable
                     title="Pozycje zamówienia"
                     columns={orderItemsColumns}
-                    data={orderItemsData}
+                    data={paginatedProducts}
                 />
+                {hasMoreProducts && (
+                    <View style={styles.loadMoreContainer}>
+                        <AppButton mode="text" icon={IconName.chevronDown} onPress={handleLoadMore}>
+                            Rozwiń kolejne{' '}
+                            {Math.min(ITEMS_PER_PAGE, orderItemsData.length - visibleProductsCount)}{' '}
+                            pozycji
+                        </AppButton>
+                        <AppText style={styles.paginationHint}>
+                            Wyświetlono {visibleProductsCount} z {orderItemsData.length}
+                        </AppText>
+                    </View>
+                )}
+
+                {!hasMoreProducts && orderItemsData.length > ITEMS_PER_PAGE && (
+                    <View style={styles.loadMoreContainer}>
+                        <AppButton
+                            mode="text"
+                            onPress={() => setVisibleProductsCount(ITEMS_PER_PAGE)}
+                        >
+                            Zwiń listę
+                        </AppButton>
+                    </View>
+                )}
             </AppCard>
 
             <AppCard>
-                <View style={styles.headerRow}>
-                    <AppText variant="titleLarge" style={{ marginBottom: metrics.spacing.lg }}>
-                        Płatności
-                    </AppText>
-
-                    <View style={styles.buttonRow}>
-                        <AppButton
-                            icon={IconName.payment}
-                            onPress={() => setPaymentModalVisible(true)}
-                        >
-                            Zarządzaj płatnościami
-                        </AppButton>
-                    </View>
+                <View style={styles.cardHeaderWithButton}>
+                    <AppText variant="titleLarge">Płatności</AppText>
+                    <AppButton icon={IconName.payment} onPress={onAddPayment}>
+                        Dodaj płatność
+                    </AppButton>
                 </View>
                 <AppTable
                     columns={paymentColumns}
                     data={paymentsData}
-                    actions={(row) => [
-                        {
-                            icon: IconName.edit,
-                            onPress: () => editPayment(row),
-                            tooltip: 'Edytuj płatność',
-                        },
-                        {
-                            icon: IconName.cancel,
-                            onPress: () => cancelPayment(row),
-                            iconColor: 'red',
-                            tooltip: 'Anuluj płatność',
-                        },
-                    ]}
+                    actions={(row) => {
+                        const isCompleted = row.status === PaymentStatus.COMPLETED;
+
+                        return [
+                            {
+                                icon: IconName.edit,
+                                iconColor: isCompleted ? 'transparent' : theme.colors.primary,
+                                onPress: () => !isCompleted && onEditPayment(row),
+                                disabled: isCompleted,
+                            },
+                            {
+                                icon: IconName.cancel,
+                                iconColor: isCompleted ? 'transparent' : theme.colors.error,
+                                onPress: () => !isCompleted && handleCancelPayment(row.id),
+                                disabled: isCompleted,
+                            },
+                        ];
+                    }}
                 />
             </AppCard>
 
@@ -232,168 +300,101 @@ export const OrderDetailsScreen = () => {
                 <AppText variant="titleLarge" style={styles.cardTitle}>
                     Podsumowanie płatności
                 </AppText>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Status:
-                    </AppText>
-                    <AppText
-                        variant="bodyLarge"
-                        style={[
-                            styles.value,
-                            { color: getPaymentStatusColor(status as PaymentSummaryStatus, theme) },
-                        ]}
-                    >
-                        {PAYMENT_SUMMARY_LABELS[status as PaymentSummaryStatus]}
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Suma zamówienia:
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {formatPrice(orderTotal)} PLN
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Suma wpłat:
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {formatPrice(paymentsTotal)} PLN
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        {isOverpaid ? 'Nadpłata:' : 'Pozostało do zapłaty:'}
-                    </AppText>
-                    <AppText
-                        variant="bodyLarge"
-                        style={[styles.value, isOverpaid && { color: theme.colors.error }]}
-                    >
-                        {formatPrice(Math.abs(remainingAmount))} PLN
-                    </AppText>
-                </View>
-
-                {isOverpaid && (
-                    <AppText
-                        variant="bodySmall"
-                        style={{ color: theme.colors.error, marginTop: metrics.spacing.sm }}
-                    >
-                        ⚠️ Wykryto nadpłatę – sprawdź poprawność wpłat
-                    </AppText>
-                )}
+                <InfoItem
+                    label="Status"
+                    value={PAYMENT_SUMMARY_LABELS[status as PaymentSummaryStatus]}
+                    valueStyle={{
+                        color: getPaymentStatusColor(status as PaymentSummaryStatus, theme),
+                    }}
+                />
+                <InfoItem label="Suma zamówienia" value={`${formatPrice(orderTotal)} PLN`} />
+                <InfoItem label="Suma wpłat" value={`${formatPrice(paymentsTotal)} PLN`} />
+                <InfoItem
+                    label={isOverpaid ? 'Nadpłata' : 'Pozostało do zapłaty'}
+                    value={`${formatPrice(Math.abs(remainingAmount))} PLN`}
+                    valueStyle={isOverpaid ? { color: theme.colors.error } : {}}
+                />
             </AppCard>
 
             <AppCard>
-                <View style={styles.headerRow}>
-                    <AppText variant="titleLarge" style={{ marginBottom: metrics.spacing.lg }}>
-                        Dostawa
-                    </AppText>
-
-                    <View style={styles.buttonRow}>
-                        <AppButton icon={IconName.delivery} onPress={editDelivery}>
-                            Zarządzaj dostawą
-                        </AppButton>
-                    </View>
+                <View style={styles.cardHeaderWithButton}>
+                    <AppText variant="titleLarge">Dostawa</AppText>
+                    <AppButton
+                        icon={IconName.delivery}
+                        onPress={() => {
+                            setSelectedDelivery(order.delivery);
+                            setDeliveryModalVisible(true);
+                        }}
+                    >
+                        Zarządzaj
+                    </AppButton>
                 </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        ID:{' '}
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {order.delivery?.id}
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Data dostawy:{' '}
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {order.delivery?.deliveryDate
-                            ? formatPolishDate(order.delivery.deliveryDate, false)
-                            : '-'}
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Adres dostawy:{' '}
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {formatAddressMultiline(order.delivery?.address)}
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Numer przesyłki:{' '}
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {order.delivery?.trackingNumber}
-                    </AppText>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <AppText variant="bodyLarge" style={styles.label}>
-                        Przewoźnik:{' '}
-                    </AppText>
-                    <AppText variant="bodyLarge" style={styles.value}>
-                        {order.delivery?.carrier}
-                    </AppText>
-                </View>
+                <InfoItem label="Adres" value={formatAddressMultiline(order.delivery?.address)} />
+                <InfoItem label="Opcja dostawy" value={carrierName} />
+                <InfoItem label="Numer przesyłki" value={order.delivery?.trackingNumber || '-'} />
+                <InfoItem
+                    label="Data dostawy"
+                    value={
+                        order.delivery?.deliveryDate
+                            ? formatPolishDate(order.delivery?.deliveryDate, false)
+                            : '-'
+                    }
+                />
             </AppCard>
 
             <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
                 <AppText variant="titleLarge" style={styles.modalTitle}>
                     Usuń zamówienie
                 </AppText>
-                <AppText variant="bodyLarge" style={styles.modalText}>
-                    Czy na pewno chcesz usunąć to zamówienie?
+                <AppText style={styles.modalText}>
+                    Czy na pewno chcesz nieodwracalnie usunąć to zamówienie?
                 </AppText>
-
                 <View style={styles.modalButtons}>
                     <AppButton mode="outlined" onPress={() => setDeleteModalVisible(false)}>
                         Anuluj
                     </AppButton>
                     <AppButton
-                        mode="contained"
                         buttonColor={theme.colors.error}
-                        onPress={handleDelete}
+                        onPress={() => {
+                            handleDeleteOrder();
+                            navigation.goBack();
+                        }}
                     >
                         Usuń
                     </AppButton>
                 </View>
             </AppModal>
-            <AppModal visible={paymentModalVisible} onClose={onClosePaymentModal}>
+
+            <AppModal
+                visible={paymentModalVisible}
+                onClose={() => {
+                    setPaymentModalVisible(false);
+                    setSelectedPayment(null);
+                }}
+            >
                 <AddEditPaymentForm
                     initialAmount={selectedPayment?.amount}
                     initialCurrency={selectedPayment?.currency ?? 'PLN'}
                     initialMethod={(selectedPayment?.paymentMethod as PaymentMethod) ?? undefined}
                     onClose={() => setPaymentModalVisible(false)}
-                    onSave={(amount, currency, method) => {
-                        console.log('Zapisano płatność:', { amount, currency, method });
-                        setPaymentModalVisible(false);
-                    }}
+                    onSave={onSavePayment}
                 />
             </AppModal>
 
-            <AppModal visible={deliveryModalVisible} onClose={onCloseDeliveryModal}>
+            <AppModal
+                visible={deliveryModalVisible}
+                onClose={() => {
+                    setDeliveryModalVisible(false);
+                    setSelectedDelivery(null);
+                }}
+            >
                 <AddEditDeliveryForm
-                    initialAddress={selectedDelivery?.address}
-                    initialCarrier={selectedDelivery?.carrier ?? ''}
-                    initialTracking={selectedDelivery?.trackingNumber ?? ''}
-                    onClose={onCloseDeliveryModal}
-                    onSave={(addr, carrier, tracking) => {
-                        console.log('Zapisano dostawę:', { addr, carrier, tracking });
-                        setDeliveryModalVisible(false);
-                        setSelectedDelivery(null);
-                    }}
+                    initialAddress={order.delivery?.address}
+                    initialCarrierId={order.delivery?.carrierId ?? ''}
+                    initialTracking={order.delivery?.trackingNumber ?? ''}
+                    initialDeliveryDate={order.delivery?.deliveryDate ?? ''}
+                    onClose={() => setDeliveryModalVisible(false)}
+                    onSave={onSaveDelivery}
                 />
             </AppModal>
         </ScrollView>
@@ -401,53 +402,39 @@ export const OrderDetailsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: metrics.spacing.lg,
-        gap: metrics.spacing.lg,
-    },
+    container: { flex: 1 },
+    contentContainer: { padding: metrics.spacing.lg, gap: metrics.spacing.lg },
+    card: { marginBottom: metrics.spacing.lg },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    subtitle: {
-        color: '#666',
-    },
-    buttonRow: {
-        flexDirection: 'row',
-        gap: metrics.spacing.md,
-    },
-    buttonWrapper: {
-        flexGrow: 1,
-        minWidth: 180,
-        alignItems: 'stretch',
-    },
-    cardTitle: {
-        marginBottom: metrics.spacing.md,
-    },
-    infoRow: {
-        flexDirection: 'row',
-        marginBottom: metrics.spacing.sm,
-    },
-    label: {
-        width: 200,
-        fontWeight: metrics.fontWeight.semibold,
-    },
-    value: {
-        flex: 1,
-    },
-    modalTitle: {
-        marginBottom: metrics.spacing.md,
-        textAlign: 'center',
-    },
-    modalText: {
         marginBottom: metrics.spacing.lg,
-        textAlign: 'center',
     },
-    modalButtons: {
+    subtitle: { color: '#666' },
+    buttonRow: { flexDirection: 'row', gap: metrics.spacing.md },
+    cardTitle: { marginBottom: metrics.spacing.md },
+    cardHeaderWithButton: {
         flexDirection: 'row',
-        justifyContent: 'center',
-        gap: metrics.spacing.md,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: metrics.spacing.lg,
+    },
+    infoRow: { flexDirection: 'row', marginBottom: metrics.spacing.xs },
+    label: { flex: 1, fontWeight: metrics.fontWeight.semibold, color: '#444' },
+    value: { flex: 3 },
+    modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
+    modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
+    modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: metrics.spacing.md },
+    loadMoreContainer: {
+        paddingVertical: metrics.spacing.md,
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+        marginTop: metrics.spacing.xs,
+    },
+    paginationHint: {
+        fontSize: 12,
+        color: '#888',
+        marginTop: metrics.spacing.xs,
     },
 });

@@ -1,56 +1,58 @@
-// types/api/product.ts
-
+import { ProductCategoryDto } from '.';
+import { ProductDimensions } from '../domain';
 import { CompanyDto } from './company';
 
 export interface ProductDto {
-    id: string; // UUID
-    name: string;
-    manufacturer: string;
-    sku: string;
-    stockQuantity: number;
-    description: string | null;
-    categoryId: string | null; // UUID
-    netPrice: number;
-    vatRate: number;
-    grossPrice: number;
-    vatAmount: number;
-    currency: string;
-    imageUrl: string | null;
-    lastRestockedAt: string | null;
-}
-
-export interface Dimensions {
-    length: number | null;
-    width: number | null;
-    height: number | null;
-}
-
-export interface ProductSpecificationDto {
-    productId: string; // UUID
-    weight: number | null; // kg
-    dimensions: Dimensions | null;
-    material: string | null;
-    color: string | null;
-    manufacturer: string | null;
-    countryOfOrigin: string | null;
-    warranty: number | null;
-}
-
-export interface StockProductDto {
     id: string;
     name: string;
+    sku: string;
     manufacturer: CompanyDto;
-    stockQuantity: number;
-    unit: string;
     netPrice: number;
-    grossPrice: number;
-    currency: string;
-    lastRestockedAt: string | null;
+    vatRate: number;
+    stockQuantity: number;
+    stockLevel: string;
+    categoryId: string;
+    lastRestockedAt: string;
 }
 
-export interface StockProductResponseDto {
-    data: StockProductDto[];
-    total: number;
-    page: number;
-    limit: number;
+export interface ProductDetailsDto {
+    id: string;
+    name: string;
+    sku: string;
+    description: string;
+    manufacturer: CompanyDto;
+    netPrice: number;
+    vatRate: number;
+    stockQuantity: number;
+    dimensions: ProductDimensions;
+    lastRestockedAt: string;
+    category: ProductCategoryDto;
+}
+
+export interface CreateProductPayload {
+    name: string;
+    sku: string;
+    manufacturerId: string;
+    netPrice: number;
+    vatRate: number;
+    stockQuantity: number;
+    dimensions: ProductDimensions;
+    description: string;
+    categoryId: string;
+}
+
+export type UpdateProductPayload = Partial<CreateProductPayload>;
+
+export interface ProductSpecificationPayload {
+    manufacturer?: string;
+    countryOfOrigin?: string;
+    weight?: number;
+    dimensions?: {
+        length: number;
+        width: number;
+        height: number;
+    };
+    material?: string;
+    color?: string;
+    warranty?: number;
 }

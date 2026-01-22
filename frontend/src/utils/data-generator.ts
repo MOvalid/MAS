@@ -265,7 +265,7 @@ const buildPayments = (orderId: string, totalGross: number): PaymentDto[] => [
         currency: 'PLN',
         paymentMethod: pick(PAYMENT_METHOD_VALUES) as PaymentMethod,
         status: pick(PAYMENT_STATUS_VALUES) as PaymentStatus,
-        paidAt: randomDate(),
+        paymentDate: randomDate(),
     },
 ];
 
@@ -381,8 +381,8 @@ export const getFAQData = (): FaqItem[] => {
             id: '4',
             question: 'Czy aplikacja generuje faktury?',
             answer:
-                'Tak. Po zatwierdzeniu zamówienia system automatycznie generuje fakturę (np. w formacie PDF). ' +
-                'Dokument można pobrać lub wysłać bezpośrednio na adres e-mail klienta.',
+                'Tak. Po zatwierdzeniu zamówienia system automatycznie generuje fakturę w formacie PDF). ' +
+                'Dokument można pobrać i zapisać w pamięci urządzenia.',
         },
         {
             id: '5',
@@ -402,8 +402,10 @@ export const getFAQData = (): FaqItem[] => {
             id: '7',
             question: 'Czy aplikacja działa na urządzeniach mobilnych?',
             answer:
-                'Tak. Aplikacja została zaprojektowana z myślą o urządzeniach mobilnych ' +
-                'i działa poprawnie na systemach Android oraz iOS.',
+                'Tak. Aplikacja została zaprojektowana z myślą rozwoju na urządzenia mobilnych. ' +
+                'Aktualnie działa wersja aplikacji webowej, którą również można otworzyć w przeglądarce' +
+                'na urządzeniu mobilnym. W przyszłości są planowane wersje natywnych aplikacji na systemy' +
+                ' Android oraz iOS.',
         },
         {
             id: '8',
@@ -414,4 +416,4 @@ export const getFAQData = (): FaqItem[] => {
                 'Do autoryzacji wykorzystywane są tokeny JWT.',
         },
     ];
-}
+};

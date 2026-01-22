@@ -6,33 +6,33 @@ export enum Currency {
 }
 
 export enum InvoiceStatus {
-    ALL = 'ALL',
-    DRAFT = 'DRAFT',
-    SENT = 'SENT',
-    PAID = 'PAID',
-    OVERDUE = 'OVERDUE',
-    CANCELLED = 'CANCELLED',
+    ALL = 'All',
+    DRAFT = 'Draft',
+    SENT = 'Sent',
+    PAID = 'Paid',
+    OVERDUE = 'Overdue',
+    CANCELLED = 'Cancelled',
 }
 
 export enum OrderStatus {
-    ALL = 'ALL',
-    DRAFT = 'DRAFT',
-    PAYMENT_PENDING = 'PAYMENT_PENDING',
-    PAID = 'PAID',
-    PROCESSING = 'PROCESSING',
-    SHIPPED = 'SHIPPED',
-    DELIVERED = 'DELIVERED',
-    CANCELLED = 'CANCELLED',
-    RETURNED = 'RETURNED',
+    ALL = 'All',
+    DRAFT = 'Draft',
+    PAYMENT_PENDING = 'PendingPayment',
+    PAID = 'Paid',
+    PROCESSING = 'Processing',
+    SHIPPED = 'Shipped',
+    DELIVERED = 'Delivered',
+    CANCELLED = 'Cancelled',
+    RETURNED = 'Returned',
 }
 
 export enum PaymentStatus {
-    PENDING = 'PENDING',
-    PROCESSING = 'PROCESSING',
-    COMPLETED = 'COMPLETED',
-    FAILED = 'FAILED',
-    REFUNDED = 'REFUNDED',
-    CANCELLED = 'CANCELLED',
+    PENDING = 'Pending',
+    PROCESSING = 'Processing',
+    COMPLETED = 'Completed',
+    FAILED = 'Failed',
+    REFUNDED = 'Refunded',
+    CANCELLED = 'Cancelled',
 }
 
 export enum PaymentMethod {
@@ -80,30 +80,50 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
     [PaymentMethod.OTHER]: 'Inna',
 };
 
+export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
+    [InvoiceStatus.ALL]: 'Wszystkie',
+    [InvoiceStatus.DRAFT]: 'Szkic',
+    [InvoiceStatus.SENT]: 'Wysłana',
+    [InvoiceStatus.PAID]: 'Opłacona',
+    [InvoiceStatus.OVERDUE]: 'Przeterminowana',
+    [InvoiceStatus.CANCELLED]: 'Anulowana',
+};
+
 export const PAYMENT_METHODS = PAYMENT_METHOD_VALUES.map((m) => ({
     label: PAYMENT_METHOD_LABELS[m],
     value: m,
 }));
 
 export const PAYMENT_SUMMARY_LABELS = {
-    PAID: 'OPŁACONE',
-    PARTIAL: 'CZĘŚCIOWE',
-    NONE: 'BRAK WPŁAT',
-    OVERPAID: 'NADPŁATA',
+    PAID: 'Opłacone',
+    PARTIAL: 'Częściowe',
+    NONE: 'Brak wpłat',
+    OVERPAID: 'Nadpłata',
 } as const;
 
 export const ORDER_SORT_OPTIONS = [
-    { label: 'Lp. ↑', value: 'LP_ASC' },
-    { label: 'Lp. ↓', value: 'LP_DESC' },
-    { label: 'Klient A → Z', value: 'CUSTOMER_ASC' },
-    { label: 'Klient Z → A', value: 'CUSTOMER_DESC' },
-    { label: 'Firma A → Z', value: 'COMPANY_ASC' },
-    { label: 'Firma Z → A', value: 'COMPANY_DESC' },
+    { label: 'Zamawiający A → Z', value: 'CLIENT_ASC' },
+    { label: 'Zamawiający Z → A', value: 'CLIENT_DESC' },
     { label: 'Data zamówienia ↑', value: 'CREATED_ASC' },
     { label: 'Data zamówienia ↓', value: 'CREATED_DESC' },
 ];
 
-export type ProductSortOption = 'NAME_ASC' | 'NAME_DESC' | 'MANUFACTURER_ASC' | 'PRICE_ASC';
-
-export type ClientTypeFilter = 'ALL' | 'CUSTOMER' | 'COMPANY';
-export type ClientSort = 'ALPHA_ASC' | 'ALPHA_DESC';
+export type ProductSort =
+    | 'NAME_ASC'
+    | 'NAME_DESC'
+    | 'MANUFACTURER_ASC'
+    | 'MANUFACTURER_ASC'
+    | 'PRICE_ASC'
+    | 'PRICE_DESC'
+    | 'STOCK_ASC'
+    | 'STOCK_DESC';
+export type OrderSort = 'CLIENT_ASC' | 'CLIENT_DESC' | 'CREATED_ASC' | 'CREATED_DESC';
+export type CustomerSort = 'ALPHA_ASC' | 'ALPHA_DESC';
+export type CompanySort = 'ALPHA_ASC' | 'ALPHA_DESC';
+export type InvoiceSort =
+    | 'ISSUED_ASC'
+    | 'ISSUED_DESC'
+    | 'PAYMENT_ASC'
+    | 'PAYMENT_DESC'
+    | 'AMOUNT_ASC'
+    | 'AMOUNT_DESC';

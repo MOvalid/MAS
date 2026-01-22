@@ -4,27 +4,24 @@ import { View, StyleSheet } from 'react-native';
 import { AppTextInput, AppDropdown, AppText } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { useTheme } from 'react-native-paper';
-import { ClientSort, ClientTypeFilter } from '@/types/common';
 
-interface ClientListFiltersProps {
+interface ClientListFiltersProps<T> {
     search: string;
     onSearchChange: (value: string) => void;
-
-    clientType: ClientTypeFilter;
-    onClientTypeChange: (value: ClientTypeFilter) => void;
-
-    sortBy: ClientSort;
-    onSortByChange: (value: ClientSort) => void;
+    sortBy: T;
+    onSortByChange: (value: T) => void;
+    options: { label: string; value: T }[];
+    searchLabel?: string;
 }
 
-export const ClientListFilters: React.FC<ClientListFiltersProps> = ({
+export const ClientListFilters = <T extends string>({
     search,
     onSearchChange,
-    clientType,
-    onClientTypeChange,
     sortBy,
     onSortByChange,
-}) => {
+    options,
+    searchLabel = 'Wyszukaj klienta / firmę',
+}: ClientListFiltersProps<T>) => {
     const theme = useTheme();
 
     const styles = StyleSheet.create({
@@ -56,7 +53,7 @@ export const ClientListFilters: React.FC<ClientListFiltersProps> = ({
             <View style={styles.row}>
                 <View style={styles.col2}>
                     <AppText variant="bodyLarge" style={styles.labelText}>
-                        Wyszukaj klienta / firmę
+                        {searchLabel}
                     </AppText>
                     <AppTextInput
                         placeholder="Wyszukaj"
@@ -68,32 +65,13 @@ export const ClientListFilters: React.FC<ClientListFiltersProps> = ({
 
                 <View style={styles.col1}>
                     <AppText variant="bodyLarge" style={styles.labelText}>
-                        Typ klienta
-                    </AppText>
-                    <AppDropdown
-                        value={clientType}
-                        onChange={(v: string) => onClientTypeChange(v as ClientTypeFilter)}
-                        fullWidth
-                        options={[
-                            { label: 'Wszyscy', value: 'ALL' },
-                            { label: 'Klienci (osoby)', value: 'CUSTOMER' },
-                            { label: 'Firmy', value: 'COMPANY' },
-                        ]}
-                    />
-                </View>
-
-                <View style={styles.col1}>
-                    <AppText variant="bodyLarge" style={styles.labelText}>
-                        Sortuj alfabetycznie
+                        Sortowanie
                     </AppText>
                     <AppDropdown
                         value={sortBy}
-                        onChange={(v: string) => onSortByChange(v as ClientSort)}
+                        onChange={(v: string) => onSortByChange(v as T)}
                         fullWidth
-                        options={[
-                            { label: 'A → Z', value: 'ALPHA_ASC' },
-                            { label: 'Z → A', value: 'ALPHA_DESC' },
-                        ]}
+                        options={options}
                     />
                 </View>
             </View>

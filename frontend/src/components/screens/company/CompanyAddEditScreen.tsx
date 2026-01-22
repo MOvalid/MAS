@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image, LayoutChangeEvent } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { 
+    View, 
+    StyleSheet, 
+    ScrollView, 
+    LayoutChangeEvent, 
+    Alert, 
+    ActivityIndicator, 
+    Animated 
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
-
 import { AppText, AppCard, AppButton, AppTextInput } from '@/components/common';
 import { metrics } from '@/theme/metrics';
 import { Company } from '@/types/domain/company';
 import { formatNip } from '@/utils/formatters';
+import {
+    CreateCompanyPayload,
+    useCreateCompany,
+    useUpdateCompany,
+} from '@/composables/company/useCompanies';
+import { CompanyDto } from '@/types/dto';
 
 const CompanyImage =
     'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764533804/modern-urban-buildings-view_vhmzbe.jpg';
@@ -15,24 +28,9 @@ const EMPTY_COMPANY: Company = {
     id: '',
     name: '',
     taxId: '',
-    address: { street: '', number: '', city: '', postalCode: '', country: '' },
+    address: { street: '', houseNumber: '', city: '', postalCode: '', country: '' },
     email: '',
-    phone: '',
-};
-
-const mockCompany: Company = {
-    id: '123',
-    name: 'Firma Przykładowa Sp. z o.o.',
-    taxId: '1234567890',
-    address: {
-        street: 'Przykładowa',
-        number: '1',
-        city: 'Warszawa',
-        postalCode: '00-001',
-        country: 'Polska',
-    },
-    email: 'kontakt@firma.pl',
-    phone: '+48 123 456 789',
+    phoneNumber: '',
 };
 
 export const CompanyAddEditScreen = () => {
@@ -40,31 +38,60 @@ export const CompanyAddEditScreen = () => {
     const navigation = useNavigation();
     const theme = useTheme();
 
-    const { id } = route.params ?? {};
-    const isEdit = Boolean(id);
-    const initial = isEdit ? mockCompany : EMPTY_COMPANY;
+    const imageOpacity = useRef(new Animated.Value(0)).current;
+    const [isImageLoading, setIsImageLoading] = useState(true);
+
+    const { company: companyToEdit } = (route.params as { company?: Company }) ?? {};
+    const isEdit = Boolean(companyToEdit?.id);
+    const initial = isEdit ? companyToEdit! : EMPTY_COMPANY;
 
     const [name, setName] = useState(initial.name);
     const [taxId, setTaxId] = useState(initial.taxId);
     const [street, setStreet] = useState(initial.address.street);
-    const [number, setNumber] = useState(initial.address.number);
+    const [houseNumber, setHouseNumber] = useState(initial.address.houseNumber);
     const [city, setCity] = useState(initial.address.city);
     const [postalCode, setPostalCode] = useState(initial.address.postalCode);
     const [country, setCountry] = useState(initial.address.country);
     const [email, setEmail] = useState(initial.email || '');
-    const [phone, setPhone] = useState(initial.phone || '');
+    const [phone, setPhone] = useState(initial.phoneNumber || '');
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [cardHeight, setCardHeight] = useState<number>(0);
 
+    const { create, loading: isCreating } = useCreateCompany(
+        () => {
+            console.log('Sukces: Firma dodana');
+            navigation.goBack();
+        },
+        (err) => Alert.alert('Błąd', err)
+    );
+
+    const { update, loading: isUpdating } = useUpdateCompany(
+        () => {
+            console.log('Sukces: Firma zaktualizowana');
+            navigation.goBack();
+        },
+        (err) => Alert.alert('Błąd', err)
+    );
+
+    const isLoading = isCreating || isUpdating;
     const pageTitle = isEdit ? `Edycja firmy ${name || ''}` : 'Dodaj nową firmę';
+
+    const onLoad = () => {
+        Animated.timing(imageOpacity, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+        }).start(() => setIsImageLoading(false));
+    };
 
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {};
         if (!name) newErrors.name = 'Nazwa firmy jest wymagana';
-        if (!taxId || !/^\d{10}$/.test(taxId)) newErrors.taxId = 'NIP musi składać się z 10 cyfr';
+        if (!taxId) newErrors.taxId = 'NIP jest wymagany';
+        if (!/^\d{10}$/.test(taxId)) newErrors.taxId = 'NIP musi składać się z 10 cyfr';
         if (!street) newErrors.street = 'Ulica jest wymagana';
-        if (!number) newErrors.number = 'Numer jest wymagany';
+        if (!houseNumber) newErrors.houseNumber = 'Numer jest wymagany';
         if (!city) newErrors.city = 'Miasto jest wymagane';
         if (!postalCode) newErrors.postalCode = 'Kod pocztowy jest wymagany';
         if (!country) newErrors.country = 'Kraj jest wymagany';
@@ -72,18 +99,22 @@ export const CompanyAddEditScreen = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!validate()) return;
-        const payload: Company = {
-            id: initial.id,
+
+        const payload = {
             name,
             taxId,
-            address: { street, number, city, postalCode, country },
-            email: email || null,
-            phone: phone || null,
+            address: { street, houseNumber, city, postalCode, country },
+            email: email?.trim() || undefined,
+            phone: phone?.trim() || undefined,
         };
-        console.log(isEdit ? '➡️ Aktualizacja firmy:' : '🆕 Tworzenie nowej firmy:', payload);
-        navigation.goBack();
+
+        if (isEdit && companyToEdit) {
+            await update(companyToEdit.id, { ...payload, id: companyToEdit.id } as CompanyDto);
+        } else {
+            await create(payload as CreateCompanyPayload);
+        }
     };
 
     const handleCancel = () => navigation.goBack();
@@ -102,7 +133,20 @@ export const CompanyAddEditScreen = () => {
             alignItems: 'flex-start',
             marginBottom: metrics.spacing.xl,
         },
-        imageContainer: { width: '45%', marginVertical: metrics.spacing.sm },
+        imageContainer: { 
+            width: '45%', 
+            marginVertical: metrics.spacing.sm,
+            position: 'relative',
+            borderRadius: metrics.radius.lg,
+            overflow: 'hidden'
+        },
+        imagePlaceholder: {
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: theme.colors.surfaceVariant,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1,
+        },
         image: { width: '100%', borderRadius: metrics.radius.lg },
         card: {
             flex: 1,
@@ -116,10 +160,21 @@ export const CompanyAddEditScreen = () => {
 
     const ActionButtons = () => (
         <View style={styles.actionRow}>
-            <AppButton onPress={handleCancel} style={styles.button} mode="outlined">
+            <AppButton
+                onPress={handleCancel}
+                style={styles.button}
+                mode="outlined"
+                disabled={isLoading}
+            >
                 Anuluj
             </AppButton>
-            <AppButton onPress={handleSave} style={styles.button} mode="contained">
+            <AppButton
+                onPress={handleSave}
+                style={styles.button}
+                mode="contained"
+                loading={isLoading}
+                disabled={isLoading}
+            >
                 {isEdit ? 'Zapisz zmiany' : 'Dodaj firmę'}
             </AppButton>
         </View>
@@ -133,9 +188,21 @@ export const CompanyAddEditScreen = () => {
 
             <View style={styles.contentRow}>
                 <View style={[styles.imageContainer, { height: cardHeight }]}>
-                    <Image
+                    {isImageLoading && (
+                        <View style={[styles.imagePlaceholder, { height: cardHeight }]}>
+                            <ActivityIndicator color={theme.colors.primary} />
+                        </View>
+                    )}
+                    <Animated.Image
                         source={{ uri: CompanyImage }}
-                        style={[styles.image, { height: cardHeight }]}
+                        onLoad={onLoad}
+                        style={[
+                            styles.image, 
+                            { 
+                                height: cardHeight,
+                                opacity: imageOpacity 
+                            }
+                        ]}
                     />
                 </View>
 
@@ -154,6 +221,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setName}
                             fullWidth
                             errorMessage={errors.name}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -167,6 +235,7 @@ export const CompanyAddEditScreen = () => {
                             fullWidth
                             keyboardType="number-pad"
                             errorMessage={errors.taxId}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -179,6 +248,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setStreet}
                             fullWidth
                             errorMessage={errors.street}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -187,10 +257,11 @@ export const CompanyAddEditScreen = () => {
                             Numer *
                         </AppText>
                         <AppTextInput
-                            value={number}
-                            onChangeText={setNumber}
+                            value={houseNumber}
+                            onChangeText={setHouseNumber}
                             fullWidth
-                            errorMessage={errors.number}
+                            errorMessage={errors.houseNumber}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -203,6 +274,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setCity}
                             fullWidth
                             errorMessage={errors.city}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -215,6 +287,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setPostalCode}
                             fullWidth
                             errorMessage={errors.postalCode}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -227,6 +300,7 @@ export const CompanyAddEditScreen = () => {
                             onChangeText={setCountry}
                             fullWidth
                             errorMessage={errors.country}
+                            editable={!isLoading}
                         />
                     </View>
 
@@ -234,14 +308,24 @@ export const CompanyAddEditScreen = () => {
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             E-mail
                         </AppText>
-                        <AppTextInput value={email} onChangeText={setEmail} fullWidth />
+                        <AppTextInput
+                            value={email}
+                            onChangeText={setEmail}
+                            fullWidth
+                            editable={!isLoading}
+                        />
                     </View>
 
                     <View style={styles.inputRow}>
                         <AppText variant="bodyMedium" style={styles.inputLabel}>
                             Telefon
                         </AppText>
-                        <AppTextInput value={phone} onChangeText={setPhone} fullWidth />
+                        <AppTextInput
+                            value={phone}
+                            onChangeText={setPhone}
+                            fullWidth
+                            editable={!isLoading}
+                        />
                     </View>
 
                     <ActionButtons />

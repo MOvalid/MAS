@@ -11,10 +11,10 @@ import { useNavigation } from '@react-navigation/native';
 type Language = 'PL' | 'EN' | 'DE';
 
 export const AppHeader = (): React.JSX.Element => {
-    const { signOut } = useAuth();
+    const { signOut, userEmail } = useAuth();
     const [languageMenuVisible, setLanguageMenuVisible] = useState<boolean>(false);
     const [currentLanguage, setCurrentLanguage] = useState<Language>('PL');
-    const currentUser = 'Jan Kowalski';
+    const currentUser = userEmail || 'Użytkownik';
     const theme = useTheme();
     const navigation = useNavigation();
     const { showSnackbar } = useSnackbar();
@@ -57,7 +57,7 @@ export const AppHeader = (): React.JSX.Element => {
             <Appbar.Content title="" />
 
             <View style={styles.rightContainer}>
-                <Menu
+                {/* <Menu
                     visible={languageMenuVisible}
                     onDismiss={() => setLanguageMenuVisible(false)}
                     anchor={
@@ -77,15 +77,15 @@ export const AppHeader = (): React.JSX.Element => {
                             leadingIcon={currentLanguage === lang ? IconName.check : undefined}
                         />
                     ))}
-                </Menu>
-
+                </Menu> */}
+{/* 
                 <AppIconButton
                     icon={IconName.notifications}
                     size={24}
                     badge="5"
                     iconColor={theme.colors.surface}
                     onPress={handleNotifications}
-                />
+                /> */}
 
                 <AppIconButton
                     icon={IconName.help}
@@ -94,12 +94,12 @@ export const AppHeader = (): React.JSX.Element => {
                     onPress={handleFAQ}
                 />
 
-                <AppIconButton
+                {/* <AppIconButton
                     icon={IconName.settings}
                     size={24}
                     iconColor={theme.colors.surface}
                     onPress={handleSettings}
-                />
+                /> */}
 
                 <AppIconButton
                     icon={IconName.logout}

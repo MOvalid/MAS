@@ -1,46 +1,44 @@
 import { AppText, AppCard, AppButton, IconName } from '@/components/common';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { metrics } from '@/theme/metrics';
-import { Company } from '@/types/domain/company';
 import { useState } from 'react';
 import { AppModal } from '@/components/common/AppModal';
 import { formatNip } from '@/utils/formatters';
-
-const mockCompany: Company = {
-    id: '123',
-    name: 'Firma Przykładowa Sp. z o.o.',
-    taxId: '1234567890',
-    address: {
-        street: 'Przykładowa',
-        number: '1',
-        city: 'Warszawa',
-        postalCode: '00-001',
-        country: 'Polska',
-    },
-    email: 'kontakt@firma.pl',
-    phone: '+48 123 456 789',
-};
+import { useCompany, useDeleteCompany } from '@/composables/company/useCompanies';
+import { LoadingScreen } from '../LoadingScreen';
+import { ErrorMessage, NotFoundMessage } from '@/components/common/AppStageMessage';
 
 export const CompanyDetailsScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
-    const { id } = route.params;
+    const { id } = route.params as { id: string };
     const theme = useTheme();
+
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-    const company = mockCompany;
+    const { data: company, loading: isFetching, error, refresh } = useCompany(id);
+
+    const { remove, loading: isDeleting } = useDeleteCompany(
+        () => {
+            setDeleteModalVisible(false);
+            navigation.goBack();
+        },
+        (err) => Alert.alert('Błąd', err)
+    );
 
     const handleEdit = () => {
-        navigation.navigate('CompanyEdit', { id: id });
+        navigation.navigate('CompanyEdit', { company });
     };
 
-    const handleDelete = () => {
-        console.log('Usuwanie firmy:', id);
-        setDeleteModalVisible(false);
-        navigation.goBack();
+    const handleDelete = async () => {
+        await remove(id);
     };
+
+    if (isFetching) {
+        return <LoadingScreen text="Pobieranie danych firmy..." />;
+    }
 
     const styles = StyleSheet.create({
         container: {
@@ -55,13 +53,14 @@ export const CompanyDetailsScreen = () => {
         },
         title: {
             marginBottom: metrics.spacing.xs,
+            flex: 1,
         },
         buttonRow: {
             flexDirection: 'row',
             gap: metrics.spacing.md,
         },
         button: {
-            minWidth: 160,
+            minWidth: 150,
         },
         deleteButton: {
             backgroundColor: theme.colors.error,
@@ -81,10 +80,10 @@ export const CompanyDetailsScreen = () => {
             marginBottom: metrics.spacing.sm,
         },
         label: {
-            fontWeight: metrics.fontWeight.semibold,
+            fontWeight: '600',
             color: theme.colors.onSurfaceVariant,
             marginRight: metrics.spacing.md,
-            width: 180,
+            width: 120,
         },
         value: {
             textAlign: 'left',
@@ -107,6 +106,16 @@ export const CompanyDetailsScreen = () => {
         },
     });
 
+    if (error) {
+        return <ErrorMessage error={error} onRetry={refresh} onBack={() => navigation.goBack()} />;
+    }
+
+    if (!company) {
+        return (
+            <NotFoundMessage title="Nie znaleziono klienta" onBack={() => navigation.goBack()} />
+        );
+    }
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
@@ -114,8 +123,13 @@ export const CompanyDetailsScreen = () => {
                     {company.name}
                 </AppText>
                 <View style={styles.buttonRow}>
-                    <AppButton icon={IconName.edit} onPress={handleEdit} style={styles.button}>
-                        Edytuj firmę
+                    <AppButton
+                        icon={IconName.edit}
+                        onPress={handleEdit}
+                        style={styles.button}
+                        mode="outlined"
+                    >
+                        Edytuj
                     </AppButton>
                     <AppButton
                         icon={IconName.delete}
@@ -123,7 +137,7 @@ export const CompanyDetailsScreen = () => {
                         style={[styles.button, styles.deleteButton]}
                         mode="contained"
                     >
-                        Usuń firmę
+                        Usuń
                     </AppButton>
                 </View>
             </View>
@@ -156,7 +170,7 @@ export const CompanyDetailsScreen = () => {
                         Telefon:
                     </AppText>
                     <AppText variant="bodyLarge" style={styles.value}>
-                        {company.phone || 'Brak'}
+                        {company.phoneNumber || 'Brak'}
                     </AppText>
                 </View>
 
@@ -165,8 +179,11 @@ export const CompanyDetailsScreen = () => {
                         Adres:
                     </AppText>
                     <AppText variant="bodyLarge" style={styles.value}>
-                        {company.address.street}, {company.address.postalCode}{' '}
-                        {company.address.city}, {company.address.country}
+                        {company.address.street} {company.address.houseNumber}
+                        {'\n'}
+                        {company.address.postalCode} {company.address.city}
+                        {'\n'}
+                        {company.address.country}
                     </AppText>
                 </View>
             </AppCard>
@@ -184,6 +201,7 @@ export const CompanyDetailsScreen = () => {
                         onPress={() => setDeleteModalVisible(false)}
                         style={styles.modalButton}
                         mode="outlined"
+                        disabled={isDeleting}
                     >
                         Anuluj
                     </AppButton>
@@ -192,6 +210,8 @@ export const CompanyDetailsScreen = () => {
                         style={styles.modalButton}
                         mode="contained"
                         buttonColor={theme.colors.error}
+                        loading={isDeleting}
+                        disabled={isDeleting}
                     >
                         Usuń
                     </AppButton>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInputProps as PaperTextInputProps } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, StyleSheet, TextInputProps as PaperTextInputProps, Text } from 'react-native';
 import { Autocomplete } from 'react-native-paper-autocomplete';
 import { AppText } from '@/components/common';
 import { useTheme } from 'react-native-paper';
@@ -12,8 +12,11 @@ type AppAutocompleteProps<T> = {
     options: T[];
     getOptionLabel: (option: T) => string;
     onChange: (option?: T) => void;
+    onInputChange?: (text: string) => void;
     placeholder?: string;
+    errorMessage?: string;
     inputProps?: Partial<PaperTextInputProps>;
+    disabled?: boolean;
 };
 
 export function AppAutocomplete<T>({
@@ -22,43 +25,78 @@ export function AppAutocomplete<T>({
     options,
     getOptionLabel,
     onChange,
+    onInputChange,
     placeholder = 'Wybierz...',
+    errorMessage,
+    disabled = false,
 }: AppAutocompleteProps<T>) {
     const theme = useTheme();
     const { colors } = useAppTheme();
     const [inputValue, setInputValue] = useState(value ? getOptionLabel(value) : '');
     const [filterActive, setFilterActive] = useState(false);
 
+    const debouncedSearch = useMemo(() => {
+        let timeout: NodeJS.Timeout;
+        return (text: string) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                onInputChange?.(text);
+            }, 500);
+        };
+    }, [onInputChange]);
+
     useEffect(() => {
         setInputValue(value ? getOptionLabel(value) : '');
     }, [value]);
 
     const getFilteredOptions = (opts: T[], input: string, active: boolean) => {
+        if (onInputChange) {
+            return opts;
+        }
         if (!active || !input) return opts;
         return opts.filter((o) => getOptionLabel(o).toLowerCase().includes(input.toLowerCase()));
     };
 
+    const errorMessageStyle = {
+        color: colors.error,
+        fontSize: metrics.text.small,
+        marginLeft: metrics.spacing.md,
+    } as const;
+
     const styles = StyleSheet.create({
-        wrapper: { flex: 1 },
+        wrapper: {
+            flex: 1,
+            opacity: disabled ? 0.5 : 1,
+        },
         input: {
             height: 48,
             alignContent: 'center',
             borderRadius: metrics.radius.xl,
             borderWidth: 0,
-            backgroundColor: colors.secondaryContainer,
+            backgroundColor: disabled ? theme.colors.surfaceDisabled : colors.secondaryContainer,
         },
         outerWrapper: {
             borderRadius: metrics.radius.xl,
             overflow: 'hidden',
             marginVertical: metrics.spacing.lmd,
-
-            backgroundColor: colors.secondaryContainer,
+            backgroundColor: disabled ? theme.colors.surfaceDisabled : colors.secondaryContainer,
         },
-        labelText: { color: theme.colors.onSurfaceVariant },
+        labelText: {
+            color: theme.colors.onSurfaceVariant,
+        },
+
+        errorContainerStyle: {
+            position: 'absolute' as const,
+            bottom: -metrics.spacing.xs,
+            left: 0,
+            right: 0,
+            height: metrics.spacing.lg,
+            justifyContent: 'center' as const,
+        },
     });
 
     return (
-        <View style={styles.wrapper}>
+        <View style={styles.wrapper} pointerEvents={disabled ? 'none' : 'auto'}>
             <AppText variant="bodyLarge" style={styles.labelText}>
                 {label}
             </AppText>
@@ -66,6 +104,7 @@ export function AppAutocomplete<T>({
                 <Autocomplete<T>
                     value={value}
                     onChange={(option) => {
+                        if (disabled) return;
                         onChange(option);
                         setInputValue(option ? getOptionLabel(option) : '');
                         setFilterActive(false);
@@ -75,11 +114,15 @@ export function AppAutocomplete<T>({
                     inputProps={{
                         placeholder,
                         value: inputValue,
+                        editable: !disabled,
                         onChangeText: (text) => {
                             setInputValue(text);
                             setFilterActive(true);
+                            debouncedSearch(text);
                         },
-                        onFocus: () => setFilterActive(false),
+                        onFocus: () => {
+                            setFilterActive(true);
+                        },
                         style: styles.input,
                         outlineColor: 'transparent',
                         activeOutlineColor: 'transparent',
@@ -87,6 +130,9 @@ export function AppAutocomplete<T>({
                         selectionColor: colors.primary,
                     }}
                 />
+            </View>
+            <View style={styles.errorContainerStyle}>
+                {errorMessage ? <Text style={errorMessageStyle}>{errorMessage}</Text> : null}
             </View>
         </View>
     );

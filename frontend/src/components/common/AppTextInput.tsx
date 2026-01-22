@@ -28,6 +28,7 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
     onChangeText,
     onChangeValue,
     errorMessage,
+    disabled,
     ...props
 }) => {
     const { colors, metrics } = useAppTheme();
@@ -41,13 +42,19 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
 
     const isMultiline = !!(height && height > 48);
 
+    const backgroundColor = disabled ? colors.surfaceVariant : colors.secondaryContainer;
+
+    const textColor = disabled ? colors.onSurfaceDisabled : colors.primary;
+
     const containerStyle: ViewStyle = {
         width: (fullWidth ? '100%' : width) as DimensionValue,
         alignSelf: fullWidth ? 'stretch' : 'center',
         marginTop: metrics.spacing[margin],
         marginBottom: metrics.spacing[margin],
         borderRadius: metrics.radius.xl,
-        backgroundColor: colors.secondaryContainer,
+        backgroundColor: backgroundColor,
+        opacity: disabled ? 0.5 : 1,
+        flex: 1,
     };
 
     const inputStyle: ViewStyle = {
@@ -74,9 +81,10 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
         <View style={containerStyle}>
             <TextInput
                 mode={mode}
+                disabled={disabled}
                 underlineColor="transparent"
                 activeUnderlineColor="transparent"
-                textColor={colors.primary}
+                textColor={textColor}
                 placeholderTextColor={colors.primary}
                 theme={{
                     roundness: metrics.radius.xl,
@@ -92,12 +100,13 @@ export const AppTextInput: React.FC<AppTextInputProps> = ({
                 onChangeText={handleChangeText}
                 {...props}
                 right={
-                    <TextInput.Icon
-                        icon="close"
-                        size={20}
-                        color={internalValue ? colors.onSurfaceVariant : 'transparent'}
-                        onPress={internalValue ? () => handleChangeText('') : undefined}
-                    />
+                    !disabled ? (
+                        <TextInput.Icon 
+                            icon="close" 
+                            onPress={internalValue ? () => handleChangeText('') : undefined}
+                            color={internalValue ? undefined : 'transparent'} 
+                        />
+                    ) : null
                 }
             />
             <View style={styles.errorContainer}>
@@ -126,7 +135,7 @@ const getStyles = (
             marginBottom: metrics.spacing[margin],
             borderRadius: metrics.radius.xl,
             backgroundColor: colors.secondaryContainer,
-            flexShrink: 1, // ważne w układzie flex
+            flexShrink: 1,
         },
         input: {
             flex: 1,

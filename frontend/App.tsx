@@ -10,7 +10,6 @@ import { createDrawerNavigator, DrawerScreenProps } from '@react-navigation/draw
 import { useColorScheme, View, ActivityIndicator } from 'react-native';
 import AuthScreen from './src/components/screens/AuthScreen';
 import {
-    ClientNavigator,
     CompanyNavigator,
     CustomerNavigator,
     OrderNavigator,
@@ -20,8 +19,16 @@ import {
 import { DrawerParamList } from './src/types/navigation';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
-import { FaqScreen, HomeScreen, InvoiceScreen, SettingsScreen, SignUpScreen } from './src/components/screens';
+import {
+    FaqScreen,
+    HomeScreen,
+    InvoiceScreen,
+    SettingsScreen,
+    SignUpScreen,
+} from './src/components/screens';
 import { AppDrawerContent, AppLoadingOverlay, AppScreenWrapper } from './src/components/common';
+import { registerTranslation } from 'react-native-paper-dates';
+import { useEffect } from 'react';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -36,18 +43,10 @@ const linking = {
                 path: '',
                 screens: {
                     Home: 'home',
-                    Client: {
-                        path: 'client',
-                        screens: {
-                            ClientList: '',
-                            ClientAdd: 'add',
-                            ClientEdit: 'edit/:id',
-                            ClientDetails: ':id',
-                        },
-                    },
                     Company: {
                         path: 'company',
                         screens: {
+                            CompanyList: '',
                             CompanyAdd: 'add',
                             CompanyEdit: 'edit/:id',
                             CompanyDetails: ':id',
@@ -56,6 +55,7 @@ const linking = {
                     Customer: {
                         path: 'customer',
                         screens: {
+                            CustomerList: '',
                             CustomerAdd: 'add',
                             CustomerEdit: 'edit/:id',
                             CustomerDetails: ':id',
@@ -136,14 +136,6 @@ function DrawerNavigator() {
                 options={{
                     drawerLabel: 'Settings',
                     title: 'Settings',
-                }}
-            />
-            <Drawer.Screen
-                name="Client"
-                component={ClientNavigator}
-                options={{
-                    drawerLabel: 'Klienci',
-                    title: 'Klienci',
                 }}
             />
             <Drawer.Screen
@@ -246,7 +238,33 @@ export default function App() {
     const isDark = colorScheme === 'dark';
     const paperTheme = isDark ? DarkTheme : LightTheme;
     const navigationTheme = isDark ? CombinedDarkTheme : CombinedLightTheme;
+
+    const { isLoading: isAuthLoading } = useAuth();
+
     const [fontsLoaded, setFontsLoaded] = React.useState(false);
+
+    
+    useEffect(() => {
+        registerTranslation('pl', {
+            selectSingle: 'Wybierz datę',
+            selectMultiple: 'Wybierz daty',
+            selectRange: 'Wybierz zakres',
+            save: 'Zatwierdź',
+            close: 'Anuluj',
+            notAccordingToDateFormat: (inputFormat) => `Data musi być w formacie ${inputFormat}`,
+            mustBeHigherThan: (date) => `Data musi być późniejsza niż ${date}`,
+            mustBeLowerThan: (date) => `Data musi być wcześniejsza niż ${date}`,
+            mustBeBetween: (startDate, endDate) =>
+                `Data musi być pomiędzy ${startDate} a ${endDate}`,
+            dateIsDisabled: 'Ta data jest niedostępna',
+            previous: 'Poprzedni',
+            next: 'Następny',
+            typeInDate: 'Wpisz datę',
+            pickDateFromCalendar: 'Wybierz datę z kalendarza',
+            hour: 'Godzina',
+            minute: 'Minuta',
+        });
+    }, []);
 
     React.useEffect(() => {
         const loadFonts = async () => {
@@ -278,7 +296,7 @@ export default function App() {
                         >
                             <AppNavigator />
                             <AppLoadingOverlay
-                                visible={useAuth().isLoading}
+                                visible={isAuthLoading}
                                 text="Trwa przetwarzanie..."
                             />
                         </NavigationContainer>

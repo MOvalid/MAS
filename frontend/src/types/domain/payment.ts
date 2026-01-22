@@ -6,14 +6,16 @@ export interface Payment {
     currency: string;
     paymentMethod: string;
     status: string;
-    paidAt: string | null; // ISO datetime
+    paymentDate: string | null; // ISO datetime
 }
 
-export interface PaymentTableRow {
+export interface PaymentTableData {
+    lp: string;
     id: string;
     method: string;
     amount: string;
     currency: string;
+    statusLabel: string;
     status: string;
-    paidAt: string;
+    paymentDate: string;
 }

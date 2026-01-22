@@ -1,17 +1,12 @@
 import { PaymentSummaryStatus } from '@/types/common';
-import { OrderItemDto, PaymentDto } from '@/types/dto';
+import { OrderItem, Payment } from '@/types/domain';
 import { useMemo } from 'react';
 
 
-export const useOrderPaymentSummary = (
-    items?: OrderItemDto[] | null,
-    payments?: PaymentDto[] | null
-) =>
+export const useOrderPaymentSummary = (items?: OrderItem[] | null, payments?: Payment[] | null) =>
     useMemo(() => {
-        const orderTotal = items?.reduce((sum, item) => sum + item.grossPrice, 0) ?? 0;
-
+        const orderTotal = items?.reduce((sum, item) => sum + item.totalGrossPrice, 0) ?? 0;
         const paymentsTotal = payments?.reduce((sum, p) => sum + p.amount, 0) ?? 0;
-
         const remainingAmount = orderTotal - paymentsTotal;
 
         let status: PaymentSummaryStatus = 'NONE';

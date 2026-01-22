@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, Pressable } from 'react-native';
 import AppIconButton from '../AppIconButton';
 import { metrics } from '../../../theme/metrics';
 import { IconValue } from '../icons';
+import { useAppTheme } from '../../../context/AppThemeContext';
 
 export interface Action {
     icon: IconValue;
     tooltip?: string;
     onPress: () => void;
     iconColor?: string;
+    disabled?: boolean;
 }
 
 interface AppTableRowActionsProps {
@@ -17,12 +19,28 @@ interface AppTableRowActionsProps {
 }
 
 export const AppTableRowActions: React.FC<AppTableRowActionsProps> = ({ actions, style }) => {
+    const { colors } = useAppTheme();
+
     return (
-        <View style={[styles.actionsContainer, style]}>
-            {actions.map((action, index) => (
-                <AppIconButton key={index} {...action}/>
-            ))}
-        </View>
+        <Pressable onPress={() => {}} style={[styles.actionsContainer, style]}>
+            {actions.map((action, index) => {
+                const { icon, onPress, iconColor, disabled = false } = action;
+
+                const finalIconColor = disabled
+                    ? colors.outlineVariant || '#bdbdbd'
+                    : iconColor || colors.primary;
+
+                return (
+                    <AppIconButton
+                        key={index}
+                        icon={icon}
+                        onPress={disabled ? () => {} : onPress}
+                        iconColor={finalIconColor}
+                        disabled={disabled}
+                    />
+                );
+            })}
+        </Pressable>
     );
 };
 

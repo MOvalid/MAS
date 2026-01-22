@@ -1,36 +1,74 @@
-import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { metrics } from '@/theme/metrics';
 import { AppButton, AppText, IconName } from '@/components/common';
-import { AppTable, TableColumn } from '@/components/common/table';
+import { Action, AppTable, TableColumn } from '@/components/common/table';
 import { AppPaginationControls } from '@/components/common/AppPaginationControls';
-import { OrderViewModel } from '@/types/view-model/order';
-import { getMockOrders } from '@/utils/data-generator';
-import { mapOrderListToViewModel } from '@/mappers/order.mapper';
+import { AppModal } from '@/components/common/AppModal'; // Zaimportuj Modal
 import { OrderListFilters } from './OrderListFilters';
-import { OrderSortOption } from '@/types/domain/order';
-import { OrderStatus } from '@/types/common';
+import { OrderTableData } from '@/types/domain/order';
+import { OrderSort, OrderStatus } from '@/types/common';
 import { useSellers } from '@/composables/seller';
-
-const mockOrders = getMockOrders(120);
+import { useNavigation, useTheme } from '@react-navigation/native';
+import { useOrders2, useOrderTableData } from '@/composables/orders/useOrders';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/types/dto/auth';
+import { ErrorScreen } from '../ErrorScreen';
+import { useOrderActions } from '@/hooks/useOrderActions'; // Import hooka akcji
+import { useGenerateInvoicePdf } from '@/composables/invoice/useInvoices';
+import { useSnackbar } from '@/context/SnackbarContext';
 
 export const OrderListScreen = () => {
     const [search, setSearch] = useState('');
-    const [status, setStatus] = useState<OrderStatus>(OrderStatus.ALL);
-    const [seller, setSeller] = useState('ALL');
-    const [sort, setSort] = useState<OrderSortOption>('CREATED_DESC');
+    const [status, setStatus] = useState(OrderStatus.ALL);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [page, setPage] = useState(1);
-    const limit = 10;
+    const [seller, setSeller] = useState('ALL');
+    const [sort, setSort] = useState<OrderSort>('CREATED_DESC');
 
-    /** Sellers from API */
-    const { items: sellers, loading: sellersLoading } = useSellers();
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-    /** Dropdown options */
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const theme = useTheme();
+    const { showSnackbar } = useSnackbar();
+
+    const { data: sellers, loading: sellersLoading } = useSellers();
+
+    const {
+        data: orders,
+        page,
+        error,
+        refetch,
+        setPage,
+        total,
+        limit,
+        loading: orderLoading,
+        setFilters,
+    } = useOrders2(true, { search, sorting: sort });
+
+    const { handleDeleteOrder, isLoading: isDeleting } = useOrderActions(
+        selectedOrderId || '',
+        '',
+        refetch
+    );
+
+    useEffect(() => {
+        setFilters({
+            search: search.trim(),
+            sorting: sort,
+            status: status !== OrderStatus.ALL ? status : undefined,
+            sellerId: seller !== 'ALL' ? seller : undefined,
+            dateFrom: startDate || undefined,
+            dateTo: endDate || undefined,
+        });
+    }, [search, sort, status, seller, startDate, endDate]);
+
+    const tableData = useOrderTableData(orders, page, limit);
+
     const sellerOptions = useMemo(
         () => [
-            { label: 'Wszyscy', value: 'ALL' },
+            { label: 'Wszyscy sprzedawcy', value: 'ALL' },
             ...sellers.map((s) => ({
                 label: `${s.firstName} ${s.lastName}`,
                 value: s.id,
@@ -39,81 +77,46 @@ export const OrderListScreen = () => {
         [sellers]
     );
 
-    const { items, total } = useMemo(() => {
-        let data = [...mockOrders];
+    const handleRowPress = (item: OrderTableData) => {
+        navigation.navigate('OrderDetails', { id: item.id });
+    };
 
-        if (search.trim()) {
-            const q = search.toLowerCase();
-            data = data.filter(
-                (o) =>
-                    o.customer?.toLowerCase().includes(q) ||
-                    o.company?.toLowerCase().includes(q) ||
-                    o.invoiceNumber?.toLowerCase().includes(q)
-            );
-        }
+    const openDeleteModal = (id: string) => {
+        setSelectedOrderId(id);
+        setDeleteModalVisible(true);
+    };
 
-        if (status !== OrderStatus.ALL) {
-            data = data.filter((o) => o.status === status);
-        }
+    const confirmDelete = async () => {
+        await handleDeleteOrder();
+        setDeleteModalVisible(false);
+        setSelectedOrderId(null);
+    };
 
-        if (seller !== 'ALL') {
-            data = data.filter((o) => o.seller === seller);
-        }
+    const loading = orderLoading || sellersLoading || isDeleting;
+    const onPrevious = () => setPage((o) => Math.max(1, o - 1));
+    const onNext = () => setPage((o) => Math.min(Math.ceil(total / limit), o + 1));
 
-        if (startDate) {
-            const start = new Date(`${startDate}T00:00:00`);
-            data = data.filter((o) => new Date(o.createdAt) >= start);
-        }
-
-        if (endDate) {
-            const end = new Date(`${endDate}T23:59:59`);
-            data = data.filter((o) => new Date(o.createdAt) <= end);
-        }
-
-        data.sort((a, b) => {
-            switch (sort) {
-                case 'CREATED_ASC':
-                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                case 'CREATED_DESC':
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                case 'CUSTOMER_ASC':
-                    return (a.customer ?? '').localeCompare(b.customer ?? '');
-                case 'COMPANY_ASC':
-                    return (a.company ?? '').localeCompare(b.company ?? '');
-                default:
-                    return 0;
-            }
-        });
-
-        const total = data.length;
-        const start = (page - 1) * limit;
-        const paginated = data.slice(start, start + limit);
-
-        return {
-            items: mapOrderListToViewModel(paginated),
-            total,
-        };
-    }, [search, status, seller, sort, startDate, endDate, page]);
-
-    const generateInvoice = (row: OrderViewModel) => console.log('Generuj fakturę', row);
-    const editOrder = (row: OrderViewModel) => console.log('Edytuj', row);
-    const cancelOrder = (row: OrderViewModel) => console.log('Anuluj', row);
-
-    const columns: TableColumn<OrderViewModel>[] = [
+    const columns: TableColumn<OrderTableData>[] = [
         { key: 'lp', title: 'Lp.', flex: 0.3 },
-        { key: 'createdAt', title: 'Data zamówienia', flex: 1 },
-        { key: 'customer', title: 'Klient', flex: 1.5 },
-        { key: 'company', title: 'Firma', flex: 1.5 },
+        { key: 'createdAt', title: 'Data', flex: 1 },
+        {
+            key: 'customer',
+            title: 'Klient',
+            flex: 2,
+            render: (item) => item.company || item.customer,
+        },
         { key: 'seller', title: 'Sprzedawca', flex: 1 },
-        { key: 'status', title: 'Status', flex: 1 },
-        { key: 'invoiceNumber', title: 'Faktura', flex: 1 },
+        { key: 'statusLabel', title: 'Status', flex: 1 },
+        { key: 'invoiceNumber', title: 'Faktura', align: 'center', flex: 1 },
     ];
+    if (error)
+        return <ErrorScreen title="Błąd ładowania danych" message={error} onRetry={refetch} />;
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
             <View style={styles.headerRow}>
                 <AppText variant="headlineLarge">Zamówienia</AppText>
-                <AppButton onPress={() => console.log('Nowe zamówienie')}>
+                <AppButton onPress={() => navigation.navigate('OrderAdd')}>
                     Nowe zamówienie
                 </AppButton>
             </View>
@@ -135,8 +138,8 @@ export const OrderListScreen = () => {
                     setSeller(v);
                     setPage(1);
                 }}
-                sortBy={sort}
-                onSortByChange={(v) => {
+                sort={sort}
+                onSortChange={(v) => {
                     setSort(v);
                     setPage(1);
                 }}
@@ -152,50 +155,95 @@ export const OrderListScreen = () => {
                 }}
             />
 
-            <AppTable
-                columns={columns}
-                data={items}
-                actions={(row) => [
-                    {
-                        icon: IconName.document,
-                        onPress: () => generateInvoice(row),
-                        tooltip: 'Generuj fakturę',
-                    },
-                    {
-                        icon: IconName.edit,
-                        onPress: () => editOrder(row),
-                        tooltip: 'Edytuj zamówienie',
-                    },
-                    {
-                        icon: IconName.delete,
-                        onPress: () => cancelOrder(row),
-                        iconColor: 'red',
-                        tooltip: 'Usuń zamówienie',
-                    },
-                ]}
-            />
+            {loading && !orders.length ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" />
+                </View>
+            ) : (
+                <>
+                    <AppTable
+                        actions={(item) => {
+                            const isDraft = item.status === OrderStatus.DRAFT;
+                            return [
+                                {
+                                    icon: IconName.edit,
+                                    onPress: () =>
+                                        navigation.navigate('OrderEdit', { id: item.id }),
+                                    tooltip: 'Edytuj',
+                                },
+                                {
+                                    icon: IconName.delete,
+                                    onPress: () => openDeleteModal(item.id),
+                                    iconColor: theme.colors.error,
+                                    tooltip: 'Usuń',
+                                    disabled: !isDraft,
+                                },
+                            ];
+                        }}
+                        columns={columns}
+                        data={tableData}
+                        onRowPress={handleRowPress}
+                    />
 
-            <View style={styles.paginationRow}>
-                <AppPaginationControls
-                    page={page}
-                    totalPages={Math.max(1, Math.ceil(total / limit))}
-                    onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-                    onNext={() => setPage((p) => Math.min(Math.ceil(total / limit), p + 1))}
-                />
-            </View>
+                    {orders.length > 0 && (
+                        <View style={styles.paginationRow}>
+                            <AppPaginationControls
+                                page={page}
+                                totalPages={Math.max(1, Math.ceil(total / limit))}
+                                onPrevious={onPrevious}
+                                onNext={onNext}
+                            />
+                        </View>
+                    )}
+                </>
+            )}
+
+            <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
+                <AppText variant="titleLarge" style={styles.modalTitle}>
+                    Usuń zamówienie
+                </AppText>
+                <AppText style={styles.modalText}>
+                    Czy na pewno chcesz nieodwracalnie usunąć to zamówienie?
+                </AppText>
+                <View style={styles.modalButtons}>
+                    <AppButton mode="outlined" onPress={() => setDeleteModalVisible(false)}>
+                        Anuluj
+                    </AppButton>
+                    <AppButton
+                        buttonColor={theme.colors.error}
+                        loading={isDeleting}
+                        onPress={confirmDelete}
+                    >
+                        Usuń
+                    </AppButton>
+                </View>
+            </AppModal>
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, gap: metrics.spacing.lg },
+    container: { flex: 1 },
+    center: {
+        flex: 1,
+        padding: metrics.spacing.xl,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    contentContainer: { paddingBottom: metrics.spacing.xl },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: metrics.spacing.lg,
+        marginTop: metrics.spacing.md,
+        marginBottom: metrics.spacing.lg,
     },
     paginationRow: {
-        marginTop: metrics.spacing.md,
+        marginTop: metrics.spacing.lg,
         alignItems: 'center',
     },
+    modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
+    modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
+    modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: metrics.spacing.md },
 });

@@ -1,16 +1,15 @@
 import { AppText, AppCard, AppButton, IconName } from '@/components/common';
-import { View, Image, StyleSheet, ScrollView } from 'react-native';
+import { View, Image, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useTheme } from 'react-native-paper';
+import { MD3Theme, useTheme } from 'react-native-paper';
 import { metrics } from '@/theme/metrics';
 import { formatPolishDate } from '@/utils/formatters';
 import { calculateVat } from '@/utils/price-utils';
 import { useState } from 'react';
 import { AppModal } from '@/components/common/AppModal';
-import { getFriendlyErrorMessage } from '@/utils/error-utils';
 import { ErrorScreen } from '../ErrorScreen';
 import { LoadingScreen } from '../LoadingScreen';
-import { useProductDetails } from '@/composables/product';
+import { useProduct, useDeleteProduct } from '@/composables/product/useProducts'; // Zaktualizowany import
 
 const NotAvailableImage =
     'https://res.cloudinary.com/ddmjmidiw/image/upload/v1764505262/not-available_kyzgum.png';
@@ -18,26 +17,28 @@ const NotAvailableImage =
 export const ProductDetailsScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
-    const { id } = route.params;
+    const { id } = route.params as { id: string };
 
     const theme = useTheme();
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-    // Use the hook to fetch product details
-    const {
-        item: product,
-        loading,
-        error,
-        notFound,
-        refetch: refresh,
-    } = useProductDetails(id, true);
+    const { data: product, loading, error, refresh } = useProduct(id);
+
+    const { remove, loading: isDeleting } = useDeleteProduct(
+        () => {
+            setDeleteModalVisible(false);
+            navigation.goBack();
+            Alert.alert('Sukces', 'Produkt został usunięty');
+        },
+        (err) => {
+            Alert.alert('Błąd', err);
+        }
+    );
 
     const getStockStatus = (stockQuantity: number) => {
         if (stockQuantity === 0) return { text: 'Brak w magazynie', color: theme.colors.error };
-        // @ts-expect-error theme.colors has warning color
-        if (stockQuantity <= 20) return { text: 'Niski stan', color: theme.colors.warning };
-        // @ts-expect-error theme.colors has error color
-        return { text: 'Dostępny', color: theme.colors.success };
+        if (stockQuantity <= 20) return { text: 'Niski stan', color: '#E6A23C' };
+        return { text: 'Dostępny', color: '#67C23A' };
     };
 
     const handleEdit = () => {
@@ -46,157 +47,21 @@ export const ProductDetailsScreen = () => {
         }
     };
 
-    const handleDelete = () => {
-        console.log('Usuwanie produktu:', product?.id);
-        setDeleteModalVisible(false);
-        navigation.goBack();
+    const handleDelete = async () => {
+        await remove(id);
     };
 
-    const styles = StyleSheet.create({
-        buttonRow: {
-            flexDirection: 'row',
-            gap: metrics.spacing.md,
-        },
-        button: {
-            minWidth: 160,
-        },
-        deleteButton: {
-            backgroundColor: theme.colors.error,
-        },
-        container: {
-            flex: 1,
-            padding: metrics.spacing.lg,
-        },
-        loadingContainer: {
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: metrics.spacing.xl,
-        },
-        errorContainer: {
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: metrics.spacing.xl,
-        },
-        errorText: {
-            marginBottom: metrics.spacing.lg,
-            textAlign: 'center',
-            color: theme.colors.error,
-        },
-        title: {
-            marginBottom: metrics.spacing.xs,
-        },
-        subtitle: {
-            marginBottom: metrics.spacing.xl,
-            color: theme.colors.onSurfaceVariant,
-        },
-        contentRow: {
-            flexDirection: 'row',
-            gap: metrics.spacing.xl,
-            alignItems: 'stretch',
-            marginBottom: metrics.spacing.xl,
-        },
-        headerRow: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-        },
-        imageContainer: {
-            width: '45%',
-            aspectRatio: 1,
-        },
-        image: {
-            width: '100%',
-            height: '100%',
-            borderRadius: metrics.radius.md,
-        },
-        card: {
-            flex: 1,
-            marginVertical: 0,
-            backgroundColor: theme.colors.background,
-        },
-        specCard: {
-            width: '100%',
-            marginVertical: 0,
-            marginBottom: metrics.spacing.xl,
-            backgroundColor: theme.colors.background,
-        },
-        cardTitle: {
-            marginBottom: metrics.spacing.md,
-        },
-        sectionTitle: {
-            marginTop: metrics.spacing.sm,
-            marginBottom: metrics.spacing.sm,
-        },
-        infoRow: {
-            flexDirection: 'row',
-            justifyContent: 'flex-start',
-            marginBottom: metrics.spacing.sm,
-        },
-        label: {
-            fontWeight: metrics.fontWeight.semibold,
-            color: theme.colors.onSurfaceVariant,
-            marginRight: metrics.spacing.md,
-            width: 180,
-        },
-        value: {
-            textAlign: 'left',
-            flex: 1,
-        },
-        priceGross: {
-            fontWeight: metrics.fontWeight.bold,
-        },
-        stockText: {
-            fontWeight: metrics.fontWeight.semibold,
-        },
-        divider: {
-            height: 1,
-            backgroundColor: theme.colors.outlineVariant,
-            marginVertical: metrics.spacing.md,
-        },
-        noData: {
-            color: theme.colors.onSurfaceVariant,
-        },
-        modalTitle: {
-            marginBottom: metrics.spacing.md,
-            textAlign: 'center',
-        },
-        modalText: {
-            marginBottom: metrics.spacing.xl,
-            textAlign: 'center',
-        },
-        modalButtons: {
-            flexDirection: 'row',
-            gap: metrics.spacing.md,
-        },
-        modalButton: {
-            flex: 1,
-        },
-    });
+    const styles = createStyles(theme);
 
-    if (loading) {
-        return <LoadingScreen />;
-    }
+    if (loading) return <LoadingScreen />;
 
-    if (!!notFound || !!error) {
-        const friendly = getFriendlyErrorMessage(error);
-
+    if (error || !product) {
         return (
             <ErrorScreen
                 title="Nie udało się pobrać danych"
-                message={friendly.message}
+                message={error || 'Produkt nie został znaleziony'}
                 onRetry={refresh}
             />
-        );
-    }
-
-    if (!product) {
-        // Opcjonalnie możesz też pokazać placeholder zamiast null
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <AppText>Brak danych</AppText>
-            </View>
         );
     }
 
@@ -205,7 +70,7 @@ export const ProductDetailsScreen = () => {
     return (
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
-                <View>
+                <View style={{ flex: 1 }}>
                     <AppText variant="headlineMedium" style={styles.title}>
                         {product.name}
                     </AppText>
@@ -220,6 +85,7 @@ export const ProductDetailsScreen = () => {
                         onPress={() => setDeleteModalVisible(true)}
                         style={[styles.button, styles.deleteButton]}
                         mode="contained"
+                        loading={isDeleting}
                     >
                         Usuń produkt
                     </AppButton>
@@ -240,42 +106,27 @@ export const ProductDetailsScreen = () => {
                         Informacje podstawowe
                     </AppText>
 
-                    <View style={styles.infoRow}>
-                        <AppText variant="bodyLarge" style={styles.label}>
-                            Kategoria:
-                        </AppText>
-                        <AppText variant="bodyLarge" style={styles.value}>
-                            {product.category?.name || '-'}
-                        </AppText>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <AppText variant="bodyLarge" style={styles.label}>
-                            Cena netto:
-                        </AppText>
-                        <AppText variant="bodyLarge" style={styles.value}>
-                            {product.netPrice.toFixed(2)} {product.currency}
-                        </AppText>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <AppText variant="bodyLarge" style={styles.label}>
-                            VAT ({product.vatRate}%):
-                        </AppText>
-                        <AppText variant="bodyLarge" style={styles.value}>
-                            {calculateVat(product.netPrice, product.vatRate).toFixed(2)}{' '}
-                            {product.currency}
-                        </AppText>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <AppText variant="bodyLarge" style={styles.label}>
-                            Cena brutto:
-                        </AppText>
-                        <AppText variant="bodyLarge" style={[styles.priceGross, styles.value]}>
-                            {product.grossPrice.toFixed(2)} {product.currency}
-                        </AppText>
-                    </View>
+                    <DetailRow
+                        label="Kategoria:"
+                        value={product.category?.name || '-'}
+                        styles={styles}
+                    />
+                    <DetailRow
+                        label="Cena netto:"
+                        value={`${product.netPrice.toFixed(2)} ${product.currency}`}
+                        styles={styles}
+                    />
+                    <DetailRow
+                        label={`VAT (${product.vatRate}%):`}
+                        value={`${calculateVat(product.netPrice, product.vatRate).toFixed(2)} ${product.currency}`}
+                        styles={styles}
+                    />
+                    <DetailRow
+                        label="Cena brutto:"
+                        value={`${product.grossPrice.toFixed(2)} ${product.currency}`}
+                        styles={styles}
+                        valueStyle={styles.priceGross}
+                    />
 
                     <View style={styles.divider} />
 
@@ -283,26 +134,17 @@ export const ProductDetailsScreen = () => {
                         Dane magazynowe
                     </AppText>
 
-                    <View style={styles.infoRow}>
-                        <AppText variant="bodyLarge" style={styles.label}>
-                            Stan magazynowy:
-                        </AppText>
-                        <AppText
-                            variant="bodyLarge"
-                            style={[styles.stockText, styles.value, { color: stockStatus.color }]}
-                        >
-                            {product.stockQuantity} szt. ({stockStatus.text})
-                        </AppText>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                        <AppText variant="bodyLarge" style={styles.label}>
-                            Ostatnie uzupełnienie:
-                        </AppText>
-                        <AppText variant="bodyLarge" style={styles.value}>
-                            {formatPolishDate(product.lastRestockedAt, false)}
-                        </AppText>
-                    </View>
+                    <DetailRow
+                        label="Stan magazynowy:"
+                        value={`${product.stockQuantity} szt. (${stockStatus.text})`}
+                        styles={styles}
+                        valueStyle={[styles.stockText, { color: stockStatus.color }]}
+                    />
+                    <DetailRow
+                        label="Ostatnie uzupełnienie:"
+                        value={formatPolishDate(product.lastRestockedAt, false)}
+                        styles={styles}
+                    />
                 </AppCard>
             </View>
 
@@ -311,87 +153,35 @@ export const ProductDetailsScreen = () => {
                     Specyfikacja produktu
                 </AppText>
 
-                {product.specification ? (
+                {product.dimensions ? (
                     <>
-                        {product.specification.manufacturer && (
-                            <View style={styles.infoRow}>
-                                <AppText variant="bodyLarge" style={styles.label}>
-                                    Producent:
-                                </AppText>
-                                <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.manufacturer}
-                                </AppText>
-                            </View>
+                        {product.manufacturer && (
+                            <DetailRow
+                                label="Producent:"
+                                value={product.manufacturer.name}
+                                styles={styles}
+                            />
                         )}
-
-                        {product.specification.countryOfOrigin && (
-                            <View style={styles.infoRow}>
-                                <AppText variant="bodyLarge" style={styles.label}>
-                                    Kraj pochodzenia:
-                                </AppText>
-                                <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.countryOfOrigin}
-                                </AppText>
-                            </View>
+                        {/* {product.specification.countryOfOrigin && (
+                            <DetailRow
+                                label="Kraj pochodzenia:"
+                                value={product.specification.countryOfOrigin}
+                                styles={styles}
+                            />
                         )}
-
                         {product.specification.weight && (
-                            <View style={styles.infoRow}>
-                                <AppText variant="bodyLarge" style={styles.label}>
-                                    Waga:
-                                </AppText>
-                                <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.weight} kg
-                                </AppText>
-                            </View>
-                        )}
-
-                        {product.specification.dimensions && (
-                            <View style={styles.infoRow}>
-                                <AppText variant="bodyLarge" style={styles.label}>
-                                    Wymiary (D×S×W):
-                                </AppText>
-                                <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.dimensions.length} ×{' '}
-                                    {product.specification.dimensions.width} ×{' '}
-                                    {product.specification.dimensions.height} cm
-                                </AppText>
-                            </View>
-                        )}
-
-                        {product.specification.material && (
-                            <View style={styles.infoRow}>
-                                <AppText variant="bodyLarge" style={styles.label}>
-                                    Materiał:
-                                </AppText>
-                                <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.material}
-                                </AppText>
-                            </View>
-                        )}
-
-                        {product.specification.color && (
-                            <View style={styles.infoRow}>
-                                <AppText variant="bodyLarge" style={styles.label}>
-                                    Kolor:
-                                </AppText>
-                                <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.color}
-                                </AppText>
-                            </View>
-                        )}
-
-                        {typeof product.specification.warranty === 'number' && (
-                            <View style={styles.infoRow}>
-                                <AppText variant="bodyLarge" style={styles.label}>
-                                    Gwarancja:
-                                </AppText>
-                                <AppText variant="bodyLarge" style={styles.value}>
-                                    {product.specification.warranty
-                                        ? `${product.specification.warranty} miesięcy`
-                                        : 'Brak'}
-                                </AppText>
-                            </View>
+                            <DetailRow
+                                label="Waga:"
+                                value={`${product.specification.weight} kg`}
+                                styles={styles}
+                            />
+                        )} */}
+                        {product.dimensions && (
+                            <DetailRow
+                                label="Wymiary (D×S×W):"
+                                value={`${product.dimensions.length} × ${product.dimensions.width} × ${product.dimensions.height} cm`}
+                                styles={styles}
+                            />
                         )}
                     </>
                 ) : (
@@ -424,6 +214,7 @@ export const ProductDetailsScreen = () => {
                         onPress={() => setDeleteModalVisible(false)}
                         style={styles.modalButton}
                         mode="outlined"
+                        disabled={isDeleting}
                     >
                         Anuluj
                     </AppButton>
@@ -432,6 +223,7 @@ export const ProductDetailsScreen = () => {
                         style={styles.modalButton}
                         mode="contained"
                         buttonColor={theme.colors.error}
+                        loading={isDeleting}
                     >
                         Usuń
                     </AppButton>
@@ -440,3 +232,57 @@ export const ProductDetailsScreen = () => {
         </ScrollView>
     );
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DetailRow = ({ label, value, styles, valueStyle }: any) => (
+    <View style={styles.infoRow}>
+        <AppText variant="bodyLarge" style={styles.label}>
+            {label}
+        </AppText>
+        <AppText variant="bodyLarge" style={[styles.value, valueStyle]}>
+            {value}
+        </AppText>
+    </View>
+);
+
+const createStyles = (theme: MD3Theme) =>
+    StyleSheet.create({
+        container: { flex: 1, padding: metrics.spacing.lg },
+        headerRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: metrics.spacing.lg,
+        },
+        title: { marginBottom: metrics.spacing.xs },
+        subtitle: { color: theme.colors.onSurfaceVariant, marginBottom: metrics.spacing.sm },
+        buttonRow: { flexDirection: 'row', gap: metrics.spacing.md },
+        button: { minWidth: 140 },
+        deleteButton: { backgroundColor: theme.colors.error },
+        contentRow: {
+            flexDirection: 'row',
+            gap: metrics.spacing.xl,
+            marginBottom: metrics.spacing.xl,
+        },
+        imageContainer: { width: '40%', aspectRatio: 1 },
+        image: { width: '100%', height: '100%', borderRadius: metrics.radius.md },
+        card: { flex: 1, backgroundColor: theme.colors.surface, padding: metrics.spacing.md },
+        specCard: { marginBottom: metrics.spacing.xl, padding: metrics.spacing.md },
+        cardTitle: { marginBottom: metrics.spacing.md, fontWeight: 'bold' },
+        sectionTitle: { marginVertical: metrics.spacing.sm, fontWeight: 'bold' },
+        infoRow: { flexDirection: 'row', marginBottom: metrics.spacing.sm },
+        label: { width: 150, color: theme.colors.onSurfaceVariant, fontWeight: '600' },
+        value: { flex: 1 },
+        priceGross: { fontWeight: 'bold', fontSize: 18 },
+        stockText: { fontWeight: 'bold' },
+        divider: {
+            height: 1,
+            backgroundColor: theme.colors.outlineVariant,
+            marginVertical: metrics.spacing.md,
+        },
+        noData: { color: theme.colors.onSurfaceVariant },
+        modalTitle: { marginBottom: metrics.spacing.md, textAlign: 'center' },
+        modalText: { marginBottom: metrics.spacing.xl, textAlign: 'center' },
+        modalButtons: { flexDirection: 'row', gap: metrics.spacing.md },
+        modalButton: { flex: 1 },
+    });

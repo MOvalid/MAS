@@ -4,7 +4,7 @@ import React from 'react';
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreenWrapper } from '../common';
 import { CustomerStackParamList } from '@/types/navigation';
-import { CustomerAddEditScreen, CustomerDetailsScreen } from '../screens/customer';
+import { CustomerAddEditScreen, CustomerDetailsScreen, CustomerListScreen } from '../screens/customer';
 
 const Stack = createNativeStackNavigator<CustomerStackParamList>();
 
@@ -19,6 +19,7 @@ const withScreenWrapper = <RouteName extends keyof CustomerStackParamList>(
 };
 
 const screens = [
+    { name: 'CustomerList' as const, component: CustomerListScreen },
     { name: 'CustomerAdd' as const, component: CustomerAddEditScreen },
     { name: 'CustomerEdit' as const, component: CustomerAddEditScreen },
     { name: 'CustomerDetails' as const, component: CustomerDetailsScreen },

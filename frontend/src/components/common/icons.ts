@@ -23,6 +23,10 @@ export const IconName = {
     refresh: 'refresh',
     back: 'arrow-u-left-top',
     lock: 'lock-outline',
+    search: 'magnify',
+    info: 'information-outline',
+    invoice: 'invoice-list-outline',
+    chevronDown: 'chevron-down'
 } as const;
 
 export type IconKey = keyof typeof IconName;

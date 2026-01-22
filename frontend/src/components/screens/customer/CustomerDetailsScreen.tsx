@@ -1,44 +1,46 @@
 import { AppText, AppCard, AppButton, IconName } from '@/components/common';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { metrics } from '@/theme/metrics';
 import { useState } from 'react';
 import { AppModal } from '@/components/common/AppModal';
-
-const mockCustomer = {
-    id: '987',
-    firstName: 'Jan',
-    lastName: 'Kowalski',
-    email: 'jan.kowalski@example.com',
-    phone: '+48 500 600 700',
-    address: {
-        street: 'Lipowa',
-        number: '22A',
-        city: 'Kraków',
-        postalCode: '30-001',
-        country: 'Polska',
-    },
-};
+import { LoadingScreen } from '../LoadingScreen';
+import { useCustomer, useDeleteCustomer } from '@/composables/customer/useCustomers';
+import { ErrorMessage, NotFoundMessage } from '@/components/common/AppStageMessage';
 
 export const CustomerDetailsScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
-    const { id } = route.params;
+    const { id } = route.params as { id: string };
     const theme = useTheme();
+
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-    const customer = mockCustomer;
+    const { data: customer, loading: isFetching, error, refresh } = useCustomer(id);
+
+    const { remove, loading: isDeleting } = useDeleteCustomer(
+        () => {
+            setDeleteModalVisible(false);
+            navigation.goBack();
+        },
+        (err) => {
+            setDeleteModalVisible(false);
+            Alert.alert('Błąd', err);
+        }
+    );
 
     const handleEdit = () => {
-        navigation.navigate('ClientEdit', { id: customer.id });
+        navigation.navigate('CustomerEdit', { customer });
     };
 
-    const handleDelete = () => {
-        console.log('Usuwanie klienta:', customer.id);
-        setDeleteModalVisible(false);
-        navigation.goBack();
+    const handleDelete = async () => {
+        await remove(id);
     };
+
+    if (isFetching) {
+        return <LoadingScreen text="Pobieranie danych klienta..." />;
+    }
 
     const styles = StyleSheet.create({
         container: {
@@ -53,6 +55,7 @@ export const CustomerDetailsScreen = () => {
         },
         title: {
             marginBottom: metrics.spacing.xs,
+            flex: 1,
         },
         buttonRow: {
             flexDirection: 'row',
@@ -105,6 +108,16 @@ export const CustomerDetailsScreen = () => {
         },
     });
 
+    if (error) {
+        return <ErrorMessage error={error} onRetry={refresh} onBack={() => navigation.goBack()} />;
+    }
+
+    if (!customer) {
+        return (
+            <NotFoundMessage title="Nie znaleziono klienta" onBack={() => navigation.goBack()} />
+        );
+    }
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
@@ -112,8 +125,13 @@ export const CustomerDetailsScreen = () => {
                     {customer.firstName} {customer.lastName}
                 </AppText>
                 <View style={styles.buttonRow}>
-                    <AppButton icon={IconName.edit} onPress={handleEdit} style={styles.button}>
-                        Edytuj klienta
+                    <AppButton
+                        icon={IconName.edit}
+                        onPress={handleEdit}
+                        style={styles.button}
+                        mode="outlined"
+                    >
+                        Edytuj
                     </AppButton>
                     <AppButton
                         icon={IconName.delete}
@@ -121,7 +139,7 @@ export const CustomerDetailsScreen = () => {
                         style={[styles.button, styles.deleteButton]}
                         mode="contained"
                     >
-                        Usuń klienta
+                        Usuń
                     </AppButton>
                 </View>
             </View>
@@ -145,7 +163,7 @@ export const CustomerDetailsScreen = () => {
                         Telefon:
                     </AppText>
                     <AppText variant="bodyLarge" style={styles.value}>
-                        {customer.phone || 'Brak'}
+                        {customer.phoneNumber || 'Brak'}
                     </AppText>
                 </View>
 
@@ -154,8 +172,10 @@ export const CustomerDetailsScreen = () => {
                         Adres:
                     </AppText>
                     <AppText variant="bodyLarge" style={styles.value}>
-                        {customer.address.street} {customer.address.number},{' '}
-                        {customer.address.postalCode} {customer.address.city},{' '}
+                        {customer.address.street} {customer.address.houseNumber}
+                        {'\n'}
+                        {customer.address.postalCode} {customer.address.city}
+                        {'\n'}
                         {customer.address.country}
                     </AppText>
                 </View>
@@ -175,6 +195,7 @@ export const CustomerDetailsScreen = () => {
                         onPress={() => setDeleteModalVisible(false)}
                         style={styles.modalButton}
                         mode="outlined"
+                        disabled={isDeleting}
                     >
                         Anuluj
                     </AppButton>
@@ -183,6 +204,8 @@ export const CustomerDetailsScreen = () => {
                         style={styles.modalButton}
                         mode="contained"
                         buttonColor={theme.colors.error}
+                        loading={isDeleting}
+                        disabled={isDeleting}
                     >
                         Usuń
                     </AppButton>
