@@ -16,5 +16,37 @@ namespace MasApi.Models
         public required DateTime IssuedAt { get; set; }
         public required DateTime PaymentDueDate { get; set; }
         public required Enums.InvoiceStatus Status { get; set; }
+
+        public bool UpdateStatus()
+        {
+            switch (Status)
+            {
+                case Enums.InvoiceStatus.Issued:
+                    if (Order != null && Order.Status == Enums.OrderStatus.Paid)
+                    {
+                        Status = Enums.InvoiceStatus.Paid;
+                        return true;
+                    }
+                    else if (Order != null && Order.Status == Enums.OrderStatus.Cancelled)
+                    {
+                        Status = Enums.InvoiceStatus.Cancelled;
+                        return true;
+                    }
+                    else if (DateTime.UtcNow > PaymentDueDate)
+                    {
+                        Status = Enums.InvoiceStatus.Overdue;
+                        return true;
+                    }
+                    break;
+                case Enums.InvoiceStatus.Paid:
+                    if (Order != null && (Order.Status == Enums.OrderStatus.Cancelled || Order.Status == Enums.OrderStatus.Returned))
+                    {
+                        Status = Enums.InvoiceStatus.Refunded;
+                        return true;
+                    }
+                    break;
+            }
+            return false;
+        }
     }
 }

@@ -1,3 +1,5 @@
+using MasApi.Models.Enums;
+
 namespace MasApi.Models.Dtos;
 
 public class DeliveryCreateDto
@@ -9,6 +11,11 @@ public class DeliveryCreateDto
     public string? TrackingNumber { get; set; }
 }
 
+public class DeliveryUpdateDto
+{
+    public required string Status { get; set; }
+}
+
 public class DeliveryListDto
 {
     public required Guid Id { get; set; }
@@ -17,6 +24,7 @@ public class DeliveryListDto
     public DateTime? DeliveryDate { get; set; }
     public required AddressDto Address { get; set; }
     public string? TrackingNumber { get; set; }
+    public required string Status { get; set; }
 }
 
 public class DeliveryDetailsDto
@@ -28,5 +36,6 @@ public class DeliveryDetailsDto
     public CarrierListDto? Carrier { get; set; }
     public DateTime? DeliveryDate { get; set; }
     public required AddressDto Address { get; set; }
+    public required string Status { get; set; }
     public string? TrackingNumber { get; set; }
 }

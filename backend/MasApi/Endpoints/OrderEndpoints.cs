@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using System.Linq.Expressions;
+using MasApi.Models.Enums;
 
 namespace MasApi.Endpoints;
 
@@ -43,7 +44,7 @@ public static class OrderEndpoints
         if (customer == null) return TypedResults.BadRequest("Customer does not exist.");
 
         var order = mapper.Map<Order>(orderRequest);
-        order.Status = Models.Enums.OrderStatus.Draft;
+        order.Status = Models.Enums.OrderStatus.PendingPayment;
 
         using var transaction = await dbContext.Database.BeginTransactionAsync();
 
@@ -211,15 +212,25 @@ public static class OrderEndpoints
             .FirstOrDefaultAsync(o => o.Id == id);
         if (order == null) return TypedResults.NotFound();
 
-        mapper.Map(orderRequest, order);
-
-        var (isValid, validationErrors) = order.Validate();
-        if (!isValid)
+        if (!Enum.TryParse<OrderStatus>(orderRequest.Status, true, out var newStatus))
         {
-            var errorMessage = string.Join("; ", validationErrors);
-            return TypedResults.BadRequest(errorMessage);
+            return TypedResults.BadRequest($"Invalid order status: {orderRequest.Status}.");
         }
 
+        var isTransitionValid = (order.Status, newStatus) switch
+        {
+            (OrderStatus.PendingPayment, OrderStatus.Cancelled) => true,
+            (OrderStatus.Delivered, OrderStatus.Returned) => true,
+            (OrderStatus.Paid, OrderStatus.Cancelled) => true,
+            _ => false
+        };
+
+        if (!isTransitionValid)
+        {
+            return TypedResults.BadRequest($"Invalid status transition from {order.Status} to {newStatus}.");
+        }
+
+        order.UpdateStatus(newStatus);
         dbContext.Orders.Update(order);
         await dbContext.SaveChangesAsync();
 

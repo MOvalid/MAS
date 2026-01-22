@@ -28,8 +28,8 @@ public static class InvoiceEndpoints
         group.MapGet("/", GetInvoices)
             .WithName("GetInvoices");
 
-        group.MapPut("/{id}", UpdateInvoice)
-            .WithName("UpdateInvoice");
+        // group.MapPut("/{id}", UpdateInvoice)
+        //     .WithName("UpdateInvoice");
 
         group.MapDelete("/{id}", DeleteInvoice)
             .WithName("DeleteInvoice");
@@ -45,6 +45,7 @@ public static class InvoiceEndpoints
 
         var order = await dbContext.Orders
             .Include(o => o.OrderProducts)
+            .Include(o => o.Invoice)
             .FirstOrDefaultAsync(o => o.Id == invoiceRequest.OrderId);
         if (order == null) return TypedResults.BadRequest("Order does not exist.");
 
@@ -55,6 +56,16 @@ public static class InvoiceEndpoints
             if (company == null) return TypedResults.BadRequest("Company does not exist.");
         }
 
+        if (order.Invoice != null && order.Invoice.Status != InvoiceStatus.Cancelled)
+        {
+            return TypedResults.BadRequest("Invoice for this order already exists.");
+        }
+
+        if (order.Status == OrderStatus.Cancelled || order.Status == OrderStatus.Returned)
+        {
+            return TypedResults.BadRequest("Cannot create invoice for a cancelled or returned order.");
+        }
+
         int todayInvoiceCount = await dbContext.Invoices
             .CountAsync(i => i.IssuedAt.Date == DateTime.UtcNow.Date) + 1;
 
@@ -63,9 +74,17 @@ public static class InvoiceEndpoints
         invoice.IssuedAt = DateTime.UtcNow;
         invoice.PaymentDueDate = invoice.IssuedAt.AddDays(PaymentDueDays);
         invoice.InvoiceNumber = $"{DateTime.UtcNow:yyyy/MM/dd}-{todayInvoiceCount.ToString().PadLeft(5, '0')}";
-        invoice.Status = InvoiceStatus.Draft;
         invoice.Company = company;
         invoice.Order = order;
+
+        if (order.Status == OrderStatus.PendingPayment)
+        {
+            invoice.Status = InvoiceStatus.Issued;
+        }
+        else
+        {
+            invoice.Status = InvoiceStatus.Paid;
+        }
 
         var (isValid, validationErrors) = invoice.Validate();
         if (!isValid)
