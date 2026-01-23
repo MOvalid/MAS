@@ -22,7 +22,7 @@ import {
 import { Address, Delivery, OrderItem, PaymentTableData } from '@/types/domain';
 import { useCreateOrder, useOrder, useUpdateOrder } from '@/composables/orders/useOrders';
 import { useCustomerOptions } from '@/composables/customer/useCustomers';
-import { CreateOrderItem, CreateOrderPayload, PaymentDto } from '@/types/dto';
+import { CreateOrderItem, CreateOrderPayload, PaymentDto, UpdateOrderPayload } from '@/types/dto';
 import { LoadingScreen } from '../LoadingScreen';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { useSellerOptions } from '@/composables/seller/useSellers';
@@ -258,6 +258,22 @@ export const OrderAddEditScreen = () => {
         setDeliveryModalVisible(false);
     };
 
+    const handleCancelOrder = async () => {
+        await update(id, { status: OrderStatus.CANCELLED } as UpdateOrderPayload);
+        setDeleteModalVisible(false);
+    };
+
+    const handleReturnOrder = async () => {
+        await update(id, { status: OrderStatus.RETURNED } as UpdateOrderPayload);
+    };
+
+    const isDelivered = order?.status === OrderStatus.DELIVERED;
+    const canCancel =
+        order &&
+        order.status !== OrderStatus.CANCELLED &&
+        order.status !== OrderStatus.RETURNED &&
+        !isDelivered;
+
     const styles = StyleSheet.create({
         container: { flex: 1 },
         contentContainer: { padding: metrics.spacing.lg, gap: metrics.spacing.lg },
@@ -266,11 +282,6 @@ export const OrderAddEditScreen = () => {
         subtitle: { color: '#666' },
         modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
         modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
-        modalButtons: {
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            gap: metrics.spacing.md,
-        },
         cardHeaderWithButton: {
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -308,6 +319,19 @@ export const OrderAddEditScreen = () => {
             borderBottomLeftRadius: metrics.radius.md,
             borderBottomRightRadius: metrics.radius.md,
         },
+        fixedButton: {
+            minWidth: 170,
+        },
+        modalButton: {
+            flex: 1,
+            minWidth: 140,
+        },
+        modalButtons: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: metrics.spacing.md,
+            marginTop: metrics.spacing.md,
+        },
     });
 
     // if (!id) {
@@ -340,17 +364,29 @@ export const OrderAddEditScreen = () => {
                         </>
                     )}
                 </View>
-                {isEdit && order?.status === OrderStatus.DRAFT && (
-                    <View style={styles.buttonRow}>
+                <View style={styles.buttonRow}>
+                    {isEdit && isDelivered && (
                         <AppButton
-                            icon={IconName.delete}
+                            icon={IconName.refresh}
+                            mode="contained"
+                            style={styles.fixedButton}
+                            onPress={handleReturnOrder}
+                        >
+                            Zwróć zamówienie
+                        </AppButton>
+                    )}
+
+                    {isEdit && canCancel && (
+                        <AppButton
+                            icon={IconName.cancel}
                             buttonColor={theme.colors.error}
+                            style={styles.fixedButton}
                             onPress={() => setDeleteModalVisible(true)}
                         >
-                            Usuń
+                            Anuluj zamówienie
                         </AppButton>
-                    </View>
-                )}
+                    )}
+                </View>
             </View>
 
             <AppCard style={styles.card}>
@@ -481,6 +517,7 @@ export const OrderAddEditScreen = () => {
                             <AppText variant="titleLarge">Dostawa</AppText>
                             <AppButton
                                 icon={IconName.delivery}
+                                style={styles.fixedButton}
                                 onPress={() => {
                                     if (order) {
                                         setSelectedDelivery(order.delivery || null);
@@ -520,6 +557,7 @@ export const OrderAddEditScreen = () => {
                             <AppText variant="titleLarge">Płatności</AppText>
                             <AppButton
                                 icon={IconName.payment}
+                                style={styles.fixedButton}
                                 onPress={() => {
                                     setSelectedPayment(null);
                                     setPaymentModalVisible(true);
@@ -533,6 +571,10 @@ export const OrderAddEditScreen = () => {
                             data={paymentsData}
                             actions={(row) => {
                                 const isCompleted = row.status === PaymentStatus.COMPLETED;
+                                const isFinal =
+                                    row.status === PaymentStatus.COMPLETED ||
+                                    row.status === PaymentStatus.CANCELLED ||
+                                    row.status === PaymentStatus.FAILED;
                                 return [
                                     {
                                         icon: IconName.edit,
@@ -544,9 +586,9 @@ export const OrderAddEditScreen = () => {
                                     },
                                     {
                                         icon: IconName.cancel,
-                                        iconColor: isCompleted ? 'transparent' : theme.colors.error,
-                                        onPress: () => !isCompleted && handleCancelPayment(row.id),
-                                        disabled: isCompleted,
+                                        iconColor: isFinal ? 'transparent' : theme.colors.error,
+                                        onPress: () => !isFinal && handleCancelPayment(row.id),
+                                        disabled: isFinal,
                                     },
                                 ];
                             }}
@@ -616,17 +658,25 @@ export const OrderAddEditScreen = () => {
             )}
             <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
                 <AppText variant="titleLarge" style={styles.modalTitle}>
-                    Usuń zamówienie
+                    Anuluj zamówienie
                 </AppText>
                 <AppText style={styles.modalText}>
-                    Czy na pewno chcesz nieodwracalnie usunąć to zamówienie?
+                    Czy na pewno chcesz zmienić status zamówienia na Anulowane?
                 </AppText>
                 <View style={styles.modalButtons}>
-                    <AppButton mode="outlined" onPress={() => setDeleteModalVisible(false)}>
-                        Anuluj
+                    <AppButton
+                        mode="outlined"
+                        onPress={() => setDeleteModalVisible(false)}
+                        style={styles.modalButton}
+                    >
+                        Wróć
                     </AppButton>
-                    <AppButton buttonColor={theme.colors.error} onPress={() => navigation.goBack()}>
-                        Usuń
+                    <AppButton
+                        buttonColor={theme.colors.error}
+                        onPress={handleCancelOrder}
+                        style={styles.modalButton}
+                    >
+                        Potwierdź anulowanie
                     </AppButton>
                 </View>
             </AppModal>

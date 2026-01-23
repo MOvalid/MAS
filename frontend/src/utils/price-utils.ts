@@ -49,7 +49,6 @@ export const calculateVat = (netPrice: number, vatRate: number): number => {
  * @returns A formatted price string (e.g. "123.45")
  */
 export const formatPrice = (value: number | string): string => {
-    console.log(value);
     if (value === null || value === undefined) return '0.00';
 
     let numericValue: number;

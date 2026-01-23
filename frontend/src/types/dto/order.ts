@@ -53,6 +53,6 @@ export interface CreateOrderPayload {
 }
 
 export interface UpdateOrderPayload {
-    id: string;
+    // id: string;
     status: string;
 }
