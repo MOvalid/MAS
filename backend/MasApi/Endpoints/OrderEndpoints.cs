@@ -230,6 +230,14 @@ public static class OrderEndpoints
             return TypedResults.BadRequest($"Invalid status transition from {order.Status} to {newStatus}.");
         }
 
+        if (newStatus == OrderStatus.Cancelled || newStatus == OrderStatus.Returned)
+        {
+            foreach (var item in order.OrderProducts ?? Array.Empty<OrderItem>())
+            {
+                item.Product!.StockQuantity += item.Quantity;
+            }
+        }
+
         order.UpdateStatus(newStatus);
         dbContext.Orders.Update(order);
         await dbContext.SaveChangesAsync();
