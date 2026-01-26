@@ -60,7 +60,7 @@ public static class PaymentEndpoints
         if (
             (
                 order.Payments?
-                    .Where(p => !p.Status.Equals(PaymentStatus.Cancelled))
+                    .Where(p => !(p.Status.Equals(PaymentStatus.Cancelled) || p.Status.Equals(PaymentStatus.Failed)))
                     .Sum(p => p.Amount)
                 + payment.Amount
             )
