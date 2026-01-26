@@ -1,17 +1,13 @@
 // @/hooks/useOrderActions.ts
 import { useSnackbar } from '@/context/SnackbarContext';
-import { PaymentMethod, PaymentStatus } from '@/types/common';
+import { PaymentMethod, PaymentStatus, OrderStatus } from '@/types/common';
 import { Address } from '@/types/domain';
-import {
-    useCreatePayment,
-    useUpdatePayment,
-    useDeletePayment,
-} from '@/composables/payment/usePayments';
+import { useCreatePayment, useUpdatePayment } from '@/composables/payment/usePayments';
 import { useCreateDelivery, useUpdateDelivery } from '@/composables/delivery/useDeliveries';
 import { mapAddressToDto } from '@/mappers/address.mapper';
 import { PaymentDto } from '@/types/dto';
 import { useCreateInvoice } from '@/composables/invoice/useInvoices';
-import { useDeleteOrder } from '@/composables/orders/useOrders';
+import { useUpdateOrder } from '@/composables/orders/useOrders';
 
 export const useOrderActions = (
     orderId: string,
@@ -45,14 +41,6 @@ export const useOrderActions = (
         (err) => showSnackbar(`Błąd aktualizacji płatności: ${err}`, 'error')
     );
 
-    const { remove: deletePayment, loading: isDeletingPayment } = useDeletePayment(
-        () => {
-            showSnackbar('Płatność została usunięta', 'info');
-            refresh();
-        },
-        (err) => showSnackbar(`Błąd podczas usuwania: ${err}`, 'error')
-    );
-
     const { update: updateDelivery, loading: isUpdatingDelivery } = useUpdateDelivery(
         () => {
             showSnackbar('Dane dostawy zostały zaktualizowane', 'success');
@@ -69,12 +57,13 @@ export const useOrderActions = (
         (err) => showSnackbar(`Błąd dodawania dostawy: ${err}`, 'error')
     );
 
-    const { remove: deleteOrder, loading: isDeletingOrder } = useDeleteOrder(
+    const { update: updateOrder, loading: isUpdatingOrder } = useUpdateOrder(
         () => {
-            showSnackbar('Usunięto zamówienie.', 'success');
+            showSnackbar('Zamówienie zostało zaktualizowane.', 'success');
+            refresh();
         },
-        (err) => showSnackbar(`Błąd podczas usuwania dostawy: ${err}`, 'error')
-    )
+        (err) => showSnackbar(`Błąd podczas aktualizacji zamówienia: ${err}`, 'error')
+    );
 
     const handleSavePayment = async (
         amount: number,
@@ -84,8 +73,11 @@ export const useOrderActions = (
     ) => {
         if (paymentId) {
             const currentPayment = currentPayments.find((p) => p.id === paymentId);
-            if (currentPayment?.status === PaymentStatus.COMPLETED) {
-                showSnackbar('Nie można edytować zatwierdzonej płatności', 'error');
+            if (
+                currentPayment?.status === PaymentStatus.COMPLETED ||
+                currentPayment?.status === PaymentStatus.FAILED
+            ) {
+                showSnackbar('Nie można edytować zakończonej płatności', 'error');
                 return;
             }
             updatePayment(paymentId, { status: PaymentStatus.COMPLETED });
@@ -103,10 +95,10 @@ export const useOrderActions = (
     const handleCancelPayment = async (paymentId: string) => {
         const currentPayment = currentPayments.find((p) => p.id === paymentId);
         if (currentPayment?.status === PaymentStatus.COMPLETED) {
-            showSnackbar('Nie można usunąć zatwierdzonej płatności', 'error');
+            showSnackbar('Nie można anulować zatwierdzonej płatności', 'error');
             return;
         }
-        deletePayment(paymentId);
+        await updatePayment(paymentId, { status: PaymentStatus.FAILED });
     };
 
     const handleSaveDelivery = async (
@@ -116,15 +108,6 @@ export const useOrderActions = (
         deliveryDate: string,
         deliveryId?: string
     ) => {
-        const selectedDate = new Date(deliveryDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (selectedDate < today) {
-            showSnackbar('Nie można zaplanować ani edytować dostawy z datą przeszłą', 'error');
-            return;
-        }
-
         const payload = {
             orderId: orderId,
             carrierId: carrierId,
@@ -146,24 +129,28 @@ export const useOrderActions = (
         });
     };
 
-    const handleDeleteOrder = async () => {
-        await deleteOrder(orderId);
-    }
+    const handleCancelOrder = async () => {
+        await updateOrder(orderId, { status: OrderStatus.CANCELLED });
+    };
+
+    const handleReturnOrder = async () => {
+        await updateOrder(orderId, { status: OrderStatus.RETURNED });
+    };
 
     return {
         handleSavePayment,
         handleCancelPayment,
         handleSaveDelivery,
         handleCreateInvoice,
-        handleDeleteOrder,
+        handleCancelOrder,
+        handleReturnOrder,
         isLoading:
             isCreatingPayment ||
             isUpdatingPayment ||
-            isDeletingPayment ||
             isUpdatingDelivery ||
             isCreatingDelivery ||
             isCreatingInvoice ||
-            isDeletingOrder ||
+            isUpdatingOrder ||
             false,
     };
 };

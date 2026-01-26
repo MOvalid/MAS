@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MasApi.Models.Enums;
 
 namespace MasApi.Models
 {
-    public class Order: BaseModel
+    public class Order : BaseModel
     {
         [Key]
         public required Guid Id { get; set; }
@@ -12,8 +13,8 @@ namespace MasApi.Models
         public Customer? Customer { get; set; }
         public required Guid SellerId { get; set; }
         public Seller? Seller { get; set; }
-        public required Enums.Currency Currency { get; set; }
-        public required Enums.OrderStatus Status { get; set; }
+        public required Currency Currency { get; set; }
+        public required OrderStatus Status { get; set; }
 
         public Invoice? Invoice { get; set; }
         public Delivery? Delivery { get; set; }
@@ -26,5 +27,54 @@ namespace MasApi.Models
         public decimal TotalVatAmount => OrderProducts?.Sum(op => op.TotalVatAmount) ?? 0;
         [NotMapped]
         public decimal TotalGrossPrice => OrderProducts?.Sum(op => op.TotalGrossPrice) ?? 0;
+
+        public bool UpdateStatus()
+        {
+            switch (Status)
+            {
+                case OrderStatus.PendingPayment:
+                    var amountPaid = Payments?
+                        .Where(p => p.Status == PaymentStatus.Completed)
+                        .Sum(p => p.Amount) ?? 0;
+                    if (amountPaid >= TotalGrossPrice)
+                    {
+                        Status = OrderStatus.Paid;
+                        Invoice?.UpdateStatus();
+                        Delivery?.UpdateStatus();
+
+                        return true;
+                    }
+                    break;
+
+                case OrderStatus.Paid:
+                    if (Delivery != null && Delivery.Status == DeliveryStatus.Completed)
+                    {
+                        Status = OrderStatus.Delivered;
+                        return true;
+                    }
+                    break;
+            }
+
+            return false;
+        }
+
+        public bool UpdateStatus(OrderStatus newStatus)
+        {
+            switch ((Status, newStatus))
+            {
+                case (OrderStatus.Paid, OrderStatus.Cancelled):
+                case (OrderStatus.Delivered, OrderStatus.Returned):
+                case (OrderStatus.PendingPayment, OrderStatus.Cancelled):
+                    Status = newStatus;
+                    Payments?.ToList().ForEach(p => p.UpdateStatus());
+                    Delivery?.UpdateStatus();
+                    Invoice?.UpdateStatus();
+
+                    return true;
+                default:
+                    break;
+            }
+            return false;
+        }
     }
 }

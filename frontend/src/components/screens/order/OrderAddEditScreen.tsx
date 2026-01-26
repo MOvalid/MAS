@@ -22,18 +22,16 @@ import {
 import { Address, Delivery, OrderItem, PaymentTableData } from '@/types/domain';
 import { useCreateOrder, useOrder, useUpdateOrder } from '@/composables/orders/useOrders';
 import { useCustomerOptions } from '@/composables/customer/useCustomers';
-import { CreateOrderItem, CreateOrderPayload, PaymentDto } from '@/types/dto';
+import { CreateOrderItem, CreateOrderPayload, PaymentDto, UpdateOrderPayload } from '@/types/dto';
 import { LoadingScreen } from '../LoadingScreen';
 import { ErrorMessage } from '@/components/common/AppStageMessage';
 import { useSellerOptions } from '@/composables/seller/useSellers';
 import { useProductOptions } from '@/composables/product/useProducts';
 import { formatAddressMultiline, formatPolishDate } from '@/utils/formatters';
 import { TableColumn, AppTable } from '@/components/common/table';
-import { useOrderItemTableData } from '@/composables/orders/useOrderItems';
 import { usePaymentTableData } from '@/composables/payment/usePayments';
 import { useOrderActions } from '@/hooks/useOrderActions';
 import { useCarrierOptions } from '@/composables/carrier/useCarriers';
-import { ErrorScreen } from '../ErrorScreen';
 import { AddEditDeliveryForm, AddEditPaymentForm } from '@/components/form';
 
 const ITEMS_PER_PAGE = 10;
@@ -58,7 +56,6 @@ export const OrderAddEditScreen = () => {
     const { handleSavePayment, handleCancelPayment, handleSaveDelivery, isLoading } =
         useOrderActions(id, '', refresh, order?.payments || []);
 
-    const orderItemsData = useOrderItemTableData(order?.orderProducts || []);
     const paymentsData = usePaymentTableData(order?.payments || []);
 
     const [searchCustomer, setSearchCustomer] = useState('');
@@ -138,6 +135,10 @@ export const OrderAddEditScreen = () => {
     const hasMoreProducts = orderProducts.length > visibleProductsCount;
 
     useEffect(() => {
+        console.log(orderProducts);
+    }, [orderProducts]);
+
+    useEffect(() => {
         if (!isEdit || !order) return;
 
         setOrderProducts(order.orderProducts || []);
@@ -168,7 +169,7 @@ export const OrderAddEditScreen = () => {
         const e: { customer?: string; seller?: string; orderItems?: string } = {};
         if (!customerValue) e.customer = 'Klient jest wymagany. Wybierz klienta';
         if (!sellerValue) e.seller = 'Sprzedający jest wymagany. Wybierz sprzedającego';
-        if (orderItemsData.length < 1)
+        if (orderProducts.length < 1)
             e.orderItems = 'Zamówienie musi posiadać przynajmniej jedną pozycję.';
         setErrors(e);
         return Object.keys(e).length === 0;
@@ -209,29 +210,47 @@ export const OrderAddEditScreen = () => {
         if (isEdit) return;
 
         const productInfo = productsData.find((p) => p.id === item.productId);
-        if (productInfo) {
-            const qty = item.quantity;
+        if (!productInfo) return;
+
+        setOrderProducts((prev) => {
+            const existingIndex = prev.findIndex((p) => p.productId === item.productId);
+
+            if (existingIndex > -1) {
+                const updatedList = [...prev];
+                const existingItem = updatedList[existingIndex];
+                const newQty = existingItem.quantity + item.quantity;
+
+                const totalNet = existingItem.unitNetPrice * newQty;
+                const totalVat = totalNet * (existingItem.vatRate / 100);
+
+                updatedList[existingIndex] = {
+                    ...existingItem,
+                    quantity: newQty,
+                    totalNetPrice: totalNet,
+                    totalVatAmount: totalVat,
+                    totalGrossPrice: totalNet + totalVat,
+                };
+                return updatedList;
+            }
+
             const netPrice = productInfo.netPrice || 0;
             const vatRate = productInfo.vatRate || 23;
-
-            const totalNet = netPrice * qty;
+            const totalNet = netPrice * item.quantity;
             const totalVat = totalNet * (vatRate / 100);
-            const totalGross = totalNet + totalVat;
 
             const newItem: OrderItem = {
                 productId: item.productId,
                 product: productInfo,
-                quantity: qty,
+                quantity: item.quantity,
                 unitNetPrice: netPrice,
                 vatRate: vatRate,
                 currency: Currency.PLN,
                 totalNetPrice: totalNet,
                 totalVatAmount: totalVat,
-                totalGrossPrice: totalGross,
+                totalGrossPrice: totalNet + totalVat,
             };
-
-            setOrderProducts((prev) => [...prev, newItem]);
-        }
+            return [...prev, newItem];
+        });
     };
 
     const handleRemoveProduct = (index: number) => {
@@ -258,6 +277,22 @@ export const OrderAddEditScreen = () => {
         setDeliveryModalVisible(false);
     };
 
+    const handleCancelOrder = async () => {
+        await update(id, { status: OrderStatus.CANCELLED } as UpdateOrderPayload);
+        setDeleteModalVisible(false);
+    };
+
+    const handleReturnOrder = async () => {
+        await update(id, { status: OrderStatus.RETURNED } as UpdateOrderPayload);
+    };
+
+    const isDelivered = order?.status === OrderStatus.DELIVERED;
+    const canCancel =
+        order &&
+        order.status !== OrderStatus.CANCELLED &&
+        order.status !== OrderStatus.RETURNED &&
+        !isDelivered;
+
     const styles = StyleSheet.create({
         container: { flex: 1 },
         contentContainer: { padding: metrics.spacing.lg, gap: metrics.spacing.lg },
@@ -266,11 +301,6 @@ export const OrderAddEditScreen = () => {
         subtitle: { color: '#666' },
         modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
         modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
-        modalButtons: {
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            gap: metrics.spacing.md,
-        },
         cardHeaderWithButton: {
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -308,6 +338,19 @@ export const OrderAddEditScreen = () => {
             borderBottomLeftRadius: metrics.radius.md,
             borderBottomRightRadius: metrics.radius.md,
         },
+        fixedButton: {
+            minWidth: 170,
+        },
+        modalButton: {
+            flex: 1,
+            minWidth: 140,
+        },
+        modalButtons: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: metrics.spacing.md,
+            marginTop: metrics.spacing.md,
+        },
     });
 
     // if (!id) {
@@ -340,17 +383,29 @@ export const OrderAddEditScreen = () => {
                         </>
                     )}
                 </View>
-                {isEdit && order?.status === OrderStatus.DRAFT && (
-                    <View style={styles.buttonRow}>
+                <View style={styles.buttonRow}>
+                    {isEdit && isDelivered && (
                         <AppButton
-                            icon={IconName.delete}
+                            icon={IconName.refresh}
+                            mode="contained"
+                            style={styles.fixedButton}
+                            onPress={handleReturnOrder}
+                        >
+                            Zwróć zamówienie
+                        </AppButton>
+                    )}
+
+                    {isEdit && canCancel && (
+                        <AppButton
+                            icon={IconName.cancel}
                             buttonColor={theme.colors.error}
+                            style={styles.fixedButton}
                             onPress={() => setDeleteModalVisible(true)}
                         >
-                            Usuń
+                            Anuluj zamówienie
                         </AppButton>
-                    </View>
-                )}
+                    )}
+                </View>
             </View>
 
             <AppCard style={styles.card}>
@@ -481,6 +536,7 @@ export const OrderAddEditScreen = () => {
                             <AppText variant="titleLarge">Dostawa</AppText>
                             <AppButton
                                 icon={IconName.delivery}
+                                style={styles.fixedButton}
                                 onPress={() => {
                                     if (order) {
                                         setSelectedDelivery(order.delivery || null);
@@ -520,6 +576,7 @@ export const OrderAddEditScreen = () => {
                             <AppText variant="titleLarge">Płatności</AppText>
                             <AppButton
                                 icon={IconName.payment}
+                                style={styles.fixedButton}
                                 onPress={() => {
                                     setSelectedPayment(null);
                                     setPaymentModalVisible(true);
@@ -533,6 +590,10 @@ export const OrderAddEditScreen = () => {
                             data={paymentsData}
                             actions={(row) => {
                                 const isCompleted = row.status === PaymentStatus.COMPLETED;
+                                const isFinal =
+                                    row.status === PaymentStatus.COMPLETED ||
+                                    row.status === PaymentStatus.CANCELLED ||
+                                    row.status === PaymentStatus.FAILED;
                                 return [
                                     {
                                         icon: IconName.edit,
@@ -544,9 +605,9 @@ export const OrderAddEditScreen = () => {
                                     },
                                     {
                                         icon: IconName.cancel,
-                                        iconColor: isCompleted ? 'transparent' : theme.colors.error,
-                                        onPress: () => !isCompleted && handleCancelPayment(row.id),
-                                        disabled: isCompleted,
+                                        iconColor: isFinal ? 'transparent' : theme.colors.error,
+                                        onPress: () => !isFinal && handleCancelPayment(row.id),
+                                        disabled: isFinal,
                                     },
                                 ];
                             }}
@@ -616,17 +677,25 @@ export const OrderAddEditScreen = () => {
             )}
             <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
                 <AppText variant="titleLarge" style={styles.modalTitle}>
-                    Usuń zamówienie
+                    Anuluj zamówienie
                 </AppText>
                 <AppText style={styles.modalText}>
-                    Czy na pewno chcesz nieodwracalnie usunąć to zamówienie?
+                    Czy na pewno chcesz zmienić status zamówienia na Anulowane?
                 </AppText>
                 <View style={styles.modalButtons}>
-                    <AppButton mode="outlined" onPress={() => setDeleteModalVisible(false)}>
-                        Anuluj
+                    <AppButton
+                        mode="outlined"
+                        onPress={() => setDeleteModalVisible(false)}
+                        style={styles.modalButton}
+                    >
+                        Wróć
                     </AppButton>
-                    <AppButton buttonColor={theme.colors.error} onPress={() => navigation.goBack()}>
-                        Usuń
+                    <AppButton
+                        buttonColor={theme.colors.error}
+                        onPress={handleCancelOrder}
+                        style={styles.modalButton}
+                    >
+                        Potwierdź anulowanie
                     </AppButton>
                 </View>
             </AppModal>

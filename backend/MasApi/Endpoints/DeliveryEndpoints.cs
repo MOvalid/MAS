@@ -1,7 +1,7 @@
 using MasApi.Models;
 using MasApi.Models.Dtos;
+using MasApi.Models.Enums;
 using Microsoft.AspNetCore.Http.HttpResults;
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 
@@ -35,13 +35,32 @@ public static class DeliveryEndpoints
 
     private static async Task<Results<Created<DeliveryDetailsDto>, BadRequest<string>>> CreateDelivery(DeliveryCreateDto deliveryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
-        var order = await dbContext.Orders.FindAsync(deliveryRequest.OrderId);
+        var order = await dbContext.Orders
+            .Include(o => o.OrderProducts)
+            .Include(o => o.Invoice)
+            .Include(o => o.Delivery)
+            .Include(o => o.Payments)
+            .FirstOrDefaultAsync(o => o.Id == deliveryRequest.OrderId);
         if (order == null) return TypedResults.BadRequest("Order does not exist.");
 
-        var existingDelivery = await dbContext.Deliveries.FirstOrDefaultAsync(d => d.OrderId == deliveryRequest.OrderId);
+        var existingDelivery = await dbContext.Deliveries.Where(d => d.Status != DeliveryStatus.Cancelled).FirstOrDefaultAsync(d => d.OrderId == deliveryRequest.OrderId);
         if (existingDelivery != null) return TypedResults.BadRequest("Delivery for this order already exists.");
 
+        if (order.Status == OrderStatus.Cancelled || order.Status == OrderStatus.Returned)
+        {
+            return TypedResults.BadRequest("Cannot create delivery for a cancelled or returned order.");
+        }
+
         var delivery = mapper.Map<Delivery>(deliveryRequest);
+
+        if (order.Status == OrderStatus.PendingPayment)
+        {
+            delivery.Status = DeliveryStatus.PendingPayment;
+        }
+        else
+        {
+            delivery.Status = DeliveryStatus.InProgress;
+        }
 
         var (isValid, validationErrors) = delivery.Validate();
         if (!isValid)
@@ -93,7 +112,7 @@ public static class DeliveryEndpoints
         return TypedResults.Ok(deliveries);
     }
 
-    private static async Task<Results<Ok<DeliveryDetailsDto>, NotFound, BadRequest<string>>> UpdateDelivery(Guid id, DeliveryCreateDto deliveryRequest, Data.MasDbContext dbContext, IMapper mapper)
+    private static async Task<Results<Ok<DeliveryDetailsDto>, NotFound, BadRequest<string>>> UpdateDelivery(Guid id, DeliveryUpdateDto deliveryRequest, Data.MasDbContext dbContext, IMapper mapper)
     {
         var delivery = await dbContext.Deliveries
             .Include(d => d.Order!.OrderProducts!)
@@ -105,6 +124,7 @@ public static class DeliveryEndpoints
             .FirstOrDefaultAsync(d => d.Id == id);
         if (delivery == null) return TypedResults.NotFound();
 
+        var currentStatus = delivery.Status;
         mapper.Map(deliveryRequest, delivery);
 
         var (isValid, validationErrors) = delivery.Validate();
@@ -114,6 +134,19 @@ public static class DeliveryEndpoints
             return TypedResults.BadRequest(errorMessage);
         }
 
+        var isTransitionValid = (currentStatus, delivery.Status) switch
+        {
+            (DeliveryStatus.InProgress, DeliveryStatus.Completed) => true,
+            (DeliveryStatus.PendingPayment, DeliveryStatus.Cancelled) => true,
+            _ => false
+        };
+
+        if (!isTransitionValid)
+        {
+            return TypedResults.BadRequest($"Invalid status transition from {currentStatus} to {delivery.Status}.");
+        }
+
+        delivery.Order?.UpdateStatus();
         dbContext.Deliveries.Update(delivery);
         await dbContext.SaveChangesAsync();
 

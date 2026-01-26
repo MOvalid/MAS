@@ -40,6 +40,8 @@ public static class PaymentEndpoints
 
         var order = await dbContext.Orders
             .Include(o => o.OrderProducts)
+            .Include(o => o.Invoice)
+            .Include(o => o.Delivery)
             .Include(o => o.Payments)
             .FirstOrDefaultAsync(o => o.Id == paymentRequest.OrderId);
         if (order == null) return TypedResults.BadRequest("Order does not exist.");
@@ -69,6 +71,8 @@ public static class PaymentEndpoints
         }
 
         dbContext.Payments.Add(payment);
+        order.Payments?.Add(payment);
+        order.UpdateStatus();
         await dbContext.SaveChangesAsync();
 
         payment = await dbContext.Payments
@@ -124,14 +128,26 @@ public static class PaymentEndpoints
             .FirstOrDefaultAsync(p => p.Id == id);
         if (payment == null) return TypedResults.NotFound();
 
-        mapper.Map(paymentRequest, payment);
-
-        var (isValid, validationErrors) = payment.Validate();
-        if (!isValid)
+        if (!Enum.TryParse(paymentRequest.Status, true, out PaymentStatus newStatus))
         {
-            var errorMessage = string.Join("; ", validationErrors);
-            return TypedResults.BadRequest(errorMessage);
+            return TypedResults.BadRequest($"Invalid payment status: {paymentRequest.Status}.");
         }
+
+        var isTransitionValid = (payment.Status, newStatus) switch
+        {
+            (PaymentStatus.Pending, PaymentStatus.Completed) => true,
+            (PaymentStatus.Pending, PaymentStatus.Cancelled) => true,
+            (PaymentStatus.Pending, PaymentStatus.Failed) => true,
+            _ => false
+        };
+
+        if (!isTransitionValid)
+        {
+            return TypedResults.BadRequest($"Invalid status transition from {payment.Status} to {newStatus}.");
+        }
+
+        payment.Status = newStatus;
+        payment.Order!.UpdateStatus();
 
         dbContext.Payments.Update(payment);
         await dbContext.SaveChangesAsync();

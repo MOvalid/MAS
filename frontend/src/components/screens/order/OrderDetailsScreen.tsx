@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
@@ -7,7 +7,7 @@ import { AppModal } from '@/components/common/AppModal';
 import { AppTable, TableColumn } from '@/components/common/table';
 import { metrics } from '@/theme/metrics';
 import { formatAddressMultiline, formatPolishDate } from '@/utils/formatters';
-import { PaymentDto, DeliveryDto } from '@/types/dto';
+import { PaymentDto } from '@/types/dto';
 import {
     PAYMENT_SUMMARY_LABELS,
     PaymentMethod,
@@ -41,12 +41,13 @@ export const OrderDetailsScreen = () => {
     const params = route.params as { id?: string } | undefined;
     const id = params?.id || '';
 
+    const [isWaitingForInvoice, setIsWaitingForInvoice] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
     const [visibleProductsCount, setVisibleProductsCount] = useState(ITEMS_PER_PAGE);
     const [selectedPayment, setSelectedPayment] = useState<PaymentDto | null>(null);
-    const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+    const [, setSelectedDelivery] = useState<Delivery | null>(null);
 
     const { data: order, loading: orderLoading, error, refresh } = useOrder(id);
     const { data: carriers } = useCarrierOptions(true, { name: '' });
@@ -56,7 +57,8 @@ export const OrderDetailsScreen = () => {
         handleCancelPayment,
         handleSaveDelivery,
         handleCreateInvoice,
-        handleDeleteOrder,
+        handleCancelOrder,
+        handleReturnOrder,
         isLoading,
     } = useOrderActions(id, '', refresh, order?.payments || []);
 
@@ -65,8 +67,17 @@ export const OrderDetailsScreen = () => {
         (err) => showSnackbar(err, 'error')
     );
 
-    const { orderTotal, paymentsTotal, remainingAmount, status, isOverpaid } =
-        useOrderPaymentSummary(order?.orderProducts || [], order?.payments || []);
+    useEffect(() => {
+        if (isWaitingForInvoice && order?.invoice?.id) {
+            generatePdf(order.invoice.id, order.invoice.invoiceNumber);
+            setIsWaitingForInvoice(false);
+        }
+    }, [order?.invoice, isWaitingForInvoice]);
+
+    const { orderTotal, paymentsTotal, remainingAmount, isOverpaid } = useOrderPaymentSummary(
+        order?.orderProducts || [],
+        order?.payments || []
+    );
 
     const orderItemsData = useOrderItemTableData(order?.orderProducts || []);
     const paymentsData = usePaymentTableData(order?.payments || []);
@@ -142,6 +153,16 @@ export const OrderDetailsScreen = () => {
         setPaymentModalVisible(true);
     };
 
+    const onCreateInvoicePress = async () => {
+        try {
+            await handleCreateInvoice();
+            setIsWaitingForInvoice(true);
+            await refresh();
+        } catch (err) {
+            showSnackbar('Błąd podczas tworzenia faktury', 'error');
+        }
+    };
+
     if (loading && !order) return <LoadingScreen />;
     if (error || !order)
         return (
@@ -159,9 +180,8 @@ export const OrderDetailsScreen = () => {
             contentContainerStyle={styles.contentContainer}
             scrollEventThrottle={16}
         >
-            {/* Nagłówek i Akcje Główne */}
             <View style={styles.headerRow}>
-                <View>
+                <View style={{ flex: 1 }}>
                     <AppText variant="headlineMedium">Zamówienie</AppText>
                     <AppText style={styles.subtitle}>ID: {order.id}</AppText>
                     <AppText style={styles.subtitle}>
@@ -170,23 +190,23 @@ export const OrderDetailsScreen = () => {
                 </View>
 
                 <View style={styles.buttonRow}>
-                    {!order.invoice && (
+                    {!order.invoice ? (
                         <AppButton
                             icon={IconName.invoice}
                             mode="outlined"
-                            onPress={handleCreateInvoice}
+                            onPress={onCreateInvoicePress}
                             loading={isLoading}
+                            style={styles.flexButton}
                         >
-                            Wystaw fakturę
+                            Faktura
                         </AppButton>
-                    )}
-
-                    {order.invoice && (
+                    ) : (
                         <AppButton
                             icon={IconName.download}
                             mode="outlined"
                             onPress={onDownloadInvoice}
                             loading={isDownloading}
+                            style={styles.flexButton}
                         >
                             Faktura
                         </AppButton>
@@ -196,17 +216,34 @@ export const OrderDetailsScreen = () => {
                         icon={IconName.edit}
                         mode="contained"
                         onPress={() => navigation.navigate('OrderEdit', { id: order.id })}
+                        style={styles.flexButton}
                     >
                         Edytuj
                     </AppButton>
 
-                    {order.status === OrderStatus.DRAFT && (
+                    {(order.status === OrderStatus.DRAFT ||
+                        order.status === OrderStatus.PAYMENT_PENDING) && (
                         <AppButton
-                            icon={IconName.delete}
+                            icon={IconName.cancel}
                             buttonColor={theme.colors.error}
                             onPress={() => setDeleteModalVisible(true)}
+                            loading={isLoading}
+                            style={styles.flexButton}
                         >
-                            Usuń
+                            Anuluj
+                        </AppButton>
+                    )}
+
+                    {order.status === OrderStatus.DELIVERED && (
+                        <AppButton
+                            icon={IconName.refresh}
+                            mode="contained"
+                            buttonColor={theme.colors.secondary}
+                            onPress={handleReturnOrder}
+                            loading={isLoading}
+                            style={styles.flexButton}
+                        >
+                            Zwrot
                         </AppButton>
                     )}
                 </View>
@@ -268,7 +305,11 @@ export const OrderDetailsScreen = () => {
             <AppCard>
                 <View style={styles.cardHeaderWithButton}>
                     <AppText variant="titleLarge">Płatności</AppText>
-                    <AppButton icon={IconName.payment} onPress={onAddPayment}>
+                    <AppButton
+                        icon={IconName.payment}
+                        onPress={onAddPayment}
+                        style={styles.actionButtonWidth}
+                    >
                         Dodaj płatność
                     </AppButton>
                 </View>
@@ -276,20 +317,20 @@ export const OrderDetailsScreen = () => {
                     columns={paymentColumns}
                     data={paymentsData}
                     actions={(row) => {
-                        const isCompleted = row.status === PaymentStatus.COMPLETED;
+                        const canAction = row.status === PaymentStatus.PENDING;
 
                         return [
                             {
                                 icon: IconName.edit,
-                                iconColor: isCompleted ? 'transparent' : theme.colors.primary,
-                                onPress: () => !isCompleted && onEditPayment(row),
-                                disabled: isCompleted,
+                                iconColor: canAction ? theme.colors.primary : 'transparent',
+                                onPress: () => canAction && onEditPayment(row),
+                                disabled: !canAction,
                             },
                             {
                                 icon: IconName.cancel,
-                                iconColor: isCompleted ? 'transparent' : theme.colors.error,
-                                onPress: () => !isCompleted && handleCancelPayment(row.id),
-                                disabled: isCompleted,
+                                iconColor: canAction ? theme.colors.error : 'transparent',
+                                onPress: () => canAction && handleCancelPayment(row.id),
+                                disabled: !canAction,
                             },
                         ];
                     }}
@@ -300,13 +341,6 @@ export const OrderDetailsScreen = () => {
                 <AppText variant="titleLarge" style={styles.cardTitle}>
                     Podsumowanie płatności
                 </AppText>
-                <InfoItem
-                    label="Status"
-                    value={PAYMENT_SUMMARY_LABELS[status as PaymentSummaryStatus]}
-                    valueStyle={{
-                        color: getPaymentStatusColor(status as PaymentSummaryStatus, theme),
-                    }}
-                />
                 <InfoItem label="Suma zamówienia" value={`${formatPrice(orderTotal)} PLN`} />
                 <InfoItem label="Suma wpłat" value={`${formatPrice(paymentsTotal)} PLN`} />
                 <InfoItem
@@ -325,6 +359,7 @@ export const OrderDetailsScreen = () => {
                             setSelectedDelivery(order.delivery);
                             setDeliveryModalVisible(true);
                         }}
+                        style={styles.actionButtonWidth}
                     >
                         Zarządzaj
                     </AppButton>
@@ -344,23 +379,28 @@ export const OrderDetailsScreen = () => {
 
             <AppModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
                 <AppText variant="titleLarge" style={styles.modalTitle}>
-                    Usuń zamówienie
+                    Anuluj zamówienie
                 </AppText>
                 <AppText style={styles.modalText}>
-                    Czy na pewno chcesz nieodwracalnie usunąć to zamówienie?
+                    Czy na pewno chcesz anulować to zamówienie?
                 </AppText>
-                <View style={styles.modalButtons}>
-                    <AppButton mode="outlined" onPress={() => setDeleteModalVisible(false)}>
-                        Anuluj
+                <View style={styles.modalButtonsRow}>
+                    <AppButton
+                        mode="outlined"
+                        onPress={() => setDeleteModalVisible(false)}
+                        style={styles.flexButton}
+                    >
+                        Wróć
                     </AppButton>
                     <AppButton
                         buttonColor={theme.colors.error}
+                        style={styles.flexButton}
                         onPress={() => {
-                            handleDeleteOrder();
-                            navigation.goBack();
+                            handleCancelOrder();
+                            setDeleteModalVisible(false);
                         }}
                     >
-                        Usuń
+                        Anuluj
                     </AppButton>
                 </View>
             </AppModal>
@@ -402,16 +442,26 @@ export const OrderDetailsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
     contentContainer: { padding: metrics.spacing.lg, gap: metrics.spacing.lg },
-    card: { marginBottom: metrics.spacing.lg },
     headerRow: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: metrics.spacing.lg,
+        gap: metrics.spacing.md,
     },
-    subtitle: { color: '#666' },
-    buttonRow: { flexDirection: 'row', gap: metrics.spacing.md },
+    subtitle: { color: '#666', fontSize: 12 },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: metrics.spacing.sm,
+        flex: 2,
+        justifyContent: 'flex-end',
+    },
+    flexButton: {
+        flex: 1,
+        minWidth: 100,
+        maxWidth: 150,
+    },
     cardTitle: { marginBottom: metrics.spacing.md },
     cardHeaderWithButton: {
         flexDirection: 'row',
@@ -419,11 +469,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: metrics.spacing.lg,
     },
+    actionButtonWidth: {
+        minWidth: 160,
+    },
+    modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
+    modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
+    modalButtonsRow: {
+        flexDirection: 'row',
+        gap: metrics.spacing.md,
+        width: '100%',
+        justifyContent: 'center',
+    },
+    container: { flex: 1 },
+    card: { marginBottom: metrics.spacing.lg },
     infoRow: { flexDirection: 'row', marginBottom: metrics.spacing.xs },
     label: { flex: 1, fontWeight: metrics.fontWeight.semibold, color: '#444' },
     value: { flex: 3 },
-    modalTitle: { textAlign: 'center', marginBottom: metrics.spacing.md },
-    modalText: { textAlign: 'center', marginBottom: metrics.spacing.lg },
     modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: metrics.spacing.md },
     loadMoreContainer: {
         paddingVertical: metrics.spacing.md,

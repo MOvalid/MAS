@@ -2,9 +2,9 @@ namespace MasApi.Models.Enums;
 
 public enum InvoiceStatus
 {
-    Draft,
-    Sent,
+    Issued,
     Paid,
     Overdue,
+    Refunded,
     Cancelled,
 }
