@@ -29,11 +29,9 @@ import { useSellerOptions } from '@/composables/seller/useSellers';
 import { useProductOptions } from '@/composables/product/useProducts';
 import { formatAddressMultiline, formatPolishDate } from '@/utils/formatters';
 import { TableColumn, AppTable } from '@/components/common/table';
-import { useOrderItemTableData } from '@/composables/orders/useOrderItems';
 import { usePaymentTableData } from '@/composables/payment/usePayments';
 import { useOrderActions } from '@/hooks/useOrderActions';
 import { useCarrierOptions } from '@/composables/carrier/useCarriers';
-import { ErrorScreen } from '../ErrorScreen';
 import { AddEditDeliveryForm, AddEditPaymentForm } from '@/components/form';
 
 const ITEMS_PER_PAGE = 10;
@@ -58,7 +56,6 @@ export const OrderAddEditScreen = () => {
     const { handleSavePayment, handleCancelPayment, handleSaveDelivery, isLoading } =
         useOrderActions(id, '', refresh, order?.payments || []);
 
-    const orderItemsData = useOrderItemTableData(order?.orderProducts || []);
     const paymentsData = usePaymentTableData(order?.payments || []);
 
     const [searchCustomer, setSearchCustomer] = useState('');
@@ -138,6 +135,10 @@ export const OrderAddEditScreen = () => {
     const hasMoreProducts = orderProducts.length > visibleProductsCount;
 
     useEffect(() => {
+        console.log(orderProducts);
+    }, [orderProducts]);
+
+    useEffect(() => {
         if (!isEdit || !order) return;
 
         setOrderProducts(order.orderProducts || []);
@@ -168,7 +169,7 @@ export const OrderAddEditScreen = () => {
         const e: { customer?: string; seller?: string; orderItems?: string } = {};
         if (!customerValue) e.customer = 'Klient jest wymagany. Wybierz klienta';
         if (!sellerValue) e.seller = 'Sprzedający jest wymagany. Wybierz sprzedającego';
-        if (orderItemsData.length < 1)
+        if (orderProducts.length < 1)
             e.orderItems = 'Zamówienie musi posiadać przynajmniej jedną pozycję.';
         setErrors(e);
         return Object.keys(e).length === 0;
@@ -209,29 +210,47 @@ export const OrderAddEditScreen = () => {
         if (isEdit) return;
 
         const productInfo = productsData.find((p) => p.id === item.productId);
-        if (productInfo) {
-            const qty = item.quantity;
+        if (!productInfo) return;
+
+        setOrderProducts((prev) => {
+            const existingIndex = prev.findIndex((p) => p.productId === item.productId);
+
+            if (existingIndex > -1) {
+                const updatedList = [...prev];
+                const existingItem = updatedList[existingIndex];
+                const newQty = existingItem.quantity + item.quantity;
+
+                const totalNet = existingItem.unitNetPrice * newQty;
+                const totalVat = totalNet * (existingItem.vatRate / 100);
+
+                updatedList[existingIndex] = {
+                    ...existingItem,
+                    quantity: newQty,
+                    totalNetPrice: totalNet,
+                    totalVatAmount: totalVat,
+                    totalGrossPrice: totalNet + totalVat,
+                };
+                return updatedList;
+            }
+
             const netPrice = productInfo.netPrice || 0;
             const vatRate = productInfo.vatRate || 23;
-
-            const totalNet = netPrice * qty;
+            const totalNet = netPrice * item.quantity;
             const totalVat = totalNet * (vatRate / 100);
-            const totalGross = totalNet + totalVat;
 
             const newItem: OrderItem = {
                 productId: item.productId,
                 product: productInfo,
-                quantity: qty,
+                quantity: item.quantity,
                 unitNetPrice: netPrice,
                 vatRate: vatRate,
                 currency: Currency.PLN,
                 totalNetPrice: totalNet,
                 totalVatAmount: totalVat,
-                totalGrossPrice: totalGross,
+                totalGrossPrice: totalNet + totalVat,
             };
-
-            setOrderProducts((prev) => [...prev, newItem]);
-        }
+            return [...prev, newItem];
+        });
     };
 
     const handleRemoveProduct = (index: number) => {
