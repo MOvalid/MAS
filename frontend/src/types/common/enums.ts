@@ -35,12 +35,12 @@ export enum PaymentStatus {
 }
 
 export enum PaymentMethod {
-    BANK_TRANSFER = 'BANK_TRANSFER',
-    CREDIT_CARD = 'CREDIT_CARD',
-    CASH = 'CASH',
-    PAYPAL = 'PAYPAL',
-    BLIK = 'BLIK',
-    OTHER = 'OTHER',
+    BANK_TRANSFER = 'BankTransfer',
+    CREDIT_CARD = 'CreditCard',
+    CASH = 'Cash',
+    PAYPAL = 'Paypal',
+    BLIK = 'Blik',
+    OTHER = 'Other',
 }
 
 export type PaymentSummaryStatus = 'PAID' | 'PARTIAL' | 'NONE' | 'OVERPAID';
